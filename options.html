@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="options.css">
+</head>
+
+<body>
+  <form>
+<p>
+	<legend>Default action</legend>
+	<label><input type="radio" name="action" value="current" id="action-current" >Current tab</label>
+	<label><input type="radio" name="action" value="left" id="action-left" >Left of current tab</label>
+	<label><input type="radio" name="action" value="right" id="action-right" >Right of current tab</label>
+	<label><input type="radio" name="action" value="all" id="action-all" >All tabs</label>
+
+<p>
+      <label><input type="checkbox" id="activeTab" >Include current tab</label>
+</p>
+<p>
+	<legend>Dimensions (pixels)</legend>
+      <label>Min width
+      <input type="text" id="minWidth" >
+      </label>
+</p>
+<p>
+      <label>Min height
+      <input type="text" id="minHeight" >
+      </label>
+</p>
+<p>
+<legend>Images are saved in your Downloads path.<br>Optionally you can name a subfolder to save into.</legend>
+      <label>Folder
+      <input type="text" id="downloadPath" >
+      </label>
+</p>
+<p>
+	<legend>Duplicate filename action</legend>
+	<label><input type="radio" name="conflictAction" value="uniquify" id="conflictAction-uniquify" >Rename (automatic)</label>
+	<label><input type="radio" name="conflictAction" value="overwrite" id="conflictAction-overwrite" >Overwrite</label>
+</p>
+<p>
+	<legend>Finished downloading</legend>
+      <label><input type="checkbox" id="closeTab" >Close tabs</label>
+</p>
+<p>
+      <label><input type="checkbox" id="removeEnded" >Hide from download history</label>
+</p>
+<p>
+      <label><input type="checkbox" id="notifyEnded" >Show notification popup</label>
+</p>
+      <button type="submit">Save</button>
+  </form>
+  <script src="options.js"></script>
+</body>
+
+</html>
