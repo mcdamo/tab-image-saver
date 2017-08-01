@@ -2,7 +2,7 @@
 
 	"manifest_version": 2,
 	"name": "Tab Image Saver",
-	"version": "1.0",
+	"version": "1.0.1",
 	"description": "Save largest image from each tab",
 	"homepage_url": "https://github.com/mcdamo/tab-image-saver",
 	"icons": {
@@ -44,7 +44,8 @@
 
 	"applications": {
 		"gecko": {
-			"strict_min_version": "45.0"
+			"id": "tab-image-saver@mcdamo.addons.mozilla.org",
+			"strict_min_version": "48.0"
 		}
 	}
 }
