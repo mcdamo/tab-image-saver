@@ -173,9 +173,9 @@ function downloadImage(image, tabid, callback) {
 	path += url.replace(/^.*[\\\/]/, ''); // append filename from url
 	var downloading = browser.downloads.download({
 		url: url,
-		conflictAction: CONFLICT_ACTION,
 		filename: path,
-		saveAs: false
+		//saveAs: false, // not required, min_ver FF52
+		conflictAction: CONFLICT_ACTION
 	});
 	downloading.then(
 		function(dlid) { onDownloadStarted(dlid, tabid, path, callback); },
