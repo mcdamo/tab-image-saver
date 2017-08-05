@@ -13,12 +13,14 @@ var REMOVE_ENDED;
 var TABS_LOADED = 0; // number of tabs executed
 var TABS_ENDED = 0; // number of tabs returned a message
 var IMAGES_SAVED = 0; // valid images saved
+var IMAGES_SKIPPED = 0; // invalid images
 const DEBUG_LOG = false;
 
 function init() {
 	TABS_LOADED = 0;
 	TABS_ENDED = 0;
 	IMAGES_SAVED = 0;
+	IMAGES_SKIPPED = 0;
 	getOptions(executeTabs);
 }
 
@@ -84,7 +86,7 @@ function executeTabs() {
 function executeTab(tab) {
 	TABS_LOADED++;
 	let tabid = tab.id;
-	debug(`Sending tab ${tabid}`);
+	debug(`Sending tab ${tabid} (LOADED ${TABS_LOADED})`);
 	var executing = browser.tabs.executeScript(
 		tabid, {
 		file: "/content-script.js"
@@ -161,6 +163,7 @@ function callOnActiveTab(callback) {
 /* receive image from content-script (Tab) */
 function downloadImage(image, tabid, callback) {
 	if (!image) {
+		IMAGES_SKIPPED++;
 		return false;
 	}
 	debug(`${image.width}x${image.height} ${image.src}`);
@@ -168,6 +171,7 @@ function downloadImage(image, tabid, callback) {
 	var url = image.src;
 	if (image.width < MIN_WIDTH || image.height < MIN_HEIGHT) {
 		debug("Dimensions smaller than required, not saving");
+		IMAGES_SKIPPED++;
 		return false;
 	}
 	path += url.replace(/^.*[\\\/]/, ''); // append filename from url
@@ -199,6 +203,7 @@ function onDownloadStarted(dlid, tabid, path, callback) {
 	callback();
 }
 function onDownloadFailed(e, path, callback) {
+	IMAGES_SKIPPED++;
 	console.log(`Download failed (${path}): ${e}`);
 	callback();
 }
@@ -222,6 +227,9 @@ function notifyFinished()
 	if (TABS_LOADED != TABS_ENDED) {
 		return;
 	}
+	if (TABS_LOADED != (IMAGES_SAVED + IMAGES_SKIPPED)) {
+		return;
+	}
 	notify('finished', {
 		title: "Tab Image Saver",
 		content: `${IMAGES_SAVED} downloaded`
@@ -230,8 +238,8 @@ function notifyFinished()
 }
 
 function handleMessage(request, sender, sendResponse) {
-	debug(`Response from tab ${sender.tab.id}`);
 	TABS_ENDED++;
+	debug(`Response from tab ${sender.tab.id} (ENDED ${TABS_ENDED})`);
 	if (downloadImage(request.image, sender.tab.id, notifyFinished)) {
 /*
 		sendResponse({
