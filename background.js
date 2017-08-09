@@ -10,6 +10,9 @@ var MIN_HEIGHT;
 var NOTIFY_ENDED;
 var REMOVE_ENDED;
 // these are used at runtime
+var SCRIPT_MAXIMAGE = '/content-maximage.js'; // content script to find largest image in tab
+var SCRIPT_TABIMAGE = '/content-tabimage.js'; // content script to test if tab is a direct image
+var CONTENT_SCRIPT = SCRIPT_MAXIMAGE;
 var TABS_LOADED = 0; // number of tabs executed
 var TABS_ENDED = 0; // number of tabs returned a message
 var IMAGES_SAVED = 0; // valid images saved
@@ -52,6 +55,9 @@ function getOptions(callback) {
 		}
 		NOTIFY_ENDED = result.notifyEnded;
 		REMOVE_ENDED = result.removeEnded;
+		if (result.tabImage) {
+			CONTENT_SCRIPT = SCRIPT_TABIMAGE;
+		}
 		callback();
 	}, error => {
 /*
@@ -86,48 +92,53 @@ function executeTabs() {
 function executeTab(tab) {
 	TABS_LOADED++;
 	let tabid = tab.id;
-	debug(`Sending tab ${tabid} (LOADED ${TABS_LOADED})`);
+	debug(`Sending tab ${tabid} (LOADED ${TABS_LOADED}): ${CONTENT_SCRIPT}`);
 	var executing = browser.tabs.executeScript(
 		tabid, {
-		file: "/content-script.js"
+		file: CONTENT_SCRIPT
 	});
 
 }
 
+/* execute all tabs */
 function tabsAll() {
-	tabs = getCurrentWindowTabs();
-	for (let i = 0; i < tabs.length; i++) {
-		if (tab.active && ACTIVE_TAB == false) {
-			continue;
+	getCurrentWindowTabs().then((tabs) => {
+		for (var tab of tabs) {
+			if (tab.active && ACTIVE_TAB == false) {
+				continue;
+			}
+			executeTab(tab);
 		}
-		executeTab(tabs[i]);
-	}
+	});
 }
 
+/* execute on active tab */
 function tabsCurrent() {
 	callOnActiveTab((tab, tabs) => {
 		executeTab(tab);
 	});
 }
 
+/* execute tabs to the LEFT of the active tab */
 function tabsLeft() {
-	callOnActiveTab((tab, tabs) => {
-		debug(`Starting at id: ${tab.id}, index: ${tab.index}`);
-		let next = tab.index;
-		if(ACTIVE_TAB == false) {
-			if((tab.index - 1) < 0) {
-				// already at last tab
-				debug("Nothing to do.");
+	var returnNow = false;
+	getCurrentWindowTabs().then((tabs) => {
+		for (var tab of tabs) {
+			if (tab.active) {
+				returnNow = true;
+				if (false == ACTIVE_TAB) {
+					return;
+				}
+			}
+			executeTab(tab);
+			if (returnNow) {
 				return;
 			}
-			next = tab.index - 1;
-		}
-		for (let i = next; i >= 0; i--) {
-			executeTab(tabs[i]);
 		}
 	});
-}
+};
 
+/* execute tabs to the right of the active tab */
 function tabsRight() {
 	callOnActiveTab((tab, tabs) => {
 		debug(`Starting at id: ${tab.id}, index: ${tab.index}`);
@@ -163,6 +174,7 @@ function callOnActiveTab(callback) {
 /* receive image from content-script (Tab) */
 function downloadImage(image, tabid, callback) {
 	if (!image) {
+		debug(`No image found`);
 		IMAGES_SKIPPED++;
 		return false;
 	}

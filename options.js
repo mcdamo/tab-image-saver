@@ -6,6 +6,7 @@ function saveOptions(e) {
 		conflictAction: document.querySelector("input[name=conflictAction]:checked").value,
 		// checkbox
 		activeTab: document.querySelector("#activeTab").checked,
+		tabImage: document.querySelector("#tabImage").checked,
 		closeTab: document.querySelector("#closeTab").checked,
 		activeTab: document.querySelector("#activeTab").checked,
 		removeEnded: document.querySelector("#removeEnded").checked,
@@ -31,6 +32,7 @@ function restoreOptions() {
 		// checkbox
 		document.querySelector("#conflictAction-"+result.conflictAction).checked = true;
 		document.querySelector("#activeTab").checked = result.activeTab;
+		document.querySelector("#tabImage").checked = result.tabImage;
 		document.querySelector("#closeTab").checked = result.closeTab;
 		if (null == result.notifyOnEnded) {
 			result.notifyOnEnded = true;

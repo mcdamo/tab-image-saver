@@ -14,9 +14,7 @@
 		var maxImage = null;
 
 		// Iterate through all the images.
-		var imgElements = document.getElementsByTagName('img');
-		for (var index in imgElements) {
-			var img = imgElements[index];
+		for (var img of document.images) {
 			var currDimension = img.width * img.height;
 			if (currDimension  > maxDimension){
 				maxDimension = currDimension
@@ -48,7 +46,7 @@
 		var sending = browser.runtime.sendMessage({
 			image: e
 		});
-		sending.then(handleResponse, handleError);  
+		sending.then(handleResponse, handleError);
 	}
 
 	notifyBackgroundPage(getMaxImage());
