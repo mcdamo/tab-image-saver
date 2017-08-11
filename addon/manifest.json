@@ -1,9 +1,19 @@
 {
   "manifest_version": 2,
   "name": "Tab Image Saver",
-  "version": "1.1.0",
-  "description": "Save largest image from each tab",
-  "homepage_url": "https://github.com/mcdamo/tab-image-saver",
+  "applications": {
+    "gecko": {
+      "strict_min_version": "48.0",
+      "id": "tab-image-saver@mcdamo.addons.mozilla.org"
+    }
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "notifications",
+    "downloads",
+    "<all_urls>"
+  ],
   "icons": {
     "16": "icons/down-16.png",
     "32": "icons/down-32.png",
@@ -11,7 +21,6 @@
     "64": "icons/down-64.png",
     "96": "icons/down-96.png"
   },
-
   "browser_action": {
     "default_icon": {
       "16": "icons/down-16.png",
@@ -23,28 +32,15 @@
     "default_title": "Tab Image Saver",
     "browser_style": true
   },
-
   "options_ui": {
     "page": "options.html",
     "browser_style": true
   },
-
-  "permissions": [
-    "tabs",
-    "storage",
-    "notifications",
-    "downloads",
-    "<all_urls>"
-  ],
-
   "background": {
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
-
-  "applications": {
-    "gecko": {
-      "id": "tab-image-saver@mcdamo.addons.mozilla.org",
-      "strict_min_version": "48.0"
-    }
-  }
+  "version": "1.1.1a",
+  "homepage_url": "https://github.com/mcdamo/tab-image-saver"
 }
