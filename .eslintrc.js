@@ -7,7 +7,8 @@ module.exports = {
     "browser": true,
     "es6": true,
     "mocha": true,
-    "node": true
+    "node": true,
+    "webextensions": true
   },
   "globals": {"chrome": true},
   "plugins": [
@@ -76,7 +77,7 @@ module.exports = {
     "key-spacing": [2, {"beforeColon": false, "afterColon": true}],
     "keyword-spacing": 2,
     "linebreak-style": [2, "unix"],
-    "lines-around-comment": [2, {"beforeBlockComment": true, "allowObjectStart": true}],
+    "lines-around-comment": [2, {"beforeBlockComment": false, "allowObjectStart": true}],
     "max-depth": [2, 4],
     "max-len": 0,
     "max-lines": 0,
@@ -99,7 +100,7 @@ module.exports = {
     "no-class-assign": 2,
     "no-cond-assign": 2,
     "no-confusing-arrow": 2,
-    "no-console": 2,
+    "no-console": 0,
     "no-const-assign": 2,
     "no-constant-condition": 2,
     "no-continue": 0,
