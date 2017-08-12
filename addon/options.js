@@ -19,20 +19,25 @@ function saveOptions(e) {
 
 function restoreOptions() {
   function setCurrentChoice(result) {
+    for (const i in result) {
+      if (Object.prototype.hasOwnProperty.call(result, i)) {
+        console.log(`${i}: ${result[i]}`);
+      }
+    }
     // radio
-    if (result.action === null) {
+    if (result.action === undefined) {
       result.action = "current";
     }
-    document.querySelector(`#action-${result.action}`).checked = true;
-    if (result.conflictAction === null) {
+    document.querySelector(`#action_${result.action}`).checked = true;
+    if (result.conflictAction === undefined) {
       result.conflictAction = "uniquify";
     }
     // checkbox
-    document.querySelector(`#conflictAction-${result.conflictAction}`).checked = true;
+    document.querySelector(`#conflictAction_${result.conflictAction}`).checked = true;
     document.querySelector("#activeTab").checked = result.activeTab;
     document.querySelector("#tabImage").checked = result.tabImage;
     document.querySelector("#closeTab").checked = result.closeTab;
-    if (result.notifyOnEnded === null) {
+    if (result.notifyOnEnded === undefined) {
       result.notifyOnEnded = true;
     }
     document.querySelector("#notifyEnded").checked = result.notifyEnded;

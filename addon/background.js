@@ -24,8 +24,10 @@ function getOptions(callback) {
   let getting = browser.storage.local.get();
   getting.then(result => {
     debug("Options: ");
-    for (const [key, value] of result) {
-      debug(`${key}: ${value}`);
+    for (const i in result) {
+      if (Object.prototype.hasOwnProperty.call(result, i)) {
+        debug(`${i}: ${result[i]}`);
+      }
     }
     ACTION = result.action || "current";
     ACTIVE_TAB = result.activeTab;
@@ -51,8 +53,7 @@ function getOptions(callback) {
     // notify("error", {
     //      "title": "Error",
     //      "content": "
-    debug(`OptionsError: ${error}`);
-    // console.warn, console.error
+    console.error(`OptionsError: ${error}`);
     return false;
   });
 }
@@ -64,10 +65,11 @@ function executeTab(tab) {
   let executing = browser.tabs.executeScript(tabid, {file: CONTENT_SCRIPT});
   executing.then(result => {
     // TODO: returned value from executed script
-    debug(`executeTab: ${result}`);
+    debug(`executeTab: ${result}`); // ${result[0].src}`);
     return result;
   }).catch(error => {
     // TODO
+    console.warn(`Error executing tab ${tabid}: ${error}`);
   });
 }
 
@@ -85,6 +87,7 @@ function callOnActiveTab(callback) {
     return;
   }).catch(error => {
     // TODO
+    console.warn(`Error getting window tabs: ${error}`);
   });
 }
 
@@ -100,6 +103,7 @@ function tabsAll() {
     return;
   }).catch(error => {
     // TODO
+    console.warn(`Error getting window tabs: ${error}`);
   });
 }
 
@@ -129,6 +133,7 @@ function tabsLeft() {
     return;
   }).catch(error => {
     // TODO
+    console.warn(`Error calling active tab: ${error}`);
   });
 }
 
@@ -181,6 +186,7 @@ function onDownloadStarted(dlid, tabid, path, callback) {
       return;
     }).catch(error => {
       // TODO
+      console.error(`Failed removing tab ${tabid}: ${error}`);
     });
   }
   if (REMOVE_ENDED) {
