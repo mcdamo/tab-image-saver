@@ -58,17 +58,102 @@ function getOptions(callback) {
   });
 }
 
+function onDownloadStarted(dlid, tabid, path, callback) {
+  IMAGES_SAVED++;
+  debug(`Download(${IMAGES_SAVED}) ${path}`);
+  if (CLOSE_TAB) {
+    let removing = browser.tabs.remove(tabid);
+    removing.then(result => {
+      // removed
+      debug(`Tab removed ${tabid}`);
+      return;
+    }).catch(error => {
+      // TODO
+      console.error(`Failed removing tab ${tabid}: ${error}`);
+    });
+  }
+  if (REMOVE_ENDED) {
+    browser.downloads.erase({"id": dlid});
+  }
+  callback();
+}
+function onDownloadFailed(e, path, callback) {
+  IMAGES_SKIPPED++;
+  console.error(`Download failed (${path}): ${e}`);
+  callback();
+}
+
+/* receive image from content-script (Tab) */
+function downloadImage(image, tabid, callback) {
+  if (!image) {
+    debug("No image found");
+    IMAGES_SKIPPED++;
+    return false;
+  }
+  debug(`${image.width}x${image.height} ${image.src}`);
+  let path = DOWNLOAD_PATH;
+  let url = image.src;
+  if (image.width < MIN_WIDTH || image.height < MIN_HEIGHT) {
+    debug("Dimensions smaller than required, not saving");
+    IMAGES_SKIPPED++;
+    return false;
+  }
+  path += url.replace(/^.*[/\\]/, ""); // append filename from url
+  let downloading = browser.downloads.download({
+    url,
+    filename: path,
+    // saveAs: false, // not required, min_ver FF52
+    conflictAction: CONFLICT_ACTION
+  });
+  downloading.then(dlid => onDownloadStarted(dlid, tabid, path, callback))
+    .catch(error => onDownloadFailed(error, path, callback));
+  return true;
+}
+
+function notify(id, message) {
+  return browser.notifications.create(id, {
+    "type": "basic",
+    "iconUrl": browser.extension.getURL("icons/down-48.png"),
+    "title": message.title,
+    "message": message.content
+  });
+}
+
+function notifyFinished()
+{
+  if (!NOTIFY_ENDED) {
+    return;
+  }
+  if (TABS_LOADED !== TABS_ENDED) {
+    return;
+  }
+  if (TABS_LOADED !== (IMAGES_SAVED + IMAGES_SKIPPED)) {
+    return;
+  }
+  notify("finished", {
+    title: "Tab Image Saver",
+    content: `${IMAGES_SAVED} downloaded`
+  });
+  // setTimeout(browser.notifications.clear('finished'), 4000);
+}
+
 function executeTab(tab) {
   TABS_LOADED++;
   let tabid = tab.id;
   debug(`Sending tab ${tabid} (LOADED ${TABS_LOADED}): ${CONTENT_SCRIPT}`);
   let executing = browser.tabs.executeScript(tabid, {file: CONTENT_SCRIPT});
   executing.then(result => {
-    // TODO: returned value from executed script
-    debug(`executeTab: ${result}`); // ${result[0].src}`);
+    TABS_ENDED++;
+    debug(`Response from tab ${tabid} (ENDED ${TABS_ENDED})`);
+    if (downloadImage(result[0], tabid, notifyFinished)) {
+      // do nothing
+    } else {
+      notifyFinished();
+    }
     return result;
   }).catch(error => {
     // TODO
+    TABS_ENDED++;
     console.warn(`Error executing tab ${tabid}: ${error}`);
   });
 }
@@ -175,101 +260,6 @@ function executeTabs() {
   }
 }
 
-function onDownloadStarted(dlid, tabid, path, callback) {
-  IMAGES_SAVED++;
-  debug(`Download(${IMAGES_SAVED}) ${path}`);
-  if (CLOSE_TAB) {
-    let removing = browser.tabs.remove(tabid);
-    removing.then(result => {
-      // removed
-      debug(`Tab removed ${tabid}`);
-      return;
-    }).catch(error => {
-      // TODO
-      console.error(`Failed removing tab ${tabid}: ${error}`);
-    });
-  }
-  if (REMOVE_ENDED) {
-    browser.downloads.erase({"id": dlid});
-  }
-  callback();
-}
-function onDownloadFailed(e, path, callback) {
-  IMAGES_SKIPPED++;
-  console.error(`Download failed (${path}): ${e}`);
-  callback();
-}
-
-/* receive image from content-script (Tab) */
-function downloadImage(image, tabid, callback) {
-  if (!image) {
-    debug("No image found");
-    IMAGES_SKIPPED++;
-    return false;
-  }
-  debug(`${image.width}x${image.height} ${image.src}`);
-  let path = DOWNLOAD_PATH;
-  let url = image.src;
-  if (image.width < MIN_WIDTH || image.height < MIN_HEIGHT) {
-    debug("Dimensions smaller than required, not saving");
-    IMAGES_SKIPPED++;
-    return false;
-  }
-  path += url.replace(/^.*[/\\]/, ""); // append filename from url
-  let downloading = browser.downloads.download({
-    url,
-    filename: path,
-    // saveAs: false, // not required, min_ver FF52
-    conflictAction: CONFLICT_ACTION
-  });
-  // downloading.then(
-  //  function(dlid) { onDownloadStarted(dlid, tabid, path, callback); },
-  //  function(e) { onDownloadFailed(e, path, callback); }
-  // );
-  downloading.then(dlid => onDownloadStarted(dlid, tabid, path, callback))
-    .catch(error => onDownloadFailed(error, path, callback));
-  return true;
-}
-
-function notify(id, message) {
-  return browser.notifications.create(id, {
-    "type": "basic",
-    "iconUrl": browser.extension.getURL("icons/down-48.png"),
-    "title": message.title,
-    "message": message.content
-  });
-}
-
-function notifyFinished()
-{
-  if (!NOTIFY_ENDED) {
-    return;
-  }
-  if (TABS_LOADED !== TABS_ENDED) {
-    return;
-  }
-  if (TABS_LOADED !== (IMAGES_SAVED + IMAGES_SKIPPED)) {
-    return;
-  }
-  notify("finished", {
-    title: "Tab Image Saver",
-    content: `${IMAGES_SAVED} downloaded`
-  });
-  // setTimeout(browser.notifications.clear('finished'), 4000);
-}
-
-function handleMessage(request, sender, sendResponse) {
-  TABS_ENDED++;
-  debug(`Response from tab ${sender.tab.id} (ENDED ${TABS_ENDED})`);
-  if (downloadImage(request.image, sender.tab.id, notifyFinished)) {
-    //  sendResponse({
-    //    response: "Thanks for the image"
-    //  });
-  } else {
-    notifyFinished();
-  }
-}
-
 function init() {
   TABS_LOADED = 0;
   TABS_ENDED = 0;
@@ -277,7 +267,5 @@ function init() {
   IMAGES_SKIPPED = 0;
   getOptions(executeTabs);
 }
-
-browser.runtime.onMessage.addListener(handleMessage);
 
 browser.browserAction.onClicked.addListener(init);
