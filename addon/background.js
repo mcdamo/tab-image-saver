@@ -16,37 +16,23 @@ let TABS_ENDED = 0; // number of tabs returned a message
 let IMAGES_SAVED = 0; // valid images saved
 let IMAGES_SKIPPED = 0; // invalid images
 
-function debug(message) {
-  console.log(message);
-}
-
 function getOptions(callback) {
   let getting = browser.storage.local.get();
   getting.then(result => {
-    debug("Options: ");
-    for (const i in result) {
-      if (Object.prototype.hasOwnProperty.call(result, i)) {
-        debug(`${i}: ${result[i]}`);
-      }
-    }
+    console.log("Loaded Options:");
+    console.log(result);
     ACTION = result.action || "current";
     ACTIVE_TAB = result.activeTab;
     CLOSE_TAB = result.closeTab;
     DOWNLOAD_PATH = result.downloadPath || "";
-    if (DOWNLOAD_PATH.length > 0) {
-      DOWNLOAD_PATH += "/";
-    }
+    if (DOWNLOAD_PATH.length > 0) {DOWNLOAD_PATH += "/";}
     CONFLICT_ACTION = result.conflictAction || "uniquify";
     MIN_WIDTH = result.minWidth || "100";
     MIN_HEIGHT = result.minHeight || "100";
-    if (result.notifyEnded === null) {
-      result.notifyEnded = true;
-    }
+    if (result.notifyEnded === null) {result.notifyEnded = true;}
     NOTIFY_ENDED = result.notifyEnded;
     REMOVE_ENDED = result.removeEnded;
-    if (result.tabImage) {
-      CONTENT_SCRIPT = SCRIPT_TABIMAGE;
-    }
+    if (result.tabImage) {CONTENT_SCRIPT = SCRIPT_TABIMAGE;}
     callback();
     return;
   }).catch(error => {
@@ -60,12 +46,12 @@ function getOptions(callback) {
 
 function onDownloadStarted(dlid, tabid, path, callback) {
   IMAGES_SAVED++;
-  debug(`Download(${IMAGES_SAVED}) ${path}`);
+  console.log(`Download(${IMAGES_SAVED}) ${path}`);
   if (CLOSE_TAB) {
     let removing = browser.tabs.remove(tabid);
     removing.then(result => {
       // removed
-      debug(`Tab removed ${tabid}`);
+      console.log(`Tab removed ${tabid}`);
       return;
     }).catch(error => {
       // TODO
@@ -86,15 +72,15 @@ function onDownloadFailed(e, path, callback) {
 /* receive image from content-script (Tab) */
 function downloadImage(image, tabid, callback) {
   if (!image) {
-    debug("No image found");
+    console.log("No image found");
     IMAGES_SKIPPED++;
     return false;
   }
-  debug(`${image.width}x${image.height} ${image.src}`);
+  console.log(`${image.width}x${image.height} ${image.src}`);
   let path = DOWNLOAD_PATH;
   let url = image.src;
   if (image.width < MIN_WIDTH || image.height < MIN_HEIGHT) {
-    debug("Dimensions smaller than required, not saving");
+    console.log("Dimensions smaller than required, not saving");
     IMAGES_SKIPPED++;
     return false;
   }
@@ -140,11 +126,11 @@ function notifyFinished()
 function executeTab(tab) {
   TABS_LOADED++;
   let tabid = tab.id;
-  debug(`Sending tab ${tabid} (LOADED ${TABS_LOADED}): ${CONTENT_SCRIPT}`);
+  console.log(`Sending tab ${tabid} (LOADED ${TABS_LOADED}): ${CONTENT_SCRIPT}`);
   let executing = browser.tabs.executeScript(tabid, {file: CONTENT_SCRIPT});
   executing.then(result => {
     TABS_ENDED++;
-    debug(`Response from tab ${tabid} (ENDED ${TABS_ENDED})`);
+    console.log(`Response from tab ${tabid} (ENDED ${TABS_ENDED})`);
     if (downloadImage(result[0], tabid, notifyFinished)) {
       // do nothing
     } else {
@@ -172,7 +158,7 @@ function callOnActiveTab(callback) {
     return;
   }).catch(error => {
     // TODO
-    console.warn(`Error getting window tabs: ${error}`);
+    console.error(`Error getting window tabs: ${error}`);
   });
 }
 
@@ -188,7 +174,7 @@ function tabsAll() {
     return;
   }).catch(error => {
     // TODO
-    console.warn(`Error getting window tabs: ${error}`);
+    console.error(`Error getting window tabs: ${error}`);
   });
 }
 
@@ -218,19 +204,19 @@ function tabsLeft() {
     return;
   }).catch(error => {
     // TODO
-    console.warn(`Error calling active tab: ${error}`);
+    console.error(`Error calling active tab: ${error}`);
   });
 }
 
 /* execute tabs to the right of the active tab */
 function tabsRight() {
   callOnActiveTab((tab, tabs) => {
-    debug(`Starting at id: ${tab.id}, index: ${tab.index}`);
+    console.log(`Starting at id: ${tab.id}, index: ${tab.index}`);
     let next = tab.index;
     if (!ACTIVE_TAB) {
       if ((tab.index + 1) === tabs.length) {
         // already at last tab
-        debug("Nothing to do.");
+        console.log("Nothing to do.");
         return;
       }
       next = tab.index + 1;
@@ -242,7 +228,7 @@ function tabsRight() {
 }
 
 function executeTabs() {
-  debug(`Action: ${ACTION}`);
+  console.log(`Action: ${ACTION}`);
   switch (ACTION) {
     case "all":
       tabsAll();

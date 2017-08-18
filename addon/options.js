@@ -19,11 +19,7 @@ function saveOptions(e) {
 
 function restoreOptions() {
   function setCurrentChoice(result) {
-    for (const i in result) {
-      if (Object.prototype.hasOwnProperty.call(result, i)) {
-        console.log(`${i}: ${result[i]}`);
-      }
-    }
+    console.log(result);
     // radio
     if (result.action === undefined) {
       result.action = "current";
