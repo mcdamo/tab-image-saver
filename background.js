@@ -190,7 +190,7 @@ function downloadImage(image, tabid, callback) {
 	var downloading = browser.downloads.download({
 		url: url,
 		filename: path,
-		//saveAs: false, // not required, min_ver FF52
+		saveAs: false, // required as of FF58
 		conflictAction: CONFLICT_ACTION
 	});
 	downloading.then(
