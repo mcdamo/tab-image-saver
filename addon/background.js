@@ -88,7 +88,7 @@ function downloadImage(image, tabid, callback) {
   let downloading = browser.downloads.download({
     url,
     filename: path,
-    // saveAs: false, // not required, min_ver FF52
+    saveAs: false, // required from FF58, min_ver FF52
     conflictAction: CONFLICT_ACTION
   });
   downloading.then(dlid => onDownloadStarted(dlid, tabid, path, callback))
