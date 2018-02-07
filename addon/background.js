@@ -64,14 +64,28 @@ function downloadComplete(dlid, tabid) {
   }
 }
 
+/* check Download was instigated by this webext and is nonzero in size */
+function verifyDownloads(downloads) {
+  for (let download of downloads) {
+    let dlid = download.id;
+    if (DOWNLOADS[dlid] !== undefined) {
+      if (download.fileSize > 0 && download.fileSize === download.totalBytes) {
+        downloadComplete(dlid, DOWNLOADS[dlid]);
+      }
+    }
+  }
+}
+
 /* catches all changes to Downloads, not just from this webext */
 function onDownloadChanged(delta) {
   if (delta.state && delta.state.current === "complete") {
-    console.log(`Download ${delta.id} is ${delta.state.current}.`);
     let dlid = delta.id;
-    if (DOWNLOADS[dlid] !== undefined) {
-      downloadComplete(dlid, DOWNLOADS[dlid]);
-    }
+    let download = browser.downloads.search({"id": dlid});
+    download.then(result => verifyDownloads(result))
+      .catch(error => {
+      // TODO
+        console.error(`Failed searching download ${dlid}: ${error}`);
+      });
   }
 }
 
