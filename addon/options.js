@@ -4,10 +4,10 @@ function saveOptions(e) {
   browser.storage.local.set({
     // radio
     action: document.querySelector("input[name=action]:checked").value,
+    filter: document.querySelector("input[name=filter]:checked").value,
     conflictAction: document.querySelector("input[name=conflictAction]:checked").value,
     // checkbox
     activeTab: document.querySelector("#activeTab").checked,
-    tabImage: document.querySelector("#tabImage").checked,
     closeTab: document.querySelector("#closeTab").checked,
     notifyEnded: document.querySelector("#notifyEnded").checked,
     removeEnded: document.querySelector("#removeEnded").checked,
@@ -27,13 +27,16 @@ function restoreOptions() {
       result.action = "current";
     }
     document.querySelector(`#action_${result.action}`).checked = true;
+    if (result.filter === undefined) {
+      result.filter = "max";
+    }
+    document.querySelector(`#filter_${result.filter}`).checked = true;
     if (result.conflictAction === undefined) {
       result.conflictAction = "uniquify";
     }
     // checkbox
     document.querySelector(`#conflictAction_${result.conflictAction}`).checked = true;
     document.querySelector("#activeTab").checked = result.activeTab;
-    document.querySelector("#tabImage").checked = result.tabImage;
     document.querySelector("#closeTab").checked = result.closeTab;
     if (result.notifyOnEnded === undefined) {
       result.notifyOnEnded = true;
