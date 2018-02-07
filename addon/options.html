@@ -9,7 +9,7 @@
 <body>
   <form>
 <p>
-	<legend>Default action</legend>
+	<legend>Tab direction</legend>
 	<label><input type="radio" name="action" value="current" id="action_current" >Current tab</label>
 	<label><input type="radio" name="action" value="left" id="action_left" >Left of current tab</label>
 	<label><input type="radio" name="action" value="right" id="action_right" >Right of current tab</label>
@@ -19,16 +19,20 @@
       <label><input type="checkbox" id="activeTab" >Include current tab</label>
 </p>
 <p>
-      <label><input type="checkbox" id="tabImage" >Restrict to image tabs</label> (only save tabs with direct images, ignore tabs with webpages)
+	<legend>Filter</legend>
+	<label><input type="radio" name="filter" value="max" id="filter_max" >Largest image</label>
+	<label><input type="radio" name="filter" value="all" id="filter_all" >All images</label>
+	<label><input type="radio" name="filter" value="direct" id="filter_direct" >Image tabs only</label> 
+ (ignore tabs with webpages)
 </p>
 <p>
-	<legend>Dimensions (pixels)</legend>
-      <label>Min width
+	<legend>Minimum dimensions (pixels)</legend>
+      <label>Width
       <input type="text" id="minWidth" >
       </label>
 </p>
 <p>
-      <label>Min height
+      <label>Height
       <input type="text" id="minHeight" >
       </label>
 </p>
@@ -44,14 +48,14 @@
 	<label><input type="radio" name="conflictAction" value="overwrite" id="conflictAction_overwrite" >Overwrite</label>
 </p>
 <p>
-	<legend>Finished downloading</legend>
-      <label><input type="checkbox" id="closeTab" >Close tabs</label>
+	<legend>Advanced options</legend>
+      <label><input type="checkbox" id="closeTab" >Close tabs after saving</label>
 </p>
 <p>
-      <label><input type="checkbox" id="removeEnded" >Hide from download history</label>
+      <label><input type="checkbox" id="notifyEnded" >Show notification popups</label>
 </p>
 <p>
-      <label><input type="checkbox" id="notifyEnded" >Show notification popup</label>
+      <label><input type="checkbox" id="removeEnded" >Incognito mode</label> (hide from download history)
 </p>
   </form>
   <script src="options.js"></script>
