@@ -15,6 +15,7 @@ let TABS_LOADED = 0; // number of tabs executed
 let TABS_ENDED = 0; // number of tabs returned a message
 let IMAGES_SAVED = 0; // valid images saved
 let IMAGES_SKIPPED = 0; // invalid images
+let DOWNLOADS = [];
 
 function getOptions(callback) {
   let getting = browser.storage.local.get();
@@ -44,9 +45,9 @@ function getOptions(callback) {
   });
 }
 
-function onDownloadStarted(dlid, tabid, path, callback) {
+/* call after download completes to cleanup and close tab */
+function downloadComplete(dlid, tabid) {
   IMAGES_SAVED++;
-  console.log(`Download(${IMAGES_SAVED}) ${path}`);
   if (CLOSE_TAB) {
     let removing = browser.tabs.remove(tabid);
     removing.then(result => {
@@ -61,8 +62,26 @@ function onDownloadStarted(dlid, tabid, path, callback) {
   if (REMOVE_ENDED) {
     browser.downloads.erase({"id": dlid});
   }
+}
+
+/* catches all changes to Downloads, not just from this webext */
+function onDownloadChanged(delta) {
+  if (delta.state && delta.state.current === "complete") {
+    console.log(`Download ${delta.id} is ${delta.state.current}.`);
+    let dlid = delta.id;
+    if (DOWNLOADS[dlid] !== undefined) {
+      downloadComplete(dlid, DOWNLOADS[dlid]);
+    }
+  }
+}
+
+/* download started - store reference to tabid in global array */
+function onDownloadStarted(dlid, tabid, path, callback) {
+  console.log(`Download(${IMAGES_SAVED}) ${path}`);
+  DOWNLOADS[dlid] = tabid;
   callback();
 }
+
 function onDownloadFailed(e, path, callback) {
   IMAGES_SKIPPED++;
   console.error(`Download failed (${path}): ${e}`);
@@ -300,4 +319,5 @@ function init() {
   getOptions(executeTabs);
 }
 
+browser.downloads.onChanged.addListener(onDownloadChanged);
 browser.browserAction.onClicked.addListener(init);
