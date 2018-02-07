@@ -69,22 +69,12 @@ function onDownloadFailed(e, path, callback) {
   callback();
 }
 
-/* receive image from content-script (Tab) */
-function downloadImage(image, tabid, callback) {
-  if (!image) {
-    console.log("No image found");
-    IMAGES_SKIPPED++;
-    return false;
-  }
-  console.log(`${image.width}x${image.height} ${image.src}`);
-  let path = DOWNLOAD_PATH;
-  let url = image.src;
-  if (image.width < MIN_WIDTH || image.height < MIN_HEIGHT) {
-    console.log("Dimensions smaller than required, not saving");
-    IMAGES_SKIPPED++;
-    return false;
-  }
-  path += url.replace(/^.*[/\\]/, ""); // append filename from url
+function isValidFilename(filename) {
+  return (filename.length > 0) && (!/[*"/\\:<>|?]/.test(filename));
+}
+
+/* do the download */
+function download(url, path, tabid, callback) {
   let downloading = browser.downloads.download({
     url,
     filename: path,
@@ -93,6 +83,62 @@ function downloadImage(image, tabid, callback) {
   });
   downloading.then(dlid => onDownloadStarted(dlid, tabid, path, callback))
     .catch(error => onDownloadFailed(error, path, callback));
+}
+
+/* now using XHR for filename */
+function downloadXhr(url, tabid, callback) {
+  let xhrCallback = (function() { // catches events for: load, error, abort
+    let filename = "";
+    let disposition = this.getResponseHeader("Content-Disposition");
+    if (disposition && disposition.indexOf("filename") !== -1) {
+      let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+      let matches = filenameRegex.exec(disposition);
+      if (matches !== null && matches[1]) {
+        filename = matches[1].replace(/['"]/g, "");
+      }
+    }
+    console.log(`XHR Filename: ${filename}`);
+    if (!isValidFilename(filename)) {
+      // no filename found, so create filename from url
+      filename = url.replace(/[*"/\\:<>|?]/g, "_");
+      console.log(`No valid filename, using: ${filename}`);
+    }
+    let path = DOWNLOAD_PATH;
+    path += filename;
+    download(url, path, tabid, callback);
+  });
+  let xhr = new XMLHttpRequest();
+  xhr.open("HEAD", url);
+  xhr.addEventListener("loadend", xhrCallback);
+  xhr.send();
+  return true;
+}
+
+/* receive image from content-script (Tab) */
+function downloadImage(image, tabid, callback) {
+  if (!image) {
+    console.log("No image found");
+    IMAGES_SKIPPED++;
+    return false;
+  }
+  console.log(`${image.width}x${image.height} ${image.src}`);
+  let url = image.src;
+  if (image.width < MIN_WIDTH || image.height < MIN_HEIGHT) {
+    console.log("Dimensions smaller than required, not saving");
+    IMAGES_SKIPPED++;
+    return false;
+  }
+  let filename = url.replace(/^.*[/\\]/, "");
+  filename = filename.replace(/:.*/, ""); // Workaround for Twitter
+  console.log(`URL filename: ${filename}`);
+  if (isValidFilename(filename)) {
+    let path = DOWNLOAD_PATH;
+    path += filename;
+    download(url, path, tabid, callback);
+  } else {
+    // try to get filename using XHR
+    downloadXhr(url, tabid, callback);
+  }
   return true;
 }
 
