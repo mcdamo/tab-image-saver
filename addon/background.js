@@ -13,8 +13,10 @@ let SCRIPT_TABIMAGE = "/content-tabimage.js"; // content script to test if tab i
 let CONTENT_SCRIPT = SCRIPT_MAXIMAGE;
 let TABS_LOADED = 0; // number of tabs executed
 let TABS_ENDED = 0; // number of tabs returned a message
-let IMAGES_SAVED = 0; // valid images saved
+let IMAGES_MATCHED = 0; // valid images
 let IMAGES_SKIPPED = 0; // invalid images
+let IMAGES_SAVED = 0; // saved images
+let IMAGES_FAILED = 0; // failed downloads
 let DOWNLOADS = [];
 
 function getOptions(callback) {
@@ -45,8 +47,54 @@ function getOptions(callback) {
   });
 }
 
+function notify(id, message) {
+  let note = browser.notifications.create(id, {
+    "type": "basic",
+    "iconUrl": browser.extension.getURL("icons/down-48.png"),
+    "title": message.title,
+    "message": message.content
+  });
+  note.then(result => {
+    console.log("Note created");
+    return;
+  }).catch(error => {
+    console.error("Note failed");
+    return;
+  });
+}
+
+function notifyFinished() {
+  if (!NOTIFY_ENDED) {
+    return;
+  }
+  if (TABS_LOADED !== TABS_ENDED) {
+    return;
+  }
+  if (TABS_LOADED === 0) {
+    notify("finished", {
+      title: "Tab Image Saver",
+      content: "Nothing to do"
+    });
+    return;
+  }
+  if (TABS_LOADED !== (IMAGES_MATCHED + IMAGES_SKIPPED)) {
+    return;
+  }
+  console.log(`${IMAGES_MATCHED} Found, ${IMAGES_SKIPPED} Skipped /-/ ${IMAGES_SAVED} Saved, ${IMAGES_FAILED} Failed`);
+  if (IMAGES_MATCHED !== (IMAGES_SAVED + IMAGES_FAILED)) {
+    return;
+  }
+  console.log("Notify finished");
+  notify("finished", {
+    title: "Tab Image Saver",
+    content: `${IMAGES_SAVED} downloaded\n${IMAGES_SKIPPED} skipped\n${IMAGES_FAILED} failed`
+  });
+  // setTimeout(browser.notifications.clear('finished'), 4000);
+}
+
 /* call after download completes to cleanup and close tab */
 function downloadComplete(dlid, tabid) {
+  console.log(`Download ${dlid} complete`);
   IMAGES_SAVED++;
   if (CLOSE_TAB) {
     let removing = browser.tabs.remove(tabid);
@@ -62,6 +110,7 @@ function downloadComplete(dlid, tabid) {
   if (REMOVE_ENDED) {
     browser.downloads.erase({"id": dlid});
   }
+  notifyFinished();
 }
 
 /* check Download was instigated by this webext and is nonzero in size */
@@ -90,16 +139,15 @@ function onDownloadChanged(delta) {
 }
 
 /* download started - store reference to tabid in global array */
-function onDownloadStarted(dlid, tabid, path, callback) {
+function onDownloadStarted(dlid, tabid, path) {
   console.log(`Download(${IMAGES_SAVED}) ${path}`);
   DOWNLOADS[dlid] = tabid;
-  callback();
 }
 
-function onDownloadFailed(e, path, callback) {
-  IMAGES_SKIPPED++;
+function onDownloadFailed(e, path) {
+  IMAGES_FAILED++;
   console.error(`Download failed (${path}): ${e}`);
-  callback();
+  notifyFinished();
 }
 
 function isValidFilename(filename) {
@@ -107,19 +155,25 @@ function isValidFilename(filename) {
 }
 
 /* do the download */
-function download(url, path, tabid, callback) {
-  let downloading = browser.downloads.download({
-    url,
-    filename: path,
-    saveAs: false, // required from FF58, min_ver FF52
-    conflictAction: CONFLICT_ACTION
-  });
-  downloading.then(dlid => onDownloadStarted(dlid, tabid, path, callback))
-    .catch(error => onDownloadFailed(error, path, callback));
+function download(url, path, tabid) {
+  try {
+    let downloading = browser.downloads.download({
+      url,
+      filename: path,
+      saveAs: false, // required from FF58, min_ver FF52
+      conflictAction: CONFLICT_ACTION
+    });
+    downloading.then(dlid => onDownloadStarted(dlid, tabid, path))
+      .catch(error => onDownloadFailed(error, path));
+  } catch (error) {
+    // catch errors related to Access Denied for data:image URLs
+    onDownloadFailed(error, path);
+    return;
+  }
 }
 
 /* now using XHR for filename */
-function downloadXhr(url, tabid, callback) {
+function downloadXhr(url, tabid) {
   let xhrCallback = (function() { // catches events for: load, error, abort
     let filename = "";
     let disposition = this.getResponseHeader("Content-Disposition");
@@ -133,14 +187,21 @@ function downloadXhr(url, tabid, callback) {
     console.log(`XHR Filename: ${filename}`);
     if (!isValidFilename(filename)) {
       // no filename found, so create filename from url
-      filename = url.replace(/\?.*/, ""); // Remove query string
+      filename = url.replace(/^.*[/\\]/, "");
+      filename = filename.replace(/\?.*/, ""); // Remove query string
       filename = filename.replace(/:.*/, ""); // Workaround for Twitter
-      filename = filename.replace(/[*"/\\:<>|?]/g, "_"); // Remove invalid characters
-      console.log(`No valid filename, using: ${filename}`);
+      if (!isValidFilename(filename)) {
+        // no filename found from url, so use domain+path as filename
+        filename = url.replace(/\?.*/, ""); // Remove query string
+        filename = filename.replace(/:.*/, ""); // Workaround for Twitter
+        filename = filename.replace(/[*"/\\:<>|?]/g, "_"); // Remove invalid characters
+        // TODO if still no valid filename
+      }
+      console.log(`New filename: ${filename}`);
     }
     let path = DOWNLOAD_PATH;
     path += filename;
-    download(url, path, tabid, callback);
+    download(url, path, tabid);
   });
   let xhr = new XMLHttpRequest();
   xhr.open("HEAD", url);
@@ -150,7 +211,7 @@ function downloadXhr(url, tabid, callback) {
 }
 
 /* receive image from content-script (Tab) */
-function downloadImage(image, tabid, callback) {
+function downloadImage(image, tabid) {
   if (!image) {
     console.log("No image found");
     IMAGES_SKIPPED++;
@@ -163,45 +224,14 @@ function downloadImage(image, tabid, callback) {
     IMAGES_SKIPPED++;
     return false;
   }
-  let filename = url.replace(/^.*[/\\]/, "");
-  filename = filename.replace(/\?.*/, ""); // Remove query string
-  filename = filename.replace(/:.*/, ""); // Workaround for Twitter
-  console.log(`URL filename: ${filename}`);
-  if (isValidFilename(filename)) {
-    let path = DOWNLOAD_PATH;
-    path += filename;
-    download(url, path, tabid, callback);
-  } else {
-    // try to get filename using XHR
-    downloadXhr(url, tabid, callback);
+  IMAGES_MATCHED++;
+  if (url.indexOf("data:") === 0) {
+    IMAGES_FAILED++;
+    console.log("Image is embedded"); // TODO support embedded
+    return false;
   }
+  downloadXhr(url, tabid);
   return true;
-}
-
-function notify(id, message) {
-  return browser.notifications.create(id, {
-    "type": "basic",
-    "iconUrl": browser.extension.getURL("icons/down-48.png"),
-    "title": message.title,
-    "message": message.content
-  });
-}
-
-function notifyFinished() {
-  if (!NOTIFY_ENDED) {
-    return;
-  }
-  if (TABS_LOADED !== TABS_ENDED) {
-    return;
-  }
-  if (TABS_LOADED !== (IMAGES_SAVED + IMAGES_SKIPPED)) {
-    return;
-  }
-  notify("finished", {
-    title: "Tab Image Saver",
-    content: `${IMAGES_SAVED} downloaded`
-  });
-  // setTimeout(browser.notifications.clear('finished'), 4000);
 }
 
 function executeTab(tab) {
@@ -212,11 +242,8 @@ function executeTab(tab) {
   executing.then(result => {
     TABS_ENDED++;
     console.log(`Response from tab ${tabid} (ENDED ${TABS_ENDED})`);
-    if (downloadImage(result[0], tabid, notifyFinished)) {
-      // do nothing
-    } else {
-      notifyFinished();
-    }
+    downloadImage(result[0], tabid);
+    notifyFinished();
     return result;
   }).catch(error => {
     // TODO
@@ -274,6 +301,7 @@ function tabsLeft() {
       if (tab.active) {
         returnNow = true;
         if (!ACTIVE_TAB) {
+          notifyFinished();
           return;
         }
       }
@@ -298,6 +326,7 @@ function tabsRight() {
       if ((tab.index + 1) === tabs.length) {
         // already at last tab
         console.log("Nothing to do.");
+        notifyFinished();
         return;
       }
       next = tab.index + 1;
@@ -330,8 +359,10 @@ function executeTabs() {
 function init() {
   TABS_LOADED = 0;
   TABS_ENDED = 0;
-  IMAGES_SAVED = 0;
+  IMAGES_MATCHED = 0;
   IMAGES_SKIPPED = 0;
+  IMAGES_SAVED = 0;
+  IMAGES_FAILED = 0;
   getOptions(executeTabs);
 }
 
