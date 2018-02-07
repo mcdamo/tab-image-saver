@@ -1,4 +1,5 @@
 function saveOptions(e) {
+  console.log("Save options");
   e.preventDefault();
   browser.storage.local.set({
     // radio
@@ -19,6 +20,7 @@ function saveOptions(e) {
 
 function restoreOptions() {
   function setCurrentChoice(result) {
+    console.log("Load options");
     console.log(result);
     // radio
     if (result.action === undefined) {
@@ -54,4 +56,4 @@ function restoreOptions() {
 }
 
 document.addEventListener("DOMContentLoaded", restoreOptions);
-document.querySelector("form").addEventListener("submit", saveOptions);
+document.querySelector("form").addEventListener("change", saveOptions);
