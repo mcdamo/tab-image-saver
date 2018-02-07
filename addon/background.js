@@ -133,7 +133,9 @@ function downloadXhr(url, tabid, callback) {
     console.log(`XHR Filename: ${filename}`);
     if (!isValidFilename(filename)) {
       // no filename found, so create filename from url
-      filename = url.replace(/[*"/\\:<>|?]/g, "_");
+      filename = url.replace(/\?.*/, ""); // Remove query string
+      filename = filename.replace(/:.*/, ""); // Workaround for Twitter
+      filename = filename.replace(/[*"/\\:<>|?]/g, "_"); // Remove invalid characters
       console.log(`No valid filename, using: ${filename}`);
     }
     let path = DOWNLOAD_PATH;
@@ -162,6 +164,7 @@ function downloadImage(image, tabid, callback) {
     return false;
   }
   let filename = url.replace(/^.*[/\\]/, "");
+  filename = filename.replace(/\?.*/, ""); // Remove query string
   filename = filename.replace(/:.*/, ""); // Workaround for Twitter
   console.log(`URL filename: ${filename}`);
   if (isValidFilename(filename)) {
@@ -184,8 +187,7 @@ function notify(id, message) {
   });
 }
 
-function notifyFinished()
-{
+function notifyFinished() {
   if (!NOTIFY_ENDED) {
     return;
   }
@@ -333,5 +335,9 @@ function init() {
   getOptions(executeTabs);
 }
 
-browser.downloads.onChanged.addListener(onDownloadChanged);
-browser.browserAction.onClicked.addListener(init);
+if (!browser.downloads.onChanged.hasListener(onDownloadChanged)) {
+  browser.downloads.onChanged.addListener(onDownloadChanged);
+}
+if (!browser.browserAction.onClicked.hasListener(init)) {
+  browser.browserAction.onClicked.addListener(init);
+}
