@@ -163,6 +163,7 @@ function download(url, path, tabid) {
       filename: path,
       saveAs: false, // required from FF58, min_ver FF52
       conflictAction: CONFLICT_ACTION,
+      headers: [{name: "cache", value: "force-cache"}],
       incognito: REMOVE_ENDED // min_ver FF57
     });
     downloading.then(dlid => onDownloadStarted(dlid, tabid, path))
@@ -199,6 +200,7 @@ function downloadXhr(url, tabid) {
         filename = filename.replace(/[*"/\\:<>|?]/g, "_"); // Remove invalid characters
         // TODO if still no valid filename
       }
+      filename = decodeURI(filename);
       console.log(`New filename: ${filename}`);
     }
     let path = DOWNLOAD_PATH;
