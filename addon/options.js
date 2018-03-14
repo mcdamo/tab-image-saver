@@ -38,8 +38,8 @@ function restoreOptions() {
     document.querySelector(`#conflictAction_${result.conflictAction}`).checked = true;
     document.querySelector("#activeTab").checked = result.activeTab;
     document.querySelector("#closeTab").checked = result.closeTab;
-    if (result.notifyOnEnded === undefined) {
-      result.notifyOnEnded = true;
+    if (result.notifyEnded === undefined) {
+      result.notifyEnded = true;
     }
     document.querySelector("#notifyEnded").checked = result.notifyEnded;
     document.querySelector("#removeEnded").checked = result.removeEnded;
