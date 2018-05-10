@@ -152,7 +152,7 @@ function onDownloadFailed(e, path) {
 }
 
 function isValidFilename(filename) {
-  return (filename.length > 0) && (!/[*"/\\:<>|?]/.test(filename));
+  return (filename.length > 0) && (!/[*\"/\\:<>|?]/.test(filename));
 }
 
 /* do the download */
