@@ -42,6 +42,18 @@
       </label>
 </p>
 <p>
+      <legend>Use image "alt" attribute for save file name, if available</legend>
+      <label>
+	<input type="checkbox" id="altIsFilename">
+	Use "alt" attribute for filename
+      </label>
+      <br/>
+      <label>
+	Optionally add file extension (e.g. ".jpg")
+	<input type="text" id="altFilenameExt"/>
+      </label>
+</p>
+<p>
 	<legend>Duplicate filename action</legend>
 	<label><input type="radio" name="conflictAction" value="uniquify" id="conflictAction_uniquify" >Rename (automatic)</label>
 	<label><input type="radio" name="conflictAction" value="overwrite" id="conflictAction_overwrite" >Overwrite</label>

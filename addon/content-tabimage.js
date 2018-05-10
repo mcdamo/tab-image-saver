@@ -5,7 +5,8 @@
       maxImage = document.images[0];
     }
     if (maxImage && maxImage.width >= window.MIN_WIDTH && maxImage.height >= window.MIN_HEIGHT) {
-      return [{src: maxImage.src}];
+      return [{src: maxImage.src,
+	       alt: maxImage.alt}];
     }
     return null;
   }

@@ -15,7 +15,8 @@
     }
     // Check if an image has been found.
     if (maxImage) {
-      return [{src: maxImage.src}];
+      return [{src: maxImage.src,
+	       alt: maxImage.alt}];
     }
     return null;
   }
