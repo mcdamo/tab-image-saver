@@ -31,6 +31,8 @@ function getOptions(callback) {
     DOWNLOAD_PATH = result.downloadPath || "";
     if (DOWNLOAD_PATH.length > 0) {DOWNLOAD_PATH += "/";}
     CONFLICT_ACTION = result.conflictAction || "uniquify";
+    ALT_IS_FILENAME = result.altIsFilename;
+    ALT_FILENAME_EXT = result.altFilenameExt;
     MIN_WIDTH = result.minWidth || "100";
     MIN_HEIGHT = result.minHeight || "100";
     if (result.notifyEnded === null) {result.notifyEnded = true;}
@@ -152,7 +154,7 @@ function onDownloadFailed(e, path) {
 }
 
 function isValidFilename(filename) {
-  return (filename.length > 0) && (!/[*"/\\:<>|?]/.test(filename));
+  return (filename.length > 0) && (!/[*\"/\\:<>|?]/.test(filename));
 }
 
 /* do the download */
@@ -176,26 +178,34 @@ function download(url, path, tabid) {
 }
 
 /* now using XHR for filename */
-function downloadXhr(url, tabid) {
+function downloadXhr(image, tabid) {
   let xhrCallback = (function() { // catches events for: load, error, abort
     let filename = "";
-    let disposition = this.getResponseHeader("Content-Disposition");
-    if (disposition && disposition.indexOf("filename") !== -1) {
-      let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-      let matches = filenameRegex.exec(disposition);
-      if (matches !== null && matches[1]) {
-        filename = matches[1].replace(/['"]/g, "");
+    if (ALT_IS_FILENAME && image.alt)
+      // append filename from alt attribute and filename extension
+      filename = image.alt + ALT_FILENAME_EXT;
+
+    if (!isValidFilename(filename)) {
+      let disposition = this.getResponseHeader("Content-Disposition");
+      if (disposition && disposition.indexOf("filename") !== -1) {
+	let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+	let matches = filenameRegex.exec(disposition);
+	if (matches !== null && matches[1]) {
+	  filename = matches[1].replace(/['"]/g, "");
+	}
       }
     }
+
     console.log(`XHR Filename: ${filename}`);
+    console.log(`XHR URL: ${image.src}`);
     if (!isValidFilename(filename)) {
       // no filename found, so create filename from url
-      filename = url.replace(/^.*[/\\]/, "");
+      filename = image.src.replace(/^.*[/\\]/, "");
       filename = filename.replace(/\?.*/, ""); // Remove query string
       filename = filename.replace(/:.*/, ""); // Workaround for Twitter
       if (!isValidFilename(filename)) {
         // no filename found from url, so use domain+path as filename
-        filename = url.replace(/\?.*/, ""); // Remove query string
+        filename = image.src.replace(/\?.*/, ""); // Remove query string
         filename = filename.replace(/:.*/, ""); // Workaround for Twitter
         filename = filename.replace(/[*"/\\:<>|?]/g, "_"); // Remove invalid characters
         // TODO if still no valid filename
@@ -205,10 +215,10 @@ function downloadXhr(url, tabid) {
     }
     let path = DOWNLOAD_PATH;
     path += filename;
-    download(url, path, tabid);
+    download(image.src, path, tabid);
   });
   let xhr = new XMLHttpRequest();
-  xhr.open("HEAD", url);
+  xhr.open("HEAD", image.src);
   xhr.addEventListener("loadend", xhrCallback);
   xhr.send();
   return true;
@@ -228,7 +238,7 @@ function downloadImages(images, tabid) {
       IMAGES_FAILED++;
       console.log("Image is embedded"); // TODO support embedded
     } else {
-      downloadXhr(url, tabid);
+      downloadXhr(image, tabid);
     }
   }
   return true;

@@ -11,10 +11,12 @@ function saveOptions(e) {
     closeTab: document.querySelector("#closeTab").checked,
     notifyEnded: document.querySelector("#notifyEnded").checked,
     removeEnded: document.querySelector("#removeEnded").checked,
+    altIsFilename: document.querySelector("#altIsFilename").checked,
     // text
     downloadPath: document.querySelector("#downloadPath").value.replace(/^[/\\]+|[/\\]+$/g, ""), // remove leading and trailing slashes
     minWidth: document.querySelector("#minWidth").value,
-    minHeight: document.querySelector("#minHeight").value
+    minHeight: document.querySelector("#minHeight").value,
+    altFilenameExt: document.querySelector("#altFilenameExt").value
   });
 }
 
@@ -43,8 +45,10 @@ function restoreOptions() {
     }
     document.querySelector("#notifyEnded").checked = result.notifyEnded;
     document.querySelector("#removeEnded").checked = result.removeEnded;
+    document.querySelector("#altIsFilename").checked = result.altIsFilename;
     // text
     document.querySelector("#downloadPath").value = result.downloadPath || "";
+    document.querySelector("#altFilenameExt").value = result.altFilenameExt || "";
     document.querySelector("#minWidth").value = result.minWidth || "100";
     document.querySelector("#minHeight").value = result.minHeight || "100";
   }
