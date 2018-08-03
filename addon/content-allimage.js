@@ -4,7 +4,10 @@
     // Iterate through all the images.
     for (let img of document.images) {
       if (img.naturalWidth >= window.MIN_WIDTH && img.naturalHeight >= window.MIN_HEIGHT) {
-        images.push({src: img.src});
+        images.push({
+          src: img.src,
+          alt: img.alt
+        });
       }
     }
     return images;

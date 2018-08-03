@@ -8,6 +8,8 @@ let MIN_WIDTH;
 let MIN_HEIGHT;
 let NOTIFY_ENDED;
 let REMOVE_ENDED;
+let ALT_IS_FILENAME;
+let ALT_FILENAME_EXT;
 let SCRIPT_MAXIMAGE = "/content-maximage.js"; // content script to find largest image
 let SCRIPT_ALLIMAGE = "/content-allimage.js"; // content script to find all images
 let SCRIPT_TABIMAGE = "/content-tabimage.js"; // content script to test if tab is a direct image
@@ -154,7 +156,7 @@ function onDownloadFailed(e, path) {
 }
 
 function isValidFilename(filename) {
-  return (filename.length > 0) && (!/[*\"/\\:<>|?]/.test(filename));
+  return (filename.length > 0) && (!/[*"/\\:<>|?]/.test(filename));
 }
 
 /* do the download */
@@ -179,25 +181,23 @@ function download(url, path, tabid) {
 
 /* now using XHR for filename */
 function downloadXhr(image, tabid) {
+  let path = DOWNLOAD_PATH;
+  let filename = "";
   let xhrCallback = (function() { // catches events for: load, error, abort
-    let filename = "";
-    if (ALT_IS_FILENAME && image.alt)
-      // append filename from alt attribute and filename extension
-      filename = image.alt + ALT_FILENAME_EXT;
-
-    if (!isValidFilename(filename)) {
-      let disposition = this.getResponseHeader("Content-Disposition");
-      if (disposition && disposition.indexOf("filename") !== -1) {
-	let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-	let matches = filenameRegex.exec(disposition);
-	if (matches !== null && matches[1]) {
-	  filename = matches[1].replace(/['"]/g, "");
-	}
+    // try getting filename from response header in XHR request
+    console.log(`XHR URL: ${image.src}`);
+    let disposition = this.getResponseHeader("Content-Disposition");
+    if (disposition && disposition.indexOf("filename") !== -1) {
+      let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+      let matches = filenameRegex.exec(disposition);
+      if (matches !== null && matches[1]) {
+        filename = matches[1].replace(/['"]/g, "");
+        console.log(`XHR Filename: ${filename}`);
       }
+    } else {
+      console.log("XHR response did not provide filename");
     }
 
-    console.log(`XHR Filename: ${filename}`);
-    console.log(`XHR URL: ${image.src}`);
     if (!isValidFilename(filename)) {
       // no filename found, so create filename from url
       filename = image.src.replace(/^.*[/\\]/, "");
@@ -211,16 +211,25 @@ function downloadXhr(image, tabid) {
         // TODO if still no valid filename
       }
       filename = decodeURI(filename);
-      console.log(`New filename: ${filename}`);
+      console.log(`Filename from url: ${filename}`);
     }
-    let path = DOWNLOAD_PATH;
     path += filename;
     download(image.src, path, tabid);
   });
-  let xhr = new XMLHttpRequest();
-  xhr.open("HEAD", image.src);
-  xhr.addEventListener("loadend", xhrCallback);
-  xhr.send();
+  if (ALT_IS_FILENAME && image.alt) {
+    // append filename from alt attribute and filename extension
+    filename = image.alt + ALT_FILENAME_EXT;
+    console.log(`Trying alt filename: ${filename}`);
+  }
+  if (isValidFilename(filename)) {
+    path += filename;
+    download(image.src, path, tabid);
+  } else {
+    let xhr = new XMLHttpRequest();
+    xhr.open("HEAD", image.src);
+    xhr.addEventListener("loadend", xhrCallback);
+    xhr.send();
+  }
   return true;
 }
 
