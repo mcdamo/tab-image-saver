@@ -5,8 +5,8 @@
 
     // Iterate through all the images.
     for (let img of document.images) {
-      if (img.width >= window.MIN_WIDTH && img.height >= window.MIN_HEIGHT) {
-        let currDimension = img.width * img.height;
+      if (img.naturalWidth >= window.MIN_WIDTH && img.naturalHeight >= window.MIN_HEIGHT) {
+        let currDimension = img.naturalWidth * img.naturalHeight;
         if (currDimension > maxDimension) {
           maxDimension = currDimension;
           maxImage = img;
