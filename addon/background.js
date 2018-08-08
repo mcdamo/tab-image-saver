@@ -58,6 +58,28 @@ function getOptions(callback) {
   });
 }
 
+function setupBadge()
+{
+  browser.browserAction.setBadgeText({text: ""});
+  browser.browserAction.setBadgeBackgroundColor({color: "green"});
+}
+
+function updateBadge()
+{
+  let text = (IMAGES_MATCHED - IMAGES_SAVED).toString();
+  browser.browserAction.setBadgeText({text});
+  if (TABS_LOADED === 0) {
+    browser.browserAction.setBadgeBackgroundColor({color: "gray"});
+  } else if (IMAGES_FAILED > 0) {
+    browser.browserAction.setBadgeBackgroundColor({color: "red"});
+  }
+}
+
+function hideBadge()
+{
+  browser.browserAction.setBadgeText({text: ""});
+}
+
 function notify(id, message) {
   let note = browser.notifications.create(id, {
     "type": "basic",
@@ -72,6 +94,7 @@ function notify(id, message) {
 }
 
 function notifyFinished() {
+  updateBadge();
   if (!NOTIFY_ENDED) {
     return;
   }
@@ -90,6 +113,7 @@ function notifyFinished() {
     return;
   }
   console.log("Notify finished");
+  hideBadge();
   notify("finished", {
     title: "Tab Image Saver",
     content: `${IMAGES_SAVED} downloaded\n${TABS_SKIPPED} tabs skipped\n${IMAGES_FAILED} failed`
@@ -396,6 +420,7 @@ function init() {
   IMAGES_MATCHED = 0;
   IMAGES_SAVED = 0;
   IMAGES_FAILED = 0;
+  setupBadge();
   getOptions(executeTabs);
 }
 
