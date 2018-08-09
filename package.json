@@ -1,6 +1,6 @@
 {
   "name": "tabimagesaver",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "id": "tab-image-saver@mcdamo.addons.mozilla.org",
   "description": "Save largest image from each tab",
   "homepage": "https://github.com/mcdamo/tab-image-saver",
@@ -27,7 +27,7 @@
     "name": "Tab Image Saver",
     "applications": {
       "gecko": {
-        "strict_min_version": "57.0"
+        "strict_min_version": "60.0"
       }
     },
     "permissions": [
@@ -63,6 +63,13 @@
       "scripts": [
         "background.js"
       ]
+    },
+    "commands": {
+      "_execute_browser_action": {
+        "suggested_key": {
+        },
+        "description": "Run Tab Image Saver with current settings"
+      }
     }
   },
   "scripts": {
@@ -86,27 +93,27 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "eslint": "4.4.0",
-    "eslint-plugin-json": "1.2.0",
-    "eslint-plugin-mocha": "4.11.0",
-    "eslint-plugin-promise": "3.5.0",
-    "fx-runner": "1.0.7",
-    "geckodriver": "1.8.0",
-    "grunt": "^1.0.1",
+    "eslint": "^4.19.1",
+    "eslint-plugin-json": "^1.2.1",
+    "eslint-plugin-mocha": "^4.12.1",
+    "eslint-plugin-promise": "^3.8.0",
+    "fx-runner": "^1.0.9",
+    "geckodriver": "^1.12.1",
+    "grunt": "^1.0.3",
     "grunt-remove-logging": "^0.2.0",
-    "karma": "1.7.0",
-    "karma-coverage": "1.1.1",
-    "karma-coveralls": "1.1.2",
-    "karma-firefox-launcher": "1.0.1",
-    "karma-mocha": "1.3.0",
-    "karma-mocha-reporter": "2.2.3",
-    "mocha": "3.5.0",
-    "mz": "2.6.0",
-    "npm-run-all": "4.0.2",
-    "selenium-webdriver": "3.5.0",
-    "sinon": "3.0.0",
-    "sinon-chrome": "2.2.1",
-    "virtualenv": "0.3.1",
-    "web-ext": "2.0.0"
+    "karma": "^1.7.1",
+    "karma-coverage": "^1.1.2",
+    "karma-coveralls": "^1.2.1",
+    "karma-firefox-launcher": "^1.1.0",
+    "karma-mocha": "^1.3.0",
+    "karma-mocha-reporter": "^2.2.5",
+    "mocha": "^3.5.3",
+    "mz": "^2.7.0",
+    "npm-run-all": "^4.1.3",
+    "selenium-webdriver": "^3.6.0",
+    "sinon": "^3.3.0",
+    "sinon-chrome": "^2.3.2",
+    "virtualenv": "^0.3.1",
+    "web-ext": "^2.8.0"
   }
 }
