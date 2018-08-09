@@ -21,12 +21,12 @@ let IMAGES_MATCHED = 0; // valid images
 let IMAGES_SAVED = 0; // saved images
 let IMAGES_FAILED = 0; // failed downloads
 let DOWNLOADS = [];
+let COMMAND = "_execute_browser_action"; // keyboard shortcut command
 
 function getOptions(callback) {
   let getting = browser.storage.local.get();
   getting.then(result => {
-    console.log("Loaded Options:");
-    console.log(result);
+    console.log("Loaded Options:", result);
     ACTION = result.action || "current";
     ACTIVE_TAB = result.activeTab;
     CLOSE_TAB = result.closeTab;
@@ -53,7 +53,7 @@ function getOptions(callback) {
     // notify("error", {
     //      "title": "Error",
     //      "content": "
-    console.error(`OptionsError: ${error}`);
+    console.error("OptionsError:", error);
     return false;
   });
 }
@@ -61,7 +61,7 @@ function getOptions(callback) {
 function setupBadge()
 {
   browser.browserAction.setBadgeText({text: ""});
-  browser.browserAction.setBadgeBackgroundColor({color: "green"});
+  browser.browserAction.setBadgeBackgroundColor({color: "blue"});
 }
 
 function updateBadge()
@@ -88,7 +88,7 @@ function notify(id, message) {
     "message": message.content
   });
   note.then().catch(error => {
-    console.error("Note failed");
+    console.error("Note failed:", error);
     return;
   });
 }
@@ -135,7 +135,7 @@ function downloadComplete(dlid, tabid) {
         return;
       }).catch(error => {
         // TODO
-        console.error(`Failed removing tab ${tabid}: ${error}`);
+        console.error(`Failed removing tab ${tabid}:`, error);
       });
     }
   }
@@ -162,20 +162,20 @@ function onDownloadChanged(delta) {
     download.then(result => verifyDownloads(result))
       .catch(error => {
       // TODO
-        console.error(`Failed searching download ${dlid}: ${error}`);
+        console.error(`Failed searching download ${dlid}:`, error);
       });
   }
 }
 
 /* download started - store reference to tabid in global array */
 function onDownloadStarted(dlid, tabid, path) {
-  console.log(`Download(${IMAGES_SAVED}) ${path}`);
+  console.log(`Download(${IMAGES_SAVED})`, path);
   DOWNLOADS[dlid] = tabid;
 }
 
 function onDownloadFailed(e, path) {
   IMAGES_FAILED++;
-  console.error(`Download failed (${path}): ${e}`);
+  console.error(`Download failed (${path}):`, e);
   notifyFinished();
 }
 
@@ -209,14 +209,14 @@ function downloadXhr(image, tabid) {
   let filename = "";
   let xhrCallback = (function() { // catches events for: load, error, abort
     // try getting filename from response header in XHR request
-    console.log(`XHR URL: ${image.src}`);
+    console.log("XHR URL:", image.src);
     let disposition = this.getResponseHeader("Content-Disposition");
     if (disposition && disposition.indexOf("filename") !== -1) {
       let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
       let matches = filenameRegex.exec(disposition);
       if (matches !== null && matches[1]) {
         filename = matches[1].replace(/['"]/g, "");
-        console.log(`XHR Filename: ${filename}`);
+        console.log("XHR Filename:", filename);
       }
     } else {
       console.log("XHR response did not provide filename");
@@ -235,7 +235,7 @@ function downloadXhr(image, tabid) {
         // TODO if still no valid filename
       }
       filename = decodeURI(filename);
-      console.log(`Filename from url: ${filename}`);
+      console.log("Filename from url:", filename);
     }
     path += filename;
     download(image.src, path, tabid);
@@ -243,7 +243,7 @@ function downloadXhr(image, tabid) {
   if (ALT_IS_FILENAME && image.alt) {
     // append filename from alt attribute and filename extension
     filename = image.alt + ALT_FILENAME_EXT;
-    console.log(`Trying alt filename: ${filename}`);
+    console.log("Trying alt filename:", filename);
   }
   if (isValidFilename(filename)) {
     path += filename;
@@ -260,7 +260,7 @@ function downloadXhr(image, tabid) {
 /* receive image from content-script (Tab) */
 function downloadImages(images, tabid) {
   if (!images) {
-    console.log("No images found");
+    console.log("No images found on tab:", tabid);
     TABS_SKIPPED++;
     return false;
   }
@@ -269,7 +269,7 @@ function downloadImages(images, tabid) {
     IMAGES_MATCHED++;
     if (url.indexOf("data:") === 0) {
       IMAGES_FAILED++;
-      console.log("Image is embedded"); // TODO support embedded
+      console.warn("Embedded image is unsupported"); // TODO support embedded
     } else {
       downloadXhr(image, tabid);
     }
@@ -280,7 +280,7 @@ function downloadImages(images, tabid) {
 function executeTab(tab) {
   TABS_LOADED++;
   let tabid = tab.id;
-  console.log(`Sending tab ${tabid} (LOADED ${TABS_LOADED}): ${CONTENT_SCRIPT}`);
+  console.log(`Sending tab ${tabid} (LOADED ${TABS_LOADED}):`, CONTENT_SCRIPT);
   // inject size variables and attach to global 'window' var
   let executing0 = browser.tabs.executeScript(
     tabid,
@@ -323,7 +323,7 @@ function callOnActiveTab(callback) {
     return;
   }).catch(error => {
     // TODO
-    console.error(`Error getting window tabs: ${error}`);
+    console.error("Error getting window tabs:", error);
   });
 }
 
@@ -339,7 +339,7 @@ function tabsAll() {
     return;
   }).catch(error => {
     // TODO
-    console.error(`Error getting window tabs: ${error}`);
+    console.error("Error getting window tabs:", error);
   });
 }
 
@@ -370,7 +370,7 @@ function tabsLeft() {
     return;
   }).catch(error => {
     // TODO
-    console.error(`Error calling active tab: ${error}`);
+    console.error("Error calling active tab:", error);
   });
 }
 
@@ -382,7 +382,6 @@ function tabsRight() {
     if (!ACTIVE_TAB) {
       if ((tab.index + 1) === tabs.length) {
         // already at last tab
-        console.log("Nothing to do.");
         notifyFinished();
         return;
       }
@@ -424,9 +423,29 @@ function init() {
   getOptions(executeTabs);
 }
 
-if (!browser.downloads.onChanged.hasListener(onDownloadChanged)) {
-  browser.downloads.onChanged.addListener(onDownloadChanged);
+function shortcutCommand(command) {
+  if (command === COMMAND) {
+    console.log("Caught keyboard shortcut");
+    init();
+  }
 }
-if (!browser.browserAction.onClicked.hasListener(init)) {
-  browser.browserAction.onClicked.addListener(init);
+
+async function loadShortcut() {
+  console.log("loadShortcut");
+  let result = await browser.storage.local.get("shortcut");
+  if (result.shortcut !== undefined) {
+    await browser.commands.update({
+      name: COMMAND,
+      shortcut: result.shortcut
+    });
+    console.log("shortcut loaded:", result.shortcut);
+  } else {
+    console.log("shortcut not set");
+  }
 }
+
+browser.downloads.onChanged.addListener(onDownloadChanged);
+browser.browserAction.onClicked.addListener(init);
+browser.commands.onCommand.addListener(shortcutCommand);
+browser.runtime.onInstalled.addListener(loadShortcut);
+browser.runtime.onStartup.addListener(loadShortcut);

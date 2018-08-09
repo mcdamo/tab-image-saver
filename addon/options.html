@@ -7,7 +7,7 @@
 </head>
 
 <body>
-  <form>
+  <form id="options">
 <p>
 	<legend>Tab direction</legend>
 	<label><input type="radio" name="action" value="current" id="action_current" >Current tab</label>
@@ -66,7 +66,17 @@
       <br/>
       <label><input type="checkbox" id="removeEnded" >Incognito mode</label> (hide from download history)
 </p>
-  </form>
+</form>
+<div id="shortcuts">
+<p>
+	<legend>Keyboard shortcuts</legend>
+Example: "Alt+X", "Ctrl+Shift+U". <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/commands#Shortcut_values">Allowed values</a>
+      <br/>
+      <input type="text" id="shortcut" >
+      <button id="updateShortcut">Update keyboard shortcut</button>
+      <button id="resetShortcut">Reset keyboard shortcut</button>
+</p>
+</div>
   <script src="options.js"></script>
 </body>
 
