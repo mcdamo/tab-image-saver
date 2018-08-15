@@ -5,6 +5,7 @@ function randomIntFromInterval(min, max)
 }
 
 function sleep(ms) {
+  console.log("sleep", ms);
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -33,7 +34,7 @@ let App = {
   },
 
   removeDownload(dlid) {
-    let tabid = App.runtime.downlods[dlid];
+    let tabid = App.runtime.downloads[dlid];
     delete App.runtime.downloads[dlid];
     return tabid;
   },
@@ -121,11 +122,9 @@ let App = {
   },
 
   hideBadge() {
-    /*
-    App.runtime.badgeTimeout = setTimeout(function() {
+    App.runtime.badgeTimeout = setTimeout(() => {
       browser.browserAction.setBadgeText({text: ""});
     }, 5000);
-    */
   },
 
   updateBadgeFinished() {
@@ -152,12 +151,16 @@ let App = {
       return null;
     }
     try {
-      return await browser.notifications.create(id, {
+      let obj = {
         "type": "basic",
-        "iconUrl": browser.extension.getURL(App.options.icon),
-        "title": message.title,
-        "message": message.content
-      });
+        "iconUrl": browser.extension.getURL(App.options.icon)
+      };
+      for (let prop in message) {
+        if ({}.propertyIsEnumerable.call(message, prop)) {
+          obj[prop] = message[prop];
+        }
+      }
+      return await browser.notifications.create(id, obj);
     } catch (err) {
       console.error("Note failed:", err);
     }
@@ -178,7 +181,7 @@ let App = {
     if (App.runtime.tabsLoaded === 0) {
       App.notify("finished", {
         title: "Tab Image Saver",
-        content: `No tabs processed:\n${msgErr}`
+        message: `No tabs processed:\n${msgErr}`
       });
       return;
     }
@@ -188,10 +191,19 @@ let App = {
       return;
     }
     */
+    let msg = `${App.runtime.imagesSaved} downloaded\n`;
+    if (App.runtime.imagesFailed > 0) {
+      msg += `${App.runtime.imagesFailed} failed\n`;
+    }
+    msg += "\n";
+    if (App.runtime.tabsSkipped > 0) {
+      msg += `${App.runtime.tabsSkipped} tabs skipped\n`;
+    }
+  
     console.log("Notify finished");
     App.notify("finished", {
       title: "Tab Image Saver",
-      content: `${App.runtime.imagesSaved} downloaded\n${App.runtime.imagesFailed} failed\n${App.runtime.tabsSkipped} tabs skipped\n${msgErr}`
+      message: `${msg}${msgErr}`
     });
   },
 
@@ -215,6 +227,7 @@ let App = {
       return true;
     }
     console.warn("Download size is 0 bytes", download);
+    App.runtime.imagesFailed++;
     return false;
   },
 
@@ -224,11 +237,15 @@ let App = {
     let loop = true;
     while (loop) {
       let downloads = await browser.downloads.search({"id": dlid});
-      // TODO if not found
+      if (!downloads[0]) {
+        console.error("Download missing", dlid);
+        App.runtime.imagesFailed++;
+        return false;
+      }
       let download = downloads[0];
       switch (download.state) {
         case "in_progress":
-          await sleep(randomIntFromInterval(1000, 2000)); // sleep 1-2sec
+          await sleep(randomIntFromInterval(1000, 3000)); // sleep 1-3sec
           break;
         case "complete":
           complete = await App.downloadComplete(download);
@@ -241,6 +258,9 @@ let App = {
       }
     }
     App.updateBadgeSaving();
+    if(!complete) {
+      App.runtime.imagesFailed++;
+    }
     return complete;
   },
 
@@ -322,7 +342,7 @@ let App = {
     });
   },
 
-  download(image, tabid) {
+  async download(image, tabid) {
     let path = App.options.downloadPath;
     let filename = "";
     if (App.options.altIsFilename && image.alt) {
@@ -332,9 +352,9 @@ let App = {
     }
     if (App.isValidFilename(filename)) {
       path += filename;
-      return App.startDownload(image.src, path, tabid);
+      return await App.startDownload(image.src, path, tabid);
     }
-    return App.downloadXhr(image, tabid);
+    return await App.downloadXhr(image, tabid);
   },
 
   // select valid images and remove duplicates
@@ -369,7 +389,7 @@ let App = {
       if (tab.discarded) {
         console.log(`Tab ${tab.id} discarded, reloading:`, tab.url);
         await browser.tabs.update(tab.id, {url: tab.url}); // reload() does not affect discarded state
-        await sleep(randomIntFromInterval(500, 1500)); // TODO: hack to allow page to load before executing script
+        await sleep(randomIntFromInterval(1000, 3000)); // TODO: hack to allow page to load before executing script
       }
       console.log(`Sending tab ${tabid}:`, App.options.contentScript);
       // returns array of script result for each loaded tab
@@ -401,6 +421,73 @@ let App = {
 
   getCurrentWindowTabs() {
     return browser.tabs.query({currentWindow: true});
+  },
+
+  resolveCompleted(promises) {
+    // map catch blocks to all promises, so that all promises are run
+    return Promise.all(promises.map(p => p.catch(e => {
+      console.error("resolveCompleted.map",e);
+      return false;
+      })))
+      .then(completed => {
+        console.log("resolveCompleted then:", completed);
+        return true;
+      })
+      .catch(err => {
+        console.error("resolveCompleted error", err);
+      });
+  },
+
+  resolveDownloads(promises) {
+    // map catch blocks to all promises, so that all promises are run
+    return Promise.all(promises.map(p => p.catch(e => {
+      console.error("resolveDownloads.map",e);
+      return false;
+      })))
+      .then(downloads => {
+        console.log("resolveDownloads then:", downloads);
+        let promiseCompleted = [];
+        for (let dlid of downloads) {
+          if (dlid === false) {
+            // download failed
+          } else {
+            promiseCompleted.push(App.waitDownload(dlid));
+          }
+        }
+        return App.resolveCompleted(promiseCompleted);
+      })
+      .catch(err => {
+        console.error("resolveDownloads error", err);
+      });
+ },
+
+  resolveTabs(promises) {
+    // map catch blocks to all promises, so that all promises are run
+    return Promise.all(promises.map(p => p.catch(e => {
+      console.error("resolveTabs.map",e);
+      return false;
+      })))
+      .then(tabResults => {
+        console.log("resolveTabs then:", tabResults);
+        // executeTab returns: [tabid, [results]]
+        let promiseDownloads = [];
+        for (let result of tabResults) {
+          if (result === false) {
+            // tab skipped
+          } else {
+            // tab ended
+            let tabid = result[0];
+            let images = result[1];
+            for (let image of images) {
+              promiseDownloads.push(App.download(image, tabid));
+            }
+          }
+        }
+        return App.resolveDownloads(promiseDownloads);
+      })
+      .catch(err => {
+        console.error("resolveTabs error", err);
+      });
   },
 
   async executeTabs(method) {
@@ -445,60 +532,8 @@ let App = {
         break;
       }
     }
-    return Promise.all(promiseTabs)
-      .then(tabResults => {
-        console.log("executeTabs then:", tabResults);
-        // executeTab returns: [tabid, [results]]
-        let promiseDownloads = [];
-        for (let result of tabResults) {
-          if (result === false) {
-            // tab skipped
-          } else {
-            // tab ended
-            let tabid = result[0];
-            let images = result[1];
-            for (let image of images) {
-              promiseDownloads.push(App.download(image, tabid));
-            }
-          }
-        }
-        return Promise.all(promiseDownloads)
-          .then(downloads => {
-            console.log("downloadImages then:", downloads);
-            let promiseDownloadsCompleted = [];
-            for (let dlid of downloads) {
-              if (dlid === false) {
-                // download failed
-              } else {
-                promiseDownloadsCompleted.push(App.waitDownload(dlid));
-              }
-            }
-            return Promise.all(promiseDownloadsCompleted)
-              .then(completed => {
-                console.log("downloadsCompleted then:", completed);
-                return true;
-              })
-              .catch(err => {
-                console.error("downloadsCompleted error", err);
-              })
-              .finally(() => {
-                console.log("downloadsCompleted finally");
-                App.finished();
-              });
-          })
-          .catch(err => {
-            console.error("downloadImages error", err);
-          })
-          .finally(() => {
-            console.log("downloadImages finally");
-          });
-      })
-      .catch(err => {
-        console.error("executeTabs error", err);
-      })
-      .finally(() => {
-        console.log("executeTabs finally");
-      });
+    await App.resolveTabs(promiseTabs);
+    App.finished();
   },
 
   async init() {
