@@ -13,20 +13,13 @@ let App = {
   options: {
     contentScript: "/content-getimages.js",
     command: "_execute_browser_action", // keyboard shortcut command
-    icon: "icons/tab-image-saver-v2.svg"
+    icon: "icons/tab-image-saver-v2.svg" // icon used on notifications
   },
 
-  runtime: {
-    tabsLoaded: 0, // tabs executed
-    tabsEnded: 0, // tabs returned a message
-    tabsSkipped: 0, // tabs with no valid images
-    tabsError: 0, // tabs with no permission
-    imagesMatched: 0, // valid images
-    imagesSkipped: 0, // skipped duplicates
-    imagesFailed: 0, // failed downloads
-    urls: [], // unique urls
-    downloads: [], // downloads in progress mapped to tabs
-    busy: false
+  runtime: undefined, // defined by init()
+
+  isCancelled() {
+    return App.runtime.cancel;
   },
 
   addDownload(dlid, tabid) {
@@ -101,17 +94,15 @@ let App = {
 
   updateBadgeLoading() {
     console.log(`TABS_ENDED ${App.runtime.tabsEnded} + TABS_SKIPPED ${App.runtime.tabsSkipped} / TABS_LOADED ${App.runtime.tabsLoaded}`);
-    let num = parseInt(100 * (App.runtime.tabsEnded + App.runtime.tabsSkipped) / App.runtime.tabsLoaded, 10);
-    let text = "○";
-    if (num >= 80) {
-      text = "●";
-    } else if (num >= 60) {
-      text = "◕";
-    } else if (num >= 40) {
-      text = "◑";
-    } else if (num >= 20) {
-      text = "◔";
+    let icons = ["◷", "◶", "◵", "◴"];
+    // let num = parseInt(100 * (App.runtime.tabsEnded + App.runtime.tabsSkipped) / App.runtime.tabsLoaded, 10);
+    let text = icons[App.runtime.badgeLoading];
+    let num = App.runtime.badgeLoading;
+    num++;
+    if (num >= 3) {
+      num = 0;
     }
+    App.runtime.badgeLoading = num;
     browser.browserAction.setBadgeText({text});
     browser.browserAction.setBadgeBackgroundColor({color: "blue"});
   },
@@ -143,6 +134,7 @@ let App = {
   updateBadgeSaving() {
     // parseInt(100 * (IMAGES_MATCHED > 0 ? IMAGES_SAVED / IMAGES_MATCHED : IMAGES_MATCHED));
     let num = App.runtime.imagesSaved;
+    console.log("IMAGES_SAVED:", num);
     browser.browserAction.setBadgeText({text: num.toString()});
   },
 
@@ -181,7 +173,7 @@ let App = {
     if (App.runtime.tabsLoaded === 0) {
       App.notify("finished", {
         title: "Tab Image Saver",
-        message: `No tabs processed:\n${msgErr}`
+        message: `No tabs processed: ${App.options.filter}\n${msgErr}`
       });
       return;
     }
@@ -191,15 +183,14 @@ let App = {
       return;
     }
     */
-    let msg = `${App.runtime.imagesSaved} downloaded\n`;
+    let msg = `Saved: ${App.runtime.imagesSaved}\n`;
     if (App.runtime.imagesFailed > 0) {
-      msg += `${App.runtime.imagesFailed} failed\n`;
+      msg += `Failed: ${App.runtime.imagesFailed}\n`;
     }
     msg += "\n";
-    if (App.runtime.tabsSkipped > 0) {
-      msg += `${App.runtime.tabsSkipped} tabs skipped\n`;
-    }
-  
+    // if (App.runtime.tabsSkipped > 0) {
+    //  msg += `${App.runtime.tabsSkipped} tabs skipped\n`;
+    // }
     console.log("Notify finished");
     App.notify("finished", {
       title: "Tab Image Saver",
@@ -232,7 +223,7 @@ let App = {
   },
 
   // poll in_progress downloads until state change
-  async waitDownload(dlid) {
+  async waitForDownload(dlid) {
     let complete = false;
     let loop = true;
     while (loop) {
@@ -245,7 +236,14 @@ let App = {
       let download = downloads[0];
       switch (download.state) {
         case "in_progress":
-          await sleep(randomIntFromInterval(1000, 3000)); // sleep 1-3sec
+          if (App.isCancelled()) {
+            console.log("cancel:waitForDownload", dlid);
+            browser.downloads.cancel(dlid); // no await
+            loop = false;
+          } else {
+            console.log("waitForDownload:", dlid);
+            await sleep(randomIntFromInterval(1000, 3000)); // sleep 1-3sec
+          }
           break;
         case "complete":
           complete = await App.downloadComplete(download);
@@ -258,7 +256,7 @@ let App = {
       }
     }
     App.updateBadgeSaving();
-    if(!complete) {
+    if (!complete) {
       App.runtime.imagesFailed++;
     }
     return complete;
@@ -270,25 +268,30 @@ let App = {
 
   // start the download
   async startDownload(url, path, tabid) {
-    try {
-      let dlid = await browser.downloads.download({
-        url,
-        filename: path,
-        saveAs: false, // required from FF58, min_ver FF52
-        conflictAction: App.options.conflictAction,
-        headers: [{name: "cache", value: "force-cache"}],
-        incognito: App.options.removeEnded // min_ver FF57
-      });
-      console.log(`Download ${dlid} from tab ${tabid}`);
-      App.addDownload(dlid, tabid);
-      return dlid;
-    } catch (err) {
-      // catch errors related to Access Denied for data:image URLs
-      App.runtime.imagesFailed++;
-      console.error(`Download failed (${path}):`, err);
-      App.updateBadgeSaving();
-      return false;
+    if (App.isCancelled()) {
+      console.log("cancel:startDownload");
+    } else {
+      try {
+        let dlid = await browser.downloads.download({
+          url,
+          filename: path,
+          saveAs: false, // required from FF58, min_ver FF52
+          conflictAction: App.options.conflictAction,
+          headers: [{name: "cache", value: "force-cache"}],
+          incognito: App.options.removeEnded // min_ver FF57
+        });
+        console.log(`Download ${dlid} from tab ${tabid}`);
+        App.addDownload(dlid, tabid);
+        App.updateBadgeLoading();
+        return dlid;
+      } catch (err) {
+        // catch errors related to Access Denied for data:image URLs
+        console.error(`Download failed (${path}):`, err);
+      }
     }
+    App.updateBadgeLoading();
+    App.runtime.imagesFailed++;
+    return false;
   },
 
   // download using XHR for filename
@@ -343,6 +346,10 @@ let App = {
   },
 
   async download(image, tabid) {
+    if (App.isCancelled()) {
+      console.log("cancel:download");
+      return false;
+    }
     let path = App.options.downloadPath;
     let filename = "";
     if (App.options.altIsFilename && image.alt) {
@@ -354,6 +361,7 @@ let App = {
       path += filename;
       return await App.startDownload(image.src, path, tabid);
     }
+    App.updateBadgeLoading();
     return await App.downloadXhr(image, tabid);
   },
 
@@ -382,40 +390,60 @@ let App = {
     return result;
   },
 
-  async executeTab(tab) {
-    let tabid = tab.id;
-    try {
+  async waitForTabReady(aTab) {
+    let tab = aTab;
+    while (tab) {
+      App.updateBadgeLoading();
+      if (App.isCancelled()) {
+        console.log("cancel:waitForTabReady", tab);
+        return false;
+      }
       // scripts do not run in discarded tabs
       if (tab.discarded) {
         console.log(`Tab ${tab.id} discarded, reloading:`, tab.url);
-        await browser.tabs.update(tab.id, {url: tab.url}); // reload() does not affect discarded state
-        await sleep(randomIntFromInterval(1000, 3000)); // TODO: hack to allow page to load before executing script
+        tab = await browser.tabs.update(tab.id, {url: tab.url}); // reload() does not affect discarded state
+        await sleep(randomIntFromInterval(1000, 3000)); // TODO: hack to allow page to load before executing script to avoid permission error
       }
-      console.log(`Sending tab ${tabid}:`, App.options.contentScript);
-      // returns array of script result for each loaded tab
-      let results = await browser.tabs.executeScript(
-        tabid, {
-          file: App.options.contentScript,
-          runAt: "document_end" // default "document_idle"
-        }
-      );
+      if (tab.status === "complete") {
+        return tab;
+      }
+      // if (tab.status === "loading") {
+      console.log("waitForTabReady:", tab);
+      await sleep(randomIntFromInterval(500, 1000));
+      tab = await browser.tabs.get(tab.id);
+    }
+    return tab;
+  },
 
-      App.runtime.tabsLoaded++;
-      console.log(`Response from tab ${tabid}`, results);
-      let images = App.processTabResult(results[0]);
-      if (images.length > 0) {
-        App.runtime.tabsEnded++;
+  async executeTab(aTab) {
+    let tab = await App.waitForTabReady(aTab);
+    if (tab) {
+      let tabid = tab.id;
+      try {
+        console.log(`Sending tab ${tabid}: ${App.options.contentScript}`, tab);
+        // returns array of script result for each loaded tab
+        let results = await browser.tabs.executeScript(
+          tabid, {
+            file: App.options.contentScript,
+            runAt: "document_idle" // wait until tab completed loading and running scripts
+          }
+        );
+        App.runtime.tabsLoaded++;
+        console.log(`Response from tab ${tabid}`, results);
+        let images = App.processTabResult(results[0]);
         App.updateBadgeLoading();
-        return [tabid, images];
+        if (images.length > 0) {
+          App.runtime.tabsEnded++;
+          return [tabid, images];
+        }
+      } catch (err) {
+        App.runtime.tabsError++;
+        App.updateBadgeLoading();
+        console.error(`Error executing tab ${tabid}`, err);
+        return false;
       }
-    } catch (err) {
-      App.runtime.tabsError++;
-      App.updateBadgeLoading();
-      console.error(`Error executing tab ${tabid}`, err);
-      return false;
     }
     App.runtime.tabsSkipped++;
-    App.updateBadgeLoading();
     return false;
   },
 
@@ -426,9 +454,9 @@ let App = {
   resolveCompleted(promises) {
     // map catch blocks to all promises, so that all promises are run
     return Promise.all(promises.map(p => p.catch(e => {
-      console.error("resolveCompleted.map",e);
+      console.error("resolveCompleted.map", e);
       return false;
-      })))
+    })))
       .then(completed => {
         console.log("resolveCompleted then:", completed);
         return true;
@@ -441,9 +469,9 @@ let App = {
   resolveDownloads(promises) {
     // map catch blocks to all promises, so that all promises are run
     return Promise.all(promises.map(p => p.catch(e => {
-      console.error("resolveDownloads.map",e);
+      console.error("resolveDownloads.map", e);
       return false;
-      })))
+    })))
       .then(downloads => {
         console.log("resolveDownloads then:", downloads);
         let promiseCompleted = [];
@@ -451,7 +479,7 @@ let App = {
           if (dlid === false) {
             // download failed
           } else {
-            promiseCompleted.push(App.waitDownload(dlid));
+            promiseCompleted.push(App.waitForDownload(dlid));
           }
         }
         return App.resolveCompleted(promiseCompleted);
@@ -459,14 +487,14 @@ let App = {
       .catch(err => {
         console.error("resolveDownloads error", err);
       });
- },
+  },
 
   resolveTabs(promises) {
     // map catch blocks to all promises, so that all promises are run
     return Promise.all(promises.map(p => p.catch(e => {
-      console.error("resolveTabs.map",e);
+      console.error("resolveTabs.map", e);
       return false;
-      })))
+    })))
       .then(tabResults => {
         console.log("resolveTabs then:", tabResults);
         // executeTab returns: [tabid, [results]]
@@ -515,6 +543,10 @@ let App = {
     let promiseTabs = [];
     let tabs = await App.getCurrentWindowTabs();
     for (let tab of tabs) {
+      /* if (App.isCancelled()) {
+        console.log("cancel:executeTabs");
+        return;
+      }*/
       if (tab.active) {
         if (!doAfter) {
           doTab = false;
@@ -532,49 +564,57 @@ let App = {
         break;
       }
     }
-    await App.resolveTabs(promiseTabs);
-    App.finished();
+    return await App.resolveTabs(promiseTabs);
   },
 
   async init() {
-    if (App.runtime.busy) {
-      console.warn("Script running, action blocked");
+    if (App.runtime !== undefined && App.runtime.busy) {
+      console.warn("Cancelling actions");
+      App.runtime.cancel = true;
       return;
     }
-    let runtime = {
+    App.runtime = {
+      tabsLoaded: 0, // tabs executed
+      tabsEnded: 0, // tabs returned a message
+      tabsSkipped: 0, // tabs with no valid images
+      tabsError: 0, // tabs with no permission
+      imagesMatched: 0, // valid images
+      imagesSkipped: 0, // skipped duplicates
+      imagesFailed: 0, // failed downloads
+      imagesSaved: 0, // saved images
+      badgeLoading: 0,
+      urls: [], // unique urls
+      downloads: [], // downloads in progress mapped to tabs
       busy: true,
-      tabsLoaded: 0,
-      tabsEnded: 0,
-      tabsSkipped: 0,
-      tabsError: 0,
-      imagesMatched: 0,
-      imagesSaved: 0,
-      imagesFailed: 0,
-      downloads: [],
-      urls: []
+      cancel: false
     };
-    for (let prop in runtime) {
-      if ({}.propertyIsEnumerable.call(runtime, prop)) {
-        App.runtime[prop] = runtime[prop];
-      }
-    }
     App.setupBadge();
     await App.loadOptions();
-    App.executeTabs(App.options.action);
+    await App.executeTabs(App.options.action);
+    App.finished();
   },
   handleMessage(request, sender, sendResponse) {
     console.log(`Message from tab ${sender.tab.id}`, request);
-    if (request.action === "config") {
-      sendResponse({
-        action: request.action,
-        body: {
-          filter: App.options.filter,
-          minHeight: App.options.minHeight,
-          minWidth: App.options.minWidth
-        }
-      });
-    } else {
-      console.error("Unexpected message from tab", request);
+    switch (request.action) {
+      case "config":
+        sendResponse({
+          action: request.action,
+          body: {
+            filter: App.options.filter,
+            minHeight: App.options.minHeight,
+            minWidth: App.options.minWidth
+          }
+        });
+        break;
+      case "cancel":
+        sendResponse({
+          action: request.action,
+          body: {cancel: App.isCancelled()}
+        });
+        break;
+      default:
+        console.error("Unexpected message from tab", request);
+        break;
     }
   }
 };

@@ -1,90 +1,158 @@
 (function() {
-  let App = {
-    // variables
-    minHeight: undefined,
-    minWidth: undefined,
-    filter: undefined,
-    images: [],
+  // return random int between min:max
+  function randomIntFromInterval(min, max)
+  {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+  }
 
-    // add to collection
-    addImage(img) {
-      App.images.push({
-        src: img.src,
-        alt: img.alt
-      });
+  function sleep(ms) {
+    console.log("sleep", ms);
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function isImageVisible(img) {
+    return !(img.hidden);
+  }
+
+  function isImageLoaded(img) {
+    // return img.complete;
+    return (
+      img.naturalWidth !== undefined && img.naturalHeight !== undefined
+      // && img.naturalWidth > 0 && img.naturalHeight > 0
+    );
+  }
+
+  let App = {
+    options: {},
+    runtime: undefined,
+
+    async waitForDomImage(i) {
+      let img = true;
+      while (img) {
+        img = document.images[i];
+        if (isImageLoaded(img)) {
+          return img;
+        }
+        if (await App.getCancelled()) {
+          console.log("cancel:waitForDomImage");
+          return false;
+        }
+        console.log(`waitForDomImage: loaded:${img.complete} ${img.naturalWidth}x${img.naturalHeight}`, img);
+        await sleep(randomIntFromInterval(500, 1000));
+      }
+      return img;
     },
 
     // verify image meets minimum requirements
     validImage(img) {
-      if (img.naturalWidth >= App.minWidth && img.naturalHeight >= App.minHeight) {
+      if (img.naturalWidth >= App.options.minWidth && img.naturalHeight >= App.options.minHeight) {
+        console.log(`valid image (${img.naturalWidth}x${img.naturalHeight}):`, img);
         return true;
       }
+      // console.log(`invalid image (${img.naturalWidth}x${img.naturalHeight}):`, img);
       return false;
     },
 
     // run chosen filter and return array of images
-    getImages() {
-      console.log(`getImages ${App.filter} ${App.minWidth}x${App.minHeight}`);
-      if (App.filter === "direct") {
-        if (document.contentType.indexOf("image") === 0) {
-          let img = document.images[0];
-          if (App.validImage(img)) {
-            App.addImage(img);
+    async getImages() {
+      console.log(`getImages ${App.options.minWidth}x${App.options.minHeight}`);
+      if (App.options.filter === "direct" && document.contentType.indexOf("image") !== 0) {
+        return false;
+      }
+      let images = [];
+      for (let i in document.images) {
+        if ({}.propertyIsEnumerable.call(document.images, i)) {
+          if (App.isCancelled()) {
+            return null;
           }
-        }
-      } else if (App.filter === "all") {
-        // Iterate through all the images.
-        for (let img of document.images) {
-          if (App.validImage(img)) {
-            App.addImage(img);
-          }
-        }
-      } else { // filter = max
-        let maxDimension = 0;
-        let maxImage = null;
-        // Iterate through all the images.
-        for (let img of document.images) {
-          if (App.validImage(img)) {
-            let currDimension = img.naturalWidth * img.naturalHeight;
-            if (currDimension > maxDimension) {
-              maxDimension = currDimension;
-              maxImage = img;
+          let img = document.images[i];
+          if (isImageVisible(img)) {
+            if (!isImageLoaded(img)) {
+              img = await App.waitForDomImage(i);
+            }
+            if (img === false) {
+              continue;
+            }
+            if (App.validImage(img)) {
+              images.push(img);
             }
           }
-        }
-        // Check if an image has been found.
-        if (maxImage) {
-          App.addImage(maxImage);
         }
       }
-      console.log("Result", App.images);
-      return App.images;
+      let results = [];
+      if (App.options.filter !== "all") {
+        let maxDimension = 0;
+        let maxImage; // undefined
+        for (let img of images) {
+          let currDimension = img.naturalWidth * img.naturalHeight;
+          if (currDimension > maxDimension) {
+            maxDimension = currDimension;
+            maxImage = img;
+          }
+        }
+        images = [maxImage];
+      }
+      for (let img of images) {
+        results.push({
+          src: img.src,
+          alt: img.alt
+        });
+      }
+      console.log("Result", results);
+      return results;
     },
 
-    // load options from background script
-    async loadOptions() {
+    async sendMessage(action) {
       try {
-        let message = await browser.runtime.sendMessage({action: "config"});
+        let message = await browser.runtime.sendMessage({action});
         console.log("Message received:", message);
-        if (message.action === "config") {
-          let obj = message.body;
-          for (let prop in obj) {
-            // property guard https://eslint.org/docs/rules/no-prototype-builtins
-            if ({}.propertyIsEnumerable.call(obj, prop)) {
-              App[prop] = obj[prop];
-            }
-          }
-          return true;
+        if (message.action === action) {
+          return message.body;
         }
         console.error("Message did not contain the expected keys", message);
       } catch (err) {
-        console.error(err);
+        console.error("loadOptions error:", err);
+      }
+      return false;
+    },
+
+    // load options from background script
+    // minHeight
+    // minWidth
+    // filter
+    async loadOptions() {
+      let obj = await App.sendMessage("config");
+      if (!obj) {
+        return false;
+      }
+      for (let prop in obj) {
+        // property guard https://eslint.org/docs/rules/no-prototype-builtins
+        if ({}.propertyIsEnumerable.call(obj, prop)) {
+          App.options[prop] = obj[prop];
+        }
+      }
+      return true;
+    },
+
+    isCancelled() {
+      return App.runtime.cancel;
+    },
+
+    async getCancelled() {
+      if (!App.isCancelled()) {
+        let obj = await App.sendMessage("cancel");
+        if (obj.cancel) {
+          App.runtime.cancel = true;
+          return true;
+        }
       }
       return false;
     },
 
     async init() {
+      App.runtime = {cancel: false};
       if (await App.loadOptions()) {
+        // console.log(document.readyState);
         return App.getImages();
       }
       return null;
