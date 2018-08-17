@@ -1,9 +1,3 @@
-// return random int between min:max
-function randomIntFromInterval(min, max)
-{
-  return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -58,18 +52,17 @@ let App = {
     return !App.runtime.urls.has(url);
   },
 
-  async sleepOrCancel(ms, callback=undefined) {
+  // callback will be called after each chunk of sleep
+  async sleepOrCancel(ms, callback = undefined) {
     let chunk = 500;
     if (ms < chunk) {
       chunk = ms;
     }
-    for (let remain = ms; remain > 0; ) {
-      console.log("subsleep", chunk);
+    for (let remain = ms; remain > 0; remain -= chunk) {
       await sleep(chunk);
       if (callback !== undefined) {
         callback();
       }
-      remain = remain - chunk;
       if (App.isCancelled()) {
         return false;
       }
@@ -136,13 +129,14 @@ let App = {
     if (App.runtime && App.runtime.badgeTimeout) {
       clearTimeout(App.runtime.badgeTimeout);
     }
-    //App.updateBadgeLoading();
   },
 
   hideBadge() {
+    /*
     App.runtime.badgeTimeout = setTimeout(() => {
-      browser.browserAction.setBadgeText({text: ""});
-    }, 5000);
+    browser.browserAction.setBadgeText({text: ""});
+    }, 60*1000);
+    */
   },
 
   updateBadgeFinished() {
@@ -161,7 +155,6 @@ let App = {
   updateBadgeSaving() {
     // parseInt(100 * (IMAGES_MATCHED > 0 ? IMAGES_SAVED / IMAGES_MATCHED : IMAGES_MATCHED));
     let num = App.runtime.imagesSaved;
-    console.log("IMAGES_SAVED:", num);
     browser.browserAction.setBadgeText({text: num.toString()});
   },
 
@@ -205,11 +198,6 @@ let App = {
       return;
     }
     console.log(`${App.runtime.imagesMatched} Found, ${App.runtime.imagesSaved} Saved, ${App.runtime.imagesFailed} Failed`);
-    /*
-    if (App.runtime.imagesMatched !== (App.runtime.imagesSaved + App.runtime.imagesFailed)) {
-      return;
-    }
-    */
     let msg = `Saved: ${App.runtime.imagesSaved}\n`;
     if (App.runtime.imagesFailed > 0) {
       msg += `Failed: ${App.runtime.imagesFailed}\n`;
@@ -227,7 +215,7 @@ let App = {
 
   // call when download ends to cleanup and close tab
   async downloadEnded(download) {
-    console.log("downloadComplete", download);
+    console.log("downloadEnded", download);
     if (download.state === "complete" && download.fileSize > 0) { // totalBytes may be undefined
       let dlid = download.id;
       let tabid = App.removeDownload(dlid);
@@ -260,7 +248,8 @@ let App = {
       for (let download of downloads) {
         let dlid = download.id;
         if (App.getDownload(dlid) !== undefined) {
-          App.downloadEnded(download); // await not required
+          await App.downloadEnded(download);
+          App.updateBadgeSaving();
         }
       }
     }
@@ -287,7 +276,7 @@ let App = {
             loop = false;
           } else {
             console.log("waitForDownload:", dlid);
-            await sleep(randomIntFromInterval(1000, 3000)); // sleep 1-3sec
+            await sleep(3000);
           }
           break;
         case "complete":
@@ -328,14 +317,12 @@ let App = {
         });
         console.log(`Download ${dlid} from tab ${tabid}`);
         App.addDownload(dlid, tabid);
-        App.updateBadgeLoading();
         return dlid;
       } catch (err) {
         // catch errors related to Access Denied for data:image URLs
         console.error(`Download failed (${path}):`, err);
       }
     }
-    App.updateBadgeLoading();
     App.runtime.imagesFailed++;
     return false;
   },
@@ -461,7 +448,7 @@ let App = {
       }
       // if (tab.status === "loading") {
       console.log("waitForTab:", tab);
-      await sleep(1000); //randomIntFromInterval(500, 1000));
+      await sleep(1000);
       tab = await browser.tabs.get(tab.id);
       sleepMore = true;
     }
@@ -595,41 +582,38 @@ let App = {
     let tabsReady = [];
     let sleepMore = false;
     while (tabsWaiting.size > 0) {
-      //App.updateBadgeLoading();
-      for (let tabid of tabsWaiting.keys()) {
+      for (let [tabid, tab] of tabsWaiting) {
         if (App.isCancelled()) {
-          console.log("cancel:waitForTabs", tab);
+          console.log("cancel:waitForTabs");
           return false;
         }
-        let tab = tabsWaiting.get(tabid);
         // scripts do not run in discarded tabs
         if (tab.discarded) {
           console.log(`Tab ${tab.id} discarded, reloading:`, tab.url);
           tab = await browser.tabs.update(tab.id, {url: tab.url}); // reload() does not affect discarded state
           sleepMore = true;
         }
-        if (tab.status === "complete" && tabsWaiting.delete(tabid)) {
+        if (tab.status === "complete") {
+          tabsWaiting.delete(tabid);
           tabsReady.push(tab);
           if (tabsWaiting.size === 0) {
-            if (sleepMore) {
-              if(!await App.sleepOrCancel(5000, App.updateBadgeLoading)) {
-                //console.log("cancelled");
-                return false;
-              }
-            }
-            return tabsReady;
+            break;
           }
-          continue;
+        } else {
+          // tab.status === "loading"
+          sleepMore = true;
+          console.log("waitForTabs:", tab);
+          tab = await browser.tabs.get(tab.id);
+          tabsWaiting.set(tab.id, tab); // update map
         }
-        // tab.status === "loading"
-        sleepMore = true;
-        console.log("waitForTabs:", tab);
-        tab = await browser.tabs.get(tab.id);
-        tabsWaiting.set(tab.id, tab); // update map
       }
       if (!await App.sleepOrCancel(1000, App.updateBadgeLoading)) {
+        // cancelled
         return false;
       }
+    }
+    if (sleepMore) {
+      await App.sleepOrCancel(5000, App.updateBadgeLoading);
     }
     return tabsReady;
   },
@@ -721,7 +705,6 @@ let App = {
     await App.loadOptions();
     await App.executeTabs(App.options.action);
     App.finished();
-    
   },
 
   // handle messages from content scripts
