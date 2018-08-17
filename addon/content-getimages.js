@@ -18,7 +18,7 @@
     // return img.complete;
     return (
       img.naturalWidth !== undefined && img.naturalHeight !== undefined
-      // && img.naturalWidth > 0 && img.naturalHeight > 0
+      // && img.naturalWidth > 0 && img.naturalHeight > 0 // an image that is stopped will have natural size 0x0
     );
   }
 
@@ -57,6 +57,7 @@
     async getImages() {
       console.log(`getImages ${App.options.minWidth}x${App.options.minHeight}`);
       if (App.options.filter === "direct" && document.contentType.indexOf("image") !== 0) {
+        console.log("not direct image");
         return false;
       }
       let images = [];
@@ -90,7 +91,9 @@
             maxImage = img;
           }
         }
-        images = [maxImage];
+        if (maxImage !== undefined) {
+          images = [maxImage];
+        }
       }
       for (let img of images) {
         results.push({

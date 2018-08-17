@@ -5,7 +5,6 @@ function randomIntFromInterval(min, max)
 }
 
 function sleep(ms) {
-  console.log("sleep", ms);
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -23,31 +22,57 @@ let App = {
   },
 
   addDownload(dlid, tabid) {
-    App.runtime.downloads[dlid] = tabid;
+    return App.runtime.downloads.set(dlid, tabid);
+  },
+
+  getDownload(dlid) {
+    return App.runtime.downloads.get(dlid);
   },
 
   removeDownload(dlid) {
-    let tabid = App.runtime.downloads[dlid];
-    delete App.runtime.downloads[dlid];
+    let tabid = App.getDownload(dlid);
+    delete App.runtime.downloads.delete(dlid);
     return tabid;
+  },
+
+  downloadsLength() {
+    return App.runtime.downloads.size;
   },
 
   // is finished when all downloads for tabid have been removed
   isTabFinished(tabid) {
-    if (App.runtime.downloads.indexOf(tabid) === -1) {
+    // TODO create tabs.Map() to track tabid => [download ids]
+    let tabs = Array.from(App.runtime.downloads.keys());
+    if (tabs.indexOf(tabid) === -1) {
       return true;
     }
     return false;
   },
 
   addUrl(url) {
-    App.runtime.urls[url] = true;
+    App.runtime.urls.add(url);
   },
 
   // is valid if not duplicate
   isUniqueUrl(url) {
-    if (url in App.runtime.urls) {
-      return false;
+    return !App.runtime.urls.has(url);
+  },
+
+  async sleepOrCancel(ms, callback=undefined) {
+    let chunk = 500;
+    if (ms < chunk) {
+      chunk = ms;
+    }
+    for (let remain = ms; remain > 0; ) {
+      console.log("subsleep", chunk);
+      await sleep(chunk);
+      if (callback !== undefined) {
+        callback();
+      }
+      remain = remain - chunk;
+      if (App.isCancelled()) {
+        return false;
+      }
     }
     return true;
   },
@@ -108,8 +133,10 @@ let App = {
   },
 
   setupBadge() {
-    clearTimeout(App.runtime.badgeTimeout);
-    App.updateBadgeLoading();
+    if (App.runtime && App.runtime.badgeTimeout) {
+      clearTimeout(App.runtime.badgeTimeout);
+    }
+    //App.updateBadgeLoading();
   },
 
   hideBadge() {
@@ -198,9 +225,10 @@ let App = {
     });
   },
 
-  // call after download completes to cleanup and close tab
-  async downloadComplete(download) {
-    if (download.fileSize > 0) { // totalBytes may be undefined
+  // call when download ends to cleanup and close tab
+  async downloadEnded(download) {
+    console.log("downloadComplete", download);
+    if (download.state === "complete" && download.fileSize > 0) { // totalBytes may be undefined
       let dlid = download.id;
       let tabid = App.removeDownload(dlid);
       console.log(`Download ${dlid} complete`);
@@ -222,7 +250,24 @@ let App = {
     return false;
   },
 
-  // poll in_progress downloads until state change
+  // handle downloads changed events
+  // note: catches all changes to Downloads, not just from this webext
+  async handleDownloadChanged(delta) {
+    console.log("handleDownloadChanged", delta);
+    if (delta.state && delta.state.current !== "in_progress") {
+      let dlid = delta.id;
+      let downloads = await browser.downloads.search({"id": dlid});
+      for (let download of downloads) {
+        let dlid = download.id;
+        if (App.getDownload(dlid) !== undefined) {
+          App.downloadEnded(download); // await not required
+        }
+      }
+    }
+  },
+
+  /*
+  // poll in_progress download until state change
   async waitForDownload(dlid) {
     let complete = false;
     let loop = true;
@@ -261,6 +306,7 @@ let App = {
     }
     return complete;
   },
+  */
 
   isValidFilename(filename) {
     return (filename.length > 0) && (!/[*"/\\:<>|?]/.test(filename));
@@ -390,33 +436,40 @@ let App = {
     return result;
   },
 
-  async waitForTabReady(aTab) {
+  /*
+  // poll tab until status=complete
+  async waitForTab(aTab) {
     let tab = aTab;
+    let sleepMore = false;
     while (tab) {
       App.updateBadgeLoading();
       if (App.isCancelled()) {
-        console.log("cancel:waitForTabReady", tab);
+        console.log("cancel:waitForTab", tab);
         return false;
       }
       // scripts do not run in discarded tabs
       if (tab.discarded) {
         console.log(`Tab ${tab.id} discarded, reloading:`, tab.url);
         tab = await browser.tabs.update(tab.id, {url: tab.url}); // reload() does not affect discarded state
-        await sleep(randomIntFromInterval(1000, 3000)); // TODO: hack to allow page to load before executing script to avoid permission error
+        sleepMore = true;
       }
       if (tab.status === "complete") {
+        if (sleepMore) {
+          await sleep(5000); // wait longer to increase chance that fresh page is ready to execute
+        }
         return tab;
       }
       // if (tab.status === "loading") {
-      console.log("waitForTabReady:", tab);
-      await sleep(randomIntFromInterval(500, 1000));
+      console.log("waitForTab:", tab);
+      await sleep(1000); //randomIntFromInterval(500, 1000));
       tab = await browser.tabs.get(tab.id);
+      sleepMore = true;
     }
     return tab;
   },
+  */
 
-  async executeTab(aTab) {
-    let tab = await App.waitForTabReady(aTab);
+  async executeTab(tab) {
     if (tab) {
       let tabid = tab.id;
       try {
@@ -425,7 +478,7 @@ let App = {
         let results = await browser.tabs.executeScript(
           tabid, {
             file: App.options.contentScript,
-            runAt: "document_idle" // wait until tab completed loading and running scripts
+            runAt: "document_end" // "document_idle" may block if page is manually stopped
           }
         );
         App.runtime.tabsLoaded++;
@@ -466,6 +519,19 @@ let App = {
       });
   },
 
+  // wait until internal downloads map is empty
+  async waitForDownloads() {
+    while (App.downloadsLength() > 0) {
+      console.log("waitForDownloads:", App.runtime.downloads);
+      await App.sleepOrCancel(1000);
+      if (App.isCancelled()) {
+        console.log("cancel:resolveDownloads");
+        return false;
+      }
+    }
+    return true;
+  },
+
   resolveDownloads(promises) {
     // map catch blocks to all promises, so that all promises are run
     return Promise.all(promises.map(p => p.catch(e => {
@@ -474,6 +540,9 @@ let App = {
     })))
       .then(downloads => {
         console.log("resolveDownloads then:", downloads);
+        return App.resolveCompleted([App.waitForDownloads()]);
+        /*
+        // poll individual downloads
         let promiseCompleted = [];
         for (let dlid of downloads) {
           if (dlid === false) {
@@ -483,6 +552,7 @@ let App = {
           }
         }
         return App.resolveCompleted(promiseCompleted);
+        */
       })
       .catch(err => {
         console.error("resolveDownloads error", err);
@@ -518,6 +588,52 @@ let App = {
       });
   },
 
+  // wait for all tabs in tabmap to have status=complete
+  // returns array of tabs
+  async waitForTabs(tabmap) {
+    let tabsWaiting = tabmap;
+    let tabsReady = [];
+    let sleepMore = false;
+    while (tabsWaiting.size > 0) {
+      //App.updateBadgeLoading();
+      for (let tabid of tabsWaiting.keys()) {
+        if (App.isCancelled()) {
+          console.log("cancel:waitForTabs", tab);
+          return false;
+        }
+        let tab = tabsWaiting.get(tabid);
+        // scripts do not run in discarded tabs
+        if (tab.discarded) {
+          console.log(`Tab ${tab.id} discarded, reloading:`, tab.url);
+          tab = await browser.tabs.update(tab.id, {url: tab.url}); // reload() does not affect discarded state
+          sleepMore = true;
+        }
+        if (tab.status === "complete" && tabsWaiting.delete(tabid)) {
+          tabsReady.push(tab);
+          if (tabsWaiting.size === 0) {
+            if (sleepMore) {
+              if(!await App.sleepOrCancel(5000, App.updateBadgeLoading)) {
+                //console.log("cancelled");
+                return false;
+              }
+            }
+            return tabsReady;
+          }
+          continue;
+        }
+        // tab.status === "loading"
+        sleepMore = true;
+        console.log("waitForTabs:", tab);
+        tab = await browser.tabs.get(tab.id);
+        tabsWaiting.set(tab.id, tab); // update map
+      }
+      if (!await App.sleepOrCancel(1000, App.updateBadgeLoading)) {
+        return false;
+      }
+    }
+    return tabsReady;
+  },
+
   async executeTabs(method) {
     let doTab = false;
     let doAfter = false;
@@ -541,8 +657,9 @@ let App = {
         return false;
     }
     let promiseTabs = [];
-    let tabs = await App.getCurrentWindowTabs();
-    for (let tab of tabs) {
+    let alltabs = await App.getCurrentWindowTabs();
+    let tabsWaiting = new Map();
+    for (let tab of alltabs) {
       /* if (App.isCancelled()) {
         console.log("cancel:executeTabs");
         return;
@@ -558,11 +675,20 @@ let App = {
         }
       }
       if (doTab || (tab.active && (doCurrent || App.options.activeTab))) {
-        promiseTabs.push(App.executeTab(tab));
+        tabsWaiting.set(tab.id, tab);
+        // promiseTabs.push(App.executeTab(await App.waitForTab(tab)));
       }
       if (tab.active && !doAfter) {
         break;
       }
+    }
+    let tabs = await App.waitForTabs(tabsWaiting);
+    if (!tabs) {
+      console.log("cancel:executeTabs");
+      return false;
+    }
+    for (let tab of tabs) {
+      promiseTabs.push(App.executeTab(tab));
     }
     return await App.resolveTabs(promiseTabs);
   },
@@ -573,7 +699,9 @@ let App = {
       App.runtime.cancel = true;
       return;
     }
+    App.setupBadge(); // run before clearing runtime
     App.runtime = {
+      startDate: new Date(),
       tabsLoaded: 0, // tabs executed
       tabsEnded: 0, // tabs returned a message
       tabsSkipped: 0, // tabs with no valid images
@@ -582,17 +710,21 @@ let App = {
       imagesSkipped: 0, // skipped duplicates
       imagesFailed: 0, // failed downloads
       imagesSaved: 0, // saved images
+      badgeTimeout: undefined,
       badgeLoading: 0,
-      urls: [], // unique urls
-      downloads: [], // downloads in progress mapped to tabs
+      urls: new Set(), // unique urls
+      downloads: new Map(), // downloads in progress mapped to tabs
       busy: true,
       cancel: false
     };
-    App.setupBadge();
+
     await App.loadOptions();
     await App.executeTabs(App.options.action);
     App.finished();
+    
   },
+
+  // handle messages from content scripts
   handleMessage(request, sender, sendResponse) {
     console.log(`Message from tab ${sender.tab.id}`, request);
     switch (request.action) {
@@ -627,14 +759,14 @@ function shortcutCommand(command) {
 }
 
 async function loadShortcut() {
-  console.log("loadShortcut");
+  console.log("loadShortcut", App.options.command);
   let result = await browser.storage.local.get("shortcut");
   if (result.shortcut !== undefined) {
     await browser.commands.update({
       name: App.options.command,
       shortcut: result.shortcut
     });
-    console.log("shortcut loaded:", result.shortcut);
+    console.log("shortcut updated:", result.shortcut);
   } else {
     console.log("shortcut not set");
   }
@@ -645,3 +777,4 @@ browser.commands.onCommand.addListener(shortcutCommand);
 browser.runtime.onInstalled.addListener(loadShortcut);
 browser.runtime.onStartup.addListener(loadShortcut);
 browser.runtime.onMessage.addListener(App.handleMessage);
+browser.downloads.onChanged.addListener(App.handleDownloadChanged);
