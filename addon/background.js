@@ -28,11 +28,15 @@ function parseURL(url) {
   };
 }
 
+function sanitizeFilename(filename, str = "_") {
+  return filename.replace(/[*"/\\:<>|?]/g, str);
+}
+
 let App = {
   options: {
     contentScript: "/content-getimages.js",
     command: "_execute_browser_action", // keyboard shortcut command
-    icon: "icons/tab-image-saver-v2.svg" // icon used on notifications
+    icon: "icons/tab-image-saver-v2@48.png" // icon used on notifications
   },
   downloads: new Map(), // shared by all instances
   runtime: new Map(),
@@ -278,7 +282,10 @@ let App = {
     let imagesSaved = App.getRuntime(windowId).imagesSaved;
     let imagesFailed = App.getRuntime(windowId).imagesFailed;
     console.log(`${imagesSaved} Saved, ${imagesFailed} Failed`);
-    let msg = `Saved: ${imagesSaved}\n`;
+    let msg = "";
+    if (imagesSaved > 0) {
+      msg += `Saved: ${imagesSaved}\n`;
+    }
     if (imagesFailed > 0) {
       msg += `Failed: ${imagesFailed}\n`;
     }
@@ -297,10 +304,14 @@ let App = {
   async downloadEnded(download) {
     let dlid = download.id;
     let windowId = App.getDownloadWindow(dlid);
-    if (download.state === "complete" && download.fileSize > 0) { // totalBytes may be undefined
+    if (
+      download.state === "complete"
+      && download.fileSize > 0 // totalBytes may be undefined
+      && download.mime !== "text/html"
+    ) {
       App.updateBadgeSaving(windowId);
       let tabid = App.removeDownload(dlid);
-      console.log(`Download ${dlid} complete`);
+      console.log(`Download ${dlid} complete`, download);
       App.getRuntime(windowId).imagesSaved++;
       if (App.options.closeTab) {
         if (App.isTabFinished(tabid, windowId)) {
@@ -314,8 +325,9 @@ let App = {
       }
       return true;
     }
-    console.warn("Download size is 0 bytes", download);
+    console.warn("Download failed", download);
     App.getRuntime(windowId).imagesFailed++;
+    App.removeDownload(dlid);
     return false;
   },
 
@@ -395,7 +407,7 @@ let App = {
           if (!App.isValidFilename(filename)) {
             // no filename found from url, so use full path as filename
             filename = parseURL(image.src).pathname.replace(/^[/\\]*/, "").replace(/[/\\]*$/, ""); // remove leading and trailing slashes
-            filename = filename.replace(/[*"/\\:<>|?]/g, "_"); // Replace invalid characters
+            filename = sanitizeFilename(filename);
             if (!App.isValidFilename(filename)) {
               // if still no valid filename
               console.warn("Unable to generate filename");
@@ -428,7 +440,7 @@ let App = {
     let filename = "";
     if (App.options.altIsFilename && image.alt) {
       // append filename from alt attribute and filename extension
-      filename = image.alt + App.options.altFilenameExt;
+      filename = sanitizeFilename(image.alt) + App.options.altFilenameExt;
       console.log("Trying alt filename:", filename);
     }
     if (App.isValidFilename(filename)) {
