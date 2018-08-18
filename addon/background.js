@@ -2,6 +2,32 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function parseURL(url) {
+  let parser = document.createElement("a");
+  let searchObject = {};
+  let queries;
+  let split;
+  let i;
+  // Let the browser do the work
+  parser.href = url;
+  // Convert query string to object
+  queries = parser.search.replace(/^\?/, "").split("&");
+  for (i = 0; i < queries.length; i++) {
+    split = queries[i].split("=");
+    searchObject[split[0]] = split[1];
+  }
+  return {
+    protocol: parser.protocol,
+    host: parser.host,
+    hostname: parser.hostname,
+    port: parser.port,
+    pathname: parser.pathname,
+    search: parser.search,
+    searchObject,
+    hash: parser.hash
+  };
+}
+
 let App = {
   options: {
     contentScript: "/content-getimages.js",
@@ -363,14 +389,13 @@ let App = {
 
         if (!App.isValidFilename(filename)) {
           // no filename found, so create filename from url
-          filename = image.src.replace(/^.*[/\\]/, "");
-          filename = filename.replace(/\?.*/, ""); // Remove query string
+          // get full path and extract filename
+          filename = parseURL(image.src).pathname.replace(/^.*[/\\]/, "");
           filename = filename.replace(/:.*/, ""); // Workaround for Twitter
           if (!App.isValidFilename(filename)) {
-            // no filename found from url, so use domain+path as filename
-            filename = image.src.replace(/\?.*/, ""); // Remove query string
-            filename = filename.replace(/:.*/, ""); // Workaround for Twitter
-            filename = filename.replace(/[*"/\\:<>|?]/g, "_"); // Remove invalid characters
+            // no filename found from url, so use full path as filename
+            filename = parseURL(image.src).pathname.replace(/^[/\\]*/, "").replace(/[/\\]*$/, ""); // remove leading and trailing slashes
+            filename = filename.replace(/[*"/\\:<>|?]/g, "_"); // Replace invalid characters
             if (!App.isValidFilename(filename)) {
               // if still no valid filename
               console.warn("Unable to generate filename");
