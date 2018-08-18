@@ -9,6 +9,7 @@ Download from the Firefox Addons site https://addons.mozilla.org/en-US/firefox/a
    - Keyboard shortcut option
    - Display badge on icon with runtime information and count of downloads
 
+## Features
 **By default this addon saves the largest image found on the active tab.**
 You may control how this functions by changing the addon preferences at in **Firefox > Add-ons > Extensions > Tab Image Saver > Preferences**
 
