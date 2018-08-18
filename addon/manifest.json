@@ -15,7 +15,7 @@
     "<all_urls>"
   ],
   "icons": {
-    "48": "icons/tab-image-saver-v2.svg"
+    "48": "icons/tab-image-saver-v2@48.png"
   },
   "browser_action": {
     "default_icon": {
@@ -46,6 +46,6 @@
       "description": "Run Tab Image Saver with current settings"
     }
   },
-  "version": "2.0.0",
+  "version": "2.0.1a",
   "homepage_url": "https://github.com/mcdamo/tab-image-saver"
 }
