@@ -51,7 +51,7 @@ let App = {
 
   // is finished when all downloads for tabid have been removed
   isTabFinished(tabid, windowId) {
-    let tabs = Array.from(App.getRuntime(windowId).downloads.keys());
+    let tabs = Array.from(App.getRuntime(windowId).downloads.values());
     if (tabs.indexOf(tabid) === -1) {
       return true;
     }
