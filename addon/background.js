@@ -358,14 +358,13 @@ let App = {
   // note: catches all changes to Downloads, not just from this webext
   async handleDownloadChanged(delta) {
     console.log("handleDownloadChanged", delta);
-    if (delta.state && delta.state.current !== "in_progress") {
-      let dlid = delta.id;
-      let downloads = await browser.downloads.search({"id": dlid});
-      for (let download of downloads) {
-        let dlid = download.id;
-        if (App.getDownload(dlid) !== undefined) {
-          App.downloadEnded(download); // await?
-        }
+    let dlid = delta.id;
+    // if (delta.state && delta.state.current !== "in_progress") {
+    let downloads = await browser.downloads.search({"id": dlid});
+    for (let download of downloads) {
+      let dlid = download.id;
+      if (App.getDownload(dlid) !== undefined) {
+        App.downloadEnded(download); // await?
       }
     }
   },
@@ -711,6 +710,7 @@ let App = {
         promiseTabs,
         tabResults => {
           // executeTab returns: [tabid, [results]]
+          console.log("tabResults", tabResults);
           let promiseDownloads = [];
           for (let result of tabResults) {
             if (result === false) {
@@ -726,11 +726,14 @@ let App = {
           }
           return allPromises(
             promiseDownloads,
-            downloads => allPromises(
-              [App.waitForDownloads(windowId)],
-              () => {console.log("Downloads Ended");},
-              err => {console.error("waitForDownloads", err);}
-            ),
+            downloads => {
+              console.log("downloads", downloads);
+              return allPromises(
+                [App.waitForDownloads(windowId)],
+                () => {console.log("Downloads Ended");},
+                err => {console.error("waitForDownloads", err);}
+              );
+            },
             err => {console.error("downloads", err);}
           );
         },
@@ -760,6 +763,8 @@ let App = {
     let tabId = mytab.id;
     console.log("init", {windowId, tabId});
     App.setupBadge(); // run before clearing runtime
+    browser.downloads.onChanged.addListener(App.handleDownloadChanged); // add download listener
+    browser.runtime.onMessage.addListener(App.handleMessage);
     App.runtime.set(windowId, {
       tabId, // required for setting badge
       startDate: new Date(),
@@ -783,6 +788,10 @@ let App = {
     await App.executeTabs(App.options.action, windowId);
     App.finished(windowId);
     App.runtime.delete(windowId); // cleanup
+    if (App.runtime.size === 0) {
+      browser.downloads.onChanged.removeListener(App.handleDownloadChanged); // remove download listener
+      browser.runtime.onMessage.removeListener(App.handleMessage);
+    }
   },
 
   // handle messages from content scripts
@@ -838,5 +847,3 @@ browser.browserAction.onClicked.addListener(App.init);
 browser.commands.onCommand.addListener(shortcutCommand);
 browser.runtime.onInstalled.addListener(loadShortcut);
 browser.runtime.onStartup.addListener(loadShortcut);
-browser.runtime.onMessage.addListener(App.handleMessage);
-browser.downloads.onChanged.addListener(App.handleDownloadChanged);
