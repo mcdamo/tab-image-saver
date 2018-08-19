@@ -22,6 +22,10 @@
     );
   }
 
+  function isDirectImage() {
+    return (document.contentType.indexOf("image") === 0);
+  }
+
   let App = {
     options: {},
     runtime: undefined,
@@ -56,7 +60,8 @@
     // run chosen filter and return array of images
     async getImages() {
       console.log(`getImages ${App.options.minWidth}x${App.options.minHeight}`);
-      if (App.options.filter === "direct" && document.contentType.indexOf("image") !== 0) {
+      let direct = isDirectImage();
+      if (App.options.filter === "direct" && !direct) {
         console.log("not direct image");
         return false;
       }
@@ -96,10 +101,11 @@
         }
       }
       for (let img of images) {
-        results.push({
-          src: img.src,
-          alt: img.alt
-        });
+        let obj = {src: img.src};
+        if (!direct) {
+          obj.alt = img.alt;
+        }
+        results.push(obj);
       }
       console.log("Result", results);
       return results;

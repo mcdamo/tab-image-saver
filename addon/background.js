@@ -32,6 +32,19 @@ function sanitizeFilename(filename, str = "_") {
   return filename.replace(/[*"/\\:<>|?]/g, str);
 }
 
+// wait for all promises to resolve
+// promiseReject default is to silently catch promise rejections
+function allPromises(promises, allThen, allError, promiseReject = undefined) {
+  let catchFn = function(err) {console.error(err);};
+  if (promiseReject !== undefined) {
+    catchFn = promiseReject;
+  }
+  // map catch blocks to all promises, so that all promises are run
+  return Promise.all(promises.map(p => p.catch(catchFn)))
+    .then(allThen)
+    .catch(allError);
+}
+
 let App = {
   options: {
     contentScript: "/content-getimages.js",
@@ -283,11 +296,15 @@ let App = {
     let imagesFailed = App.getRuntime(windowId).imagesFailed;
     console.log(`${imagesSaved} Saved, ${imagesFailed} Failed`);
     let msg = "";
-    if (imagesSaved > 0) {
-      msg += `Saved: ${imagesSaved}\n`;
-    }
-    if (imagesFailed > 0) {
-      msg += `Failed: ${imagesFailed}\n`;
+    if (imagesSaved === 0 && imagesFailed === 0) {
+      msg += "No images";
+    } else {
+      if (imagesSaved > 0) {
+        msg += `Saved: ${imagesSaved}\n`;
+      }
+      if (imagesFailed > 0) {
+        msg += `Failed: ${imagesFailed}\n`;
+      }
     }
     msg += "\n";
     // if (App.runtime.tabsSkipped > 0) {
@@ -305,9 +322,9 @@ let App = {
     let dlid = download.id;
     let windowId = App.getDownloadWindow(dlid);
     if (
-      download.state === "complete"
-      && download.fileSize > 0 // totalBytes may be undefined
-      && download.mime !== "text/html"
+      download.state === "complete" &&
+      download.fileSize > 0 && // totalBytes may be undefined
+      download.mime !== "text/html"
     ) {
       App.updateBadgeSaving(windowId);
       let tabid = App.removeDownload(dlid);
@@ -323,6 +340,12 @@ let App = {
           }
         }
       }
+      /*
+      // TODO option to erase downloads from history
+      let erase = browser.downloads.erase({id: dlid});
+      erase.then((ids)=>{console.log("download erased", ids)});
+      await erase;
+      */
       return true;
     }
     console.warn("Download failed", download);
@@ -438,6 +461,7 @@ let App = {
     }
     let path = App.options.downloadPath;
     let filename = "";
+    // don't use alt as filename for direct images
     if (App.options.altIsFilename && image.alt) {
       // append filename from alt attribute and filename extension
       filename = sanitizeFilename(image.alt) + App.options.altFilenameExt;
@@ -541,19 +565,26 @@ let App = {
     return browser.tabs.query({windowId});
   },
 
-  resolveCompleted(promises) {
-    // map catch blocks to all promises, so that all promises are run
-    return Promise.all(promises.map(p => p.catch(e => {
-      console.error("resolveCompleted.map", e);
-      return false;
-    })))
-      .then(completed => {
-        console.log("resolveCompleted then:", completed);
+  cancelDownloads(windowId) {
+    let promises = [];
+    for (let dlid of App.getRuntime(windowId).downloads.keys()) {
+      // request cancellation but do not wait for response
+      let canceling = browser.downloads.cancel(dlid);
+      canceling.then(() => {
+        console.log("Cancelled download", dlid);
         return true;
       })
-      .catch(err => {
-        console.error("resolveCompleted error", err);
-      });
+        .catch(err => {
+          console.log(`Failed cancelling download ${dlid}`, err);
+          return false;
+        })
+      ;
+      promises.push(canceling);
+    }
+    return allPromises(promises,
+      () => {console.log("Cancelled all downloads");},
+      err => {console.error("cancelDownloads", err);}
+    );
   },
 
   // wait until internal downloads map is empty
@@ -561,55 +592,12 @@ let App = {
     while (App.downloadsLength(windowId) > 0) {
       await App.sleepOrCancel(1000, windowId);
       if (App.isCancelled(windowId)) {
-        console.log("cancel:resolveDownloads");
+        await App.cancelDownloads(windowId);
+        console.log("waitForDownloads:Received cancel command");
         return false;
       }
     }
     return true;
-  },
-
-  resolveDownloads(promises, windowId) {
-    // map catch blocks to all promises, so that all promises are run
-    return Promise.all(promises.map(p => p.catch(e => {
-      console.error("resolveDownloads.map", e);
-      return false;
-    })))
-      .then(downloads => {
-        console.log("resolveDownloads then:", downloads);
-        return App.resolveCompleted([App.waitForDownloads(windowId)]);
-      })
-      .catch(err => {
-        console.error("resolveDownloads error", err);
-      });
-  },
-
-  resolveTabs(promises, windowId) {
-    // map catch blocks to all promises, so that all promises are run
-    return Promise.all(promises.map(p => p.catch(e => {
-      console.error("resolveTabs.map", e);
-      return false;
-    })))
-      .then(tabResults => {
-        console.log("resolveTabs then:", tabResults);
-        // executeTab returns: [tabid, [results]]
-        let promiseDownloads = [];
-        for (let result of tabResults) {
-          if (result === false) {
-            // tab skipped
-          } else {
-            // tab ended
-            let tabid = result[0];
-            let images = result[1];
-            for (let image of images) {
-              promiseDownloads.push(App.download(image, tabid, windowId));
-            }
-          }
-        }
-        return App.resolveDownloads(promiseDownloads, windowId);
-      })
-      .catch(err => {
-        console.error("resolveTabs error", err);
-      });
   },
 
   // wait for all tabs in tabmap to have status=complete
@@ -711,15 +699,47 @@ let App = {
         break;
       }
     }
-    let tabs = await App.waitForTabs(tabsWaiting, windowId);
-    if (!tabs) {
-      console.log("cancel:executeTabs");
+    try {
+      let tabs = await App.waitForTabs(tabsWaiting, windowId);
+      if (!tabs) {
+        return false;
+      }
+      for (let tab of tabs) {
+        promiseTabs.push(App.executeTab(tab, windowId));
+      }
+      return allPromises(
+        promiseTabs,
+        tabResults => {
+          // executeTab returns: [tabid, [results]]
+          let promiseDownloads = [];
+          for (let result of tabResults) {
+            if (result === false) {
+              // tab skipped
+            } else {
+              // tab ended
+              let tabid = result[0];
+              let images = result[1];
+              for (let image of images) {
+                promiseDownloads.push(App.download(image, tabid, windowId));
+              }
+            }
+          }
+          return allPromises(
+            promiseDownloads,
+            downloads => allPromises(
+              [App.waitForDownloads(windowId)],
+              () => {console.log("Downloads Ended");},
+              err => {console.error("waitForDownloads", err);}
+            ),
+            err => {console.error("downloads", err);}
+          );
+        },
+        err => {console.error("executeTabs", err);}
+      );
+    } catch (err) {
+      console.error("waitForTabs", err);
       return false;
     }
-    for (let tab of tabs) {
-      promiseTabs.push(App.executeTab(tab, windowId));
-    }
-    return await App.resolveTabs(promiseTabs, windowId);
   },
 
   async getActiveTab(windowId)
