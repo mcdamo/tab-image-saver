@@ -214,11 +214,11 @@ let App = {
 
   updateBadgeFinished(windowId) {
     let num = App.getRuntime(windowId).imagesSaved;
-    let color = "#579900"; // green
+    let color = "#579900d0"; // green
     if (App.getRuntime(windowId).imagesFailed > 0) {
-      color = "#d3290f"; // red
+      color = "#d3290fd0"; // red
     } else if (App.getRuntime(windowId).imagesSaved === 0) {
-      color = "#cc9a23"; // yellow
+      color = "#cc9a23d0"; // yellow
     }
     App.setBadgeText({text: num.toString(), windowId});
     App.setBadgeBackgroundColor({color, windowId});
@@ -229,7 +229,7 @@ let App = {
     let num = App.getRuntime(windowId).imagesSaved;
     if (num > 0) {
       App.setBadgeText({text: num.toString(), windowId});
-      App.setBadgeBackgroundColor({color: "#486fe3", windowId}); // blue
+      App.setBadgeBackgroundColor({color: "#486fe3d0", windowId}); // blue
     }
   },
 
@@ -250,7 +250,7 @@ let App = {
       App.getRuntime(windowId).badgeLoading = num;
     }
     App.setBadgeText({text, windowId});
-    App.setBadgeBackgroundColor({color: "#8b67b3", windowId}); // purple
+    App.setBadgeBackgroundColor({color: "#8b67b3d0", windowId}); // purple
   },
 
   async notify(id, message) {
