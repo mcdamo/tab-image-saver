@@ -1,6 +1,6 @@
 {
   "name": "tabimagesaver",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "id": "tab-image-saver@mcdamo.addons.mozilla.org",
   "description": "Save largest image from each tab",
   "homepage": "https://github.com/mcdamo/tab-image-saver",
@@ -44,11 +44,13 @@
       "default_icon": {
         "48": "icons/tab-image-saver-v2.svg"
       },
-      "theme_icons": [{
-        "light": "icons/tab-image-saver-v2-light.svg",
-        "dark": "icons/tab-image-saver-v2.svg",
-        "size": 48
-      }],
+      "theme_icons": [
+        {
+          "light": "icons/tab-image-saver-v2-light.svg",
+          "dark": "icons/tab-image-saver-v2.svg",
+          "size": 48
+        }
+      ],
       "default_title": "Tab Image Saver",
       "browser_style": true
     },
@@ -63,8 +65,7 @@
     },
     "commands": {
       "_execute_browser_action": {
-        "suggested_key": {
-        },
+        "suggested_key": {},
         "description": "Run Tab Image Saver with current settings"
       }
     }
@@ -95,7 +96,7 @@
     "eslint-plugin-mocha": "^4.12.1",
     "eslint-plugin-promise": "^3.8.0",
     "fx-runner": "^1.0.9",
-    "geckodriver": "^1.12.1",
+    "geckodriver": "^1.12.2",
     "grunt": "^1.0.3",
     "grunt-remove-logging": "^0.2.0",
     "karma": "^1.7.1",
