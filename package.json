@@ -62,12 +62,18 @@
       "browser_style": true
     },
     "options_ui": {
-      "page": "options.html",
+      "page": "options/options.html",
       "browser_style": true
     },
     "background": {
       "scripts": [
-        "background.js"
+        "background/global.js",
+        "background/constants.js",
+        "background/options.js",
+        "background/messaging.js",
+        "background/downloads.js",
+        "background/background.js",
+        "background/commands.js"
       ]
     },
     "commands": {
@@ -83,22 +89,29 @@
     "build:copy": "mkdir build && cp -r addon/* build",
     "build:striplogging": "grunt",
     "bundle": "npm-run-all bundle:*",
+    "#bundle:copy": "cp -r addon/icons bundle && cp addon/manifest.json bundle",
     "bundle:manifest": "node ./bin/generate-manifest",
+    "#bundle:webpack": "webpack",
     "download": "node scripts/get_ff.js",
-    "firefox": "web-ext -s addon run --firefox-binary ${FIREFOX_BINARY:-beta}",
     "lint": "npm-run-all lint:*",
     "lint:eslint": "eslint --ext=.js,.json addon",
     "lint:webext": "web-ext -s addon lint",
-    "package": "npm-run-all bundle:* build:* && web-ext -s build -a dist build --overwrite-dest",
+    "release": "npm-run-all bundle:* build:* && web-ext -s build -a release build --overwrite-dest",
     "test": "npm-run-all test:*",
+    "#test:bundle": "npm run-all bundle:*",
     "test:lint": "npm run lint",
-    "test:karma": "NODE_ENV=test karma start",
+    "#test:lint": "npm run bundle:webpack && npm run lint",
     "test:func": "export FIREFOX_BINARY=${FIREFOX_BINARY:-beta} && npm run bundle && XPI_NAME=dist/tab-image-saver-1.0.0.zip mocha test/functional/",
-    "virtualenv-postinstall": "virtualenv-postinstall"
+    "virtualenv-postinstall": "virtualenv-postinstall",
+    "watch:js": "webpack --watch --progress",
+    "web-ext": "web-ext -s ./addon run"
   },
   "dependencies": {},
   "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^4.19.1",
+    "eslint-loader": "^2.1.0",
     "eslint-plugin-json": "^1.2.1",
     "eslint-plugin-mocha": "^4.12.1",
     "eslint-plugin-promise": "^3.8.0",
@@ -106,19 +119,26 @@
     "geckodriver": "^1.12.2",
     "grunt": "^1.0.3",
     "grunt-remove-logging": "^0.2.0",
+    "istanbul-instrumenter-loader": "^3.0.1",
     "karma": "^1.7.1",
     "karma-coverage": "^1.1.2",
+    "karma-coverage-istanbul-reporter": "^2.0.2",
     "karma-coveralls": "^1.2.1",
     "karma-firefox-launcher": "^1.1.0",
     "karma-mocha": "^1.3.0",
     "karma-mocha-reporter": "^2.2.5",
+    "karma-webpack": "^3.0.0",
     "mocha": "^3.5.3",
     "mz": "^2.7.0",
     "npm-run-all": "^4.1.3",
     "selenium-webdriver": "^3.6.0",
-    "sinon": "^3.3.0",
+    "sinon": "^6.1.5",
+    "sinon-chai": "^3.2.0",
     "sinon-chrome": "^2.3.2",
     "virtualenv": "^0.3.1",
-    "web-ext": "^2.8.0"
+    "web-ext": "^2.8.0",
+    "webextensions-api-fake": "^0.5.1",
+    "webpack": "^4.17.1",
+    "webpack-cli": "^3.1.0"
   }
 }

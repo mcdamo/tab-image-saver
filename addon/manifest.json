@@ -39,12 +39,18 @@
     "browser_style": true
   },
   "options_ui": {
-    "page": "options.html",
+    "page": "options/options.html",
     "browser_style": true
   },
   "background": {
     "scripts": [
-      "background.js"
+      "background/global.js",
+      "background/constants.js",
+      "background/options.js",
+      "background/messaging.js",
+      "background/downloads.js",
+      "background/background.js",
+      "background/commands.js"
     ]
   },
   "commands": {

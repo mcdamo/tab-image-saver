@@ -26,11 +26,11 @@
     return (document.contentType.indexOf("image") === 0);
   }
 
-  let App = {
+  const App = {
     options: {},
     runtime: undefined,
 
-    async waitForDomImage(i) {
+    waitForDomImage: async i => {
       let img = true;
       while (img) {
         img = document.images[i];
@@ -48,7 +48,7 @@
     },
 
     // verify image meets minimum requirements
-    validImage(img) {
+    validImage: img => {
       if (img.naturalWidth >= App.options.minWidth && img.naturalHeight >= App.options.minHeight) {
         console.log(`valid image (${img.naturalWidth}x${img.naturalHeight}):`, img);
         return true;
@@ -58,15 +58,15 @@
     },
 
     // run chosen filter and return array of images
-    async getImages() {
+    getImages: async () => {
       console.log(`getImages ${App.options.minWidth}x${App.options.minHeight}`);
-      let direct = isDirectImage();
+      const direct = isDirectImage();
       if (App.options.filter === "direct" && !direct) {
         console.log("not direct image");
         return false;
       }
       let images = [];
-      for (let i in document.images) {
+      for (const i in document.images) {
         if ({}.propertyIsEnumerable.call(document.images, i)) {
           if (App.isCancelled()) {
             return null;
@@ -89,7 +89,7 @@
       if (App.options.filter !== "all") {
         let maxDimension = 0;
         let maxImage; // undefined
-        for (let img of images) {
+        for (const img of images) {
           let currDimension = img.naturalWidth * img.naturalHeight;
           if (currDimension > maxDimension) {
             maxDimension = currDimension;
@@ -100,7 +100,7 @@
           images = [maxImage];
         }
       }
-      for (let img of images) {
+      for (const img of images) {
         let obj = {src: img.src};
         if (!direct) {
           obj.alt = img.alt;
@@ -111,11 +111,11 @@
       return results;
     },
 
-    async sendMessage(action) {
+    sendMessage: async type => {
       try {
-        let message = await browser.runtime.sendMessage({action});
+        const message = await browser.runtime.sendMessage({type});
         console.log("Message received:", message);
-        if (message.action === action) {
+        if (message.type === type) {
           return message.body;
         }
         console.error("Message did not contain the expected keys", message);
@@ -129,12 +129,12 @@
     // minHeight
     // minWidth
     // filter
-    async loadOptions() {
-      let obj = await App.sendMessage("config");
+    loadOptions: async () => {
+      const obj = await App.sendMessage("OPTIONS");
       if (!obj) {
         return false;
       }
-      for (let prop in obj) {
+      for (const prop in obj) {
         // property guard https://eslint.org/docs/rules/no-prototype-builtins
         if ({}.propertyIsEnumerable.call(obj, prop)) {
           App.options[prop] = obj[prop];
@@ -143,13 +143,11 @@
       return true;
     },
 
-    isCancelled() {
-      return App.runtime.cancel;
-    },
+    isCancelled: () => App.runtime.cancel,
 
-    async getCancelled() {
+    getCancelled: async () => {
       if (!App.isCancelled()) {
-        let obj = await App.sendMessage("cancel");
+        const obj = await App.sendMessage("CANCEL");
         if (obj.cancel) {
           App.runtime.cancel = true;
           return true;
@@ -158,7 +156,7 @@
       return false;
     },
 
-    async init() {
+    init: async () => {
       App.runtime = {cancel: false};
       if (await App.loadOptions()) {
         // console.log(document.readyState);

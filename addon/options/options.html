@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="options.css">
+</head>
+
+<body>
+  <form id="options">
+<p>
+	<legend>Tab direction</legend>
+	<label><input type="radio" name="action" value="current" >Active tab</label>
+	<label><input type="radio" name="action" value="left" >Left of active tab</label>
+	<label><input type="radio" name="action" value="right" >Right of active tab</label>
+	<label><input type="radio" name="action" value="all" >All tabs</label>
+
+	<br/>
+      <label><input type="checkbox" name="activeTab" >Include active tab</label>
+</p>
+<p>
+	<legend>Filter</legend>
+	<label><input type="radio" name="filter" value="max" >Largest image</label>
+	<label><input type="radio" name="filter" value="all" >All images</label>
+	<label><input type="radio" name="filter" value="direct" >Image tabs only</label> 
+ (ignore tabs with webpages)
+</p>
+<p>
+	<legend>Minimum dimensions (pixels)</legend>
+      <label>Width
+      <input type="text" name="minWidth" >
+      </label>
+      <br/>
+      <label>Height
+      <input type="text" name="minHeight" >
+      </label>
+</p>
+<p>
+<legend>Images are saved in your Downloads path.<br>Optionally you can name a subfolder to save into.</legend>
+      <label>Folder
+      <input type="text" name="downloadPath" size="60">
+      </label>
+</p>
+<p>
+      <legend>Use image "alt" attribute for save file name, if available</legend>
+      <label>
+	<input type="checkbox" name="altIsFilename">
+	Use "alt" attribute for filename
+      </label>
+      <br/>
+      <label>
+	Optionally add file extension (e.g. ".jpg")
+	<input type="text" name="altFilenameExt"/>
+      </label>
+</p>
+<p>
+	<legend>Duplicate filename action</legend>
+	<label><input type="radio" name="conflictAction" value="uniquify" >Rename (automatic)</label>
+	<label><input type="radio" name="conflictAction" value="overwrite" >Overwrite</label>
+</p>
+<p>
+	<legend>Advanced options</legend>
+      <label><input type="checkbox" name="closeTab" >Close tabs after saving</label>
+      <br/>
+      <label><input type="checkbox" name="notifyEnded" >Show notification popups</label>
+      <br/>
+      <label><input type="checkbox" name="removeEnded" >Incognito mode</label> (hide from download history)
+</p>
+</form>
+<div id="shortcuts">
+<p>
+	<legend>Keyboard shortcuts</legend>
+Example: "Alt+X", "Ctrl+Shift+U". <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/commands#Shortcut_values">Allowed values</a>
+      <br/>
+      <input type="text" name="shortcut" >
+</p>
+</div>
+  <script src="options-ui.js"></script>
+</body>
+
+</html>
