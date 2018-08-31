@@ -14,6 +14,7 @@ const App = {
   },
   options: {},
   runtime: new Map(),
+  blocking: {},
 
   getRuntime: windowId => {
     const props = App.runtime.get(windowId);
@@ -602,12 +603,18 @@ const App = {
 
   run: async () => {
     const windowId = await getWindowId();
+    if (App.blocking.windowId) {
+      console.log("Blocking concurrent run command");
+      return -1; // for testing
+    }
+    App.blocking.windowId = windowId;
     if (App.runtime.has(windowId)) {
       console.warn("Cancelling windowId:", windowId);
       App.getRuntime(windowId).cancel = true;
       await Downloads.cancelWindowDownloads(windowId);
       // TODO call finished() after timeout?
-      return;
+      delete App.blocking.windowId;
+      return 0; // for testing
     }
     const mytab = await App.getActiveTab(windowId);
     const tabId = mytab.id;
@@ -632,6 +639,7 @@ const App = {
       // downloads: new Map(), // downloads in progress mapped to tabs
       cancel: false
     });
+    delete App.blocking.windowId;
 
     App.updateBadgeLoading(windowId);
     if (await App.executeTabs(App.options.action, windowId) === false) {
@@ -639,6 +647,7 @@ const App = {
       console.log("executeTabs cancelled");
       App.finished(windowId);
     }
+    return 1; // for testing
   }
 };
 

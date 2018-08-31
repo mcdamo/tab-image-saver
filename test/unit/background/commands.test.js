@@ -14,7 +14,7 @@ describe("commands.js", () => {
 
   describe("browser", () => {
     it("should register a listener for onCommand", () => {
-      expect(browser.commands.onCommand.addListener).to.be.calledOnce;
+      expect(browser.commands.onCommand.addListener).to.be.called; //Once;
     });
   });
 

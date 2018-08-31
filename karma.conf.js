@@ -24,7 +24,7 @@ module.exports = function(config) {
       // "addon/**/*.js",
       "addon/background/constants.js",
       //"addon/background/global.js",
-      //"addon/**/*.js",
+      "addon/**/*.js",
 
       // Tests
       "test/unit/**/*.test.js",
