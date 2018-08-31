@@ -13,10 +13,7 @@ const OptionsUI = {
         value: o.value
       }
     });
-    if (res.type === "OK") {
-      return true;
-    }
-    return false;
+    return (res.type === "OK");
   },
 
   saveOptions: async e => {

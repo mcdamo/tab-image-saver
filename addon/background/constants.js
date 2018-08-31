@@ -1,6 +1,6 @@
 // options.action
 const ACTION = {
-  ACTIVE: "current",
+  ACTIVE: "active",
   LEFT: "left",
   RIGHT: "right",
   ALL: "all"

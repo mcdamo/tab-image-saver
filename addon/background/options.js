@@ -120,8 +120,19 @@ const Options = {
     return Options.OPTIONS;
   },
 
-  loadOptions: async () => {
-    const loadedOptions = await browser.storage.local.get(Options.getKeys());
+  storageChangeHandler: (changes, area) => {
+    if (area !== "local") {
+      return Options.OPTIONS;
+    }
+    const loadedOptions = Object.keys(changes).reduce(
+      (acc, val) => Object.assign(acc, {[val]: changes[val].newValue}),
+      {}
+    );
+    return Options.setOptions(loadedOptions);
+  },
+
+  setOptions: loadedOptions => {
+    console.log("loadedOptions", loadedOptions);
     const localKeys = Object.keys(loadedOptions);
     localKeys.forEach(k => {
       const optionType = Options.OPTION_KEYS.find(
@@ -130,8 +141,13 @@ const Options = {
       const fn = (optionType.onLoad) ? optionType.onLoad.function : (x => x);
       Options.setOption(k, fn(loadedOptions[k]));
     });
-    Options.loaded = true;
     return Options.OPTIONS;
+  },
+
+  loadOptions: async () => {
+    const loadedOptions = await browser.storage.local.get(Options.getKeys());
+    Options.loaded = true;
+    return Options.setOptions(loadedOptions);
   }
 };
 

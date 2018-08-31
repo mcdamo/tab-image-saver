@@ -50,8 +50,8 @@ const Downloads = {
 
   // handle downloads changed events
   // note: catches all changes to Downloads, not just from this webext
-  handleDownloadChanged: async delta => {
-    console.log("handleDownloadChanged", delta);
+  downloadChangedHandler: async delta => {
+    console.log("downloadChangedHandler", delta);
     let dlid = delta.id;
     // if (delta.state && delta.state.current !== "in_progress") {
     let downloads = await browser.downloads.search({"id": dlid});
@@ -63,6 +63,7 @@ const Downloads = {
   removeWindowDownloads: windowId => {
     for (const [dlid, val] of Downloads.dlMap.entries()) {
       if (val.windowId === windowId) {
+        console.warn("Removing orphan download", dlid, val);
         Downloads.removeDownload(dlid);
       }
     }

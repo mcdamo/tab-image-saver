@@ -1,7 +1,7 @@
 /* globals App MESSAGE_TYPES Options */
 
 const Messaging = {
-  listener: async (request, sender, sendResponse) => {
+  handler: async (request, sender, sendResponse) => {
     let msg = {};
     switch (request.type) {
       case MESSAGE_TYPES.OPTIONS: {
@@ -53,7 +53,7 @@ const Messaging = {
   }
 };
 
-browser.runtime.onMessage.addListener(Messaging.listener);
+browser.runtime.onMessage.addListener(Messaging.handler);
 
 // Export for testing
 if (typeof module !== "undefined") {

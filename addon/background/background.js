@@ -1,4 +1,4 @@
-/* globals Downloads Options Global */
+/* globals ACTION Downloads Options Global */
 
 async function getWindowId() {
   const mywindow = await browser.windows.getCurrent();
@@ -8,8 +8,9 @@ async function getWindowId() {
 
 const App = {
   constants: {
+    title: "",
     contentScript: "/content/get-images.js",
-    icon: "icons/tab-image-saver-v2@48.png" // icon used on notifications
+    icon: "" // icon used on notifications
   },
   options: {},
   runtime: new Map(),
@@ -160,7 +161,7 @@ const App = {
     let msgErr = "";
     const tabsError = App.getRuntime(windowId).tabsError;
     if (tabsError > 0) {
-      if (App.options.action === "current") {
+      if (App.options.action === ACTION.ACTIVE) {
         msgErr = "active tab does not have permission";
       } else {
         msgErr = `${tabsError} tabs do not have permission`;
@@ -209,7 +210,7 @@ const App = {
     Downloads.removeWindowDownloads(windowId);
     App.runtime.delete(windowId); // cleanup
     if (App.runtime.size === 0) {
-      browser.downloads.onChanged.removeListener(Downloads.handleDownloadChanged); // remove download listener
+      browser.downloads.onChanged.removeListener(Downloads.downloadChangedHandler); // remove download listener
     }
   },
 
@@ -448,17 +449,18 @@ const App = {
     let doAfter = false;
     let doCurrent = false;
     switch (method) {
-      case "left":
+      case ACTION.LEFT:
         doTab = true;
         break;
-      case "right":
+      case ACTION.RIGHT:
         doAfter = true;
         break;
-      case "all":
+      case ACTION.ALL:
         doTab = true;
         doAfter = true;
         break;
-      case "current":
+      case ACTION.ACTIVE:
+      case "current": // deprecated after v2.0.5
         doCurrent = true;
         break;
       default:
@@ -571,12 +573,31 @@ const App = {
 
   // load options to trigger onLoad and set commands
   init: async () => {
+    await App.loadManifest();
     await App.loadOptions();
   },
 
+  updateTitle: async () => {
+    const title = `${App.constants.title}: ${App.options.action}`;
+    await browser.browserAction.setTitle({title});
+  },
+
+  loadManifest: async () => {
+    const mf = await browser.runtime.getManifest();
+    console.log(mf);
+    App.constants.icon = mf.icons["48"];
+    App.constants.title = mf.name;
+  },
+
+  storageChangeHandler: (changes, area) => {
+    console.log("ReLoading background options");
+    App.options = Options.storageChangeHandler(changes, area);
+  },
+
   loadOptions: async () => {
-    console.log("Reloading background options");
+    console.log("Loading background options");
     App.options = await Options.loadOptions();
+    await App.updateTitle();
   },
 
   run: async () => {
@@ -588,12 +609,11 @@ const App = {
       // TODO call finished() after timeout?
       return;
     }
-    await App.loadOptions();
     const mytab = await App.getActiveTab(windowId);
     const tabId = mytab.id;
     console.log("running", {windowId, tabId});
     App.setupBadge(); // run before clearing runtime
-    browser.downloads.onChanged.addListener(Downloads.handleDownloadChanged); // add download listener
+    browser.downloads.onChanged.addListener(Downloads.downloadChangedHandler); // add download listener
     // browser.runApp.runtime.onMessage.addListener(App.handleMessage);
     App.runtime.set(windowId, {
       tabId, // required for setting badge
@@ -625,6 +645,7 @@ const App = {
 browser.browserAction.onClicked.addListener(App.run);
 browser.runtime.onInstalled.addListener(App.init);
 browser.runtime.onStartup.addListener(App.init);
+browser.storage.onChanged.addListener(App.storageChangeHandler);
 
 // Export for testing
 if (typeof module !== "undefined") {

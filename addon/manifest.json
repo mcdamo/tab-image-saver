@@ -12,6 +12,7 @@
     "storage",
     "notifications",
     "downloads",
+    "menus",
     "<all_urls>"
   ],
   "icons": {
@@ -50,6 +51,7 @@
       "background/messaging.js",
       "background/downloads.js",
       "background/background.js",
+      "background/menus.js",
       "background/commands.js"
     ]
   },
