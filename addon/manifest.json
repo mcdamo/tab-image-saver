@@ -61,7 +61,7 @@
       "description": "Run Tab Image Saver with current settings"
     }
   },
-  "version": "2.1.0",
-  "description": "Save images from open tabs. Default action saves largest image in active tab, with options to act on tabs to the left or right of the active tab.",
+  "version": "2.1.1",
+  "description": "Save images from open tabs. Default action saves largest image in active tab.",
   "homepage_url": "https://github.com/mcdamo/tab-image-saver"
 }
