@@ -152,7 +152,7 @@ const App = {
       }
       return await browser.notifications.create(id, obj);
     } catch (err) {
-      console.error("Note failed:", err);
+      console.error("Note failed:", err); /* RemoveLogging:skip */
     }
     return false;
   },
@@ -235,7 +235,7 @@ const App = {
           await browser.tabs.remove(tabId);
           console.log(`Tab removed ${tabId}`);
         } catch (err) {
-          console.error(`Failed removing tab ${tabId}:`, err);
+          console.error(`Failed removing tab ${tabId}:`, err); /* RemoveLogging:skip  */
         }
       }
     }
@@ -286,6 +286,11 @@ const App = {
     return filename;
   },
 
+  createPath: async (image, num = undefined) => {
+    const path = Global.pathJoin([App.options.downloadPath, await App.createFilename(image, num)]);
+    return Global.sanitizePath(path);
+  },
+
   // select valid images and remove duplicates
   // return array of images to be downloaded
   processTabResult: (images, windowId) => {
@@ -297,7 +302,8 @@ const App = {
       const url = image.src;
       if (url.indexOf("data:") === 0) {
         App.getRuntime(windowId).imagesFailed++;
-        console.warn("Embedded image is unsupported"); // TODO support embedded
+        // TODO
+        console.warn("Embedded image is unsupported"); /* RemoveLogging:skip */
       } else if (App.isUniqueUrl(url, windowId) === false) {
         console.log("Duplicate URL skipped", url);
         App.getRuntime(windowId).imagesSkipped++;
@@ -365,7 +371,7 @@ const App = {
         }
       } catch (err) {
         App.getRuntime(windowId).tabsError++;
-        console.error(`Error executing tab ${tabid}`, err);
+        console.error(`Error executing tab ${tabid}`, err); /* RemoveLogging:skip */
         return false;
       }
     }
@@ -465,7 +471,7 @@ const App = {
         doCurrent = true;
         break;
       default:
-        console.error("Invalid method for executeTabs:", method);
+        console.error("Invalid method for executeTabs:", method); /* RemoveLogging:skip */
         return false;
     }
     let promiseTabs = [];
@@ -522,7 +528,7 @@ const App = {
               const tabId = result[0];
               const images = result[1];
               for (const image of images) {
-                const path = `${App.options.downloadPath}/${await App.createFilename(image, count)}`; // TODO
+                const path = await App.createPath(image, count);
                 promiseDownloads.push(
                   Downloads.startDownload({
                     url: image.src,
@@ -562,7 +568,7 @@ const App = {
         err => {console.error("executeTabs", err);}
       );
     } catch (err) {
-      console.error("waitForTabs", err);
+      console.error("waitForTabs", err); /* RemoveLogging:skip */
       return false;
     }
   },

@@ -40,14 +40,15 @@ describe("options-ui.js", () => {
     };
     browser.runtime.sendMessage.resolves({type: MESSAGE_TYPES.ERROR});
     browser.runtime.sendMessage.withArgs({type: MESSAGE_TYPES.OPTIONS_ONSAVE, body: onsaveOkBody})
-      .resolves({type: MESSAGE_TYPES.OK});
-    it("should return true for 'shortcut'", () => {
+      .resolves({type: MESSAGE_TYPES.OPTIONS_ONSAVE, body: onsaveOkBody});
+    it("should return value for valid shortcut", async () => {
       const o = onsaveOkBody;
-      return expect(OptionsUI.onSaveOption(o)).to.eventually.become(true);
+      await expect(OptionsUI.onSaveOption(o)).to.eventually.become(o.value);
     });
-    it("should return false for 'test'", () => {
+    it("should throw Error for invalid shortcut", async () => {
       const o = onsaveErBody;
-      return expect(OptionsUI.onSaveOption(o)).to.eventually.become(false);
+      await expect(OptionsUI.onSaveOption(o)).to.eventually.be.rejected
+        .and.be.an.instanceOf(Error);
     });
   });
   describe("saveOptions", () => {

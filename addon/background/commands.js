@@ -11,7 +11,7 @@ const Commands = {
     if (key === "" || key === null || key === undefined) {
       console.log("Shortcut reset");
       await browser.commands.reset(command);
-      return true;
+      return key;
     }
     try {
       await browser.commands.update({
@@ -19,11 +19,11 @@ const Commands = {
         shortcut: key
       });
     } catch (err) {
-      console.error(`Unable to use shortcut: ${key}`, err);
+      console.error(`Unable to use shortcut: ${key}`, err); /* RemoveLogging:skip */
       throw new Error(`Unable to use shortcut: ${key}`);
     }
     console.log("Shortcut updated", key);
-    return true;
+    return key;
   },
 
   setBrowserAction: async key => await Commands.setCommand(SHORTCUT_TYPES.BROWSER_ACTION, key),

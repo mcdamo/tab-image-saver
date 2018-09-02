@@ -6,14 +6,18 @@ const OptionsUI = {
 
   // option object with name and value
   onSaveOption: async o => {
+    const type = "OPTIONS_ONSAVE";
     const res = await browser.runtime.sendMessage({
-      type: "OPTIONS_ONSAVE",
+      type,
       body: {
         name: o.name,
         value: o.value
       }
     });
-    return (res.type === "OK");
+    if (res.type === type) {
+      return res.body.value;
+    }
+    throw new Error("Invalid option");
   },
 
   saveOptions: async e => {
@@ -46,8 +50,10 @@ const OptionsUI = {
         optionValue = val.default;
       }
       if (val.onSave) {
-        if (!await OptionsUI.onSaveOption({name: val.name, value: optionValue})) {
-          console.log("Shortcut rejected");
+        try {
+          optionValue = await OptionsUI.onSaveOption({name: val.name, value: optionValue});
+        } catch (err) {
+          console.log("onSave rejected");
           optionValue = val.default;
           // TODO error message
         }

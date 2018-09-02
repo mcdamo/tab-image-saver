@@ -63,7 +63,7 @@ const Downloads = {
   removeWindowDownloads: windowId => {
     for (const [dlid, val] of Downloads.dlMap.entries()) {
       if (val.windowId === windowId) {
-        console.warn("Removing orphan download", dlid, val);
+        console.warn("Removing orphan download", dlid, val); /* RemoveLogging:skip */
         Downloads.removeDownload(dlid);
       }
     }
@@ -110,7 +110,7 @@ const Downloads = {
       return dlid;
     } catch (err) {
       // catch errors related to Access Denied for data:image URLs
-      console.error("Download failed", err, download);
+      console.error("Download failed", err, download); /* RemoveLogging:skip */
     }
     const fn = context.error || (x => x);
     fn();

@@ -43,6 +43,18 @@ const Global = {
       .catch(allError);
   },
 
+  sanitizePath: (path, str = "_") =>
+    path.replace(/[*":<>|?]/g, str) // remove invalid characters
+      .replace(/[/\\]+/g, "/") // replace backslash with forward slash
+      .replace(/^[/]/, "") // strip leading slash
+      .replace(/[/]$/, ""), // strip trailing slash
+
+  pathJoin: (parts, sep) => {
+    const separator = sep || "/";
+    const replace = new RegExp(`${separator}{1,}`, "g");
+    return parts.join(separator).replace(replace, separator);
+  },
+
   isValidFilename: filename => (filename.length > 0) && (!/[*"/\\:<>|?]/.test(filename)),
 
   // download using XHR for filename

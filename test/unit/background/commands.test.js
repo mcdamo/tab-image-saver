@@ -25,7 +25,7 @@ describe("commands.js", () => {
       for (const key of keys) {
         commandResetStub.resetHistory();
         //expect(Commands.setCommand(command, key)).to.eventually.be.true.notify(done); // notify(done) instead of returning promise
-        expect(await Commands.setCommand(command, key)).to.be.true;
+        await expect(Commands.setCommand(command, key), `Key ${key}`).to.be.eventually.become(key);
         expect(browser.commands.reset).to.be.calledOnceWith(command);
       }
     });
@@ -43,7 +43,7 @@ describe("commands.js", () => {
       const command = browserAction;
       const key = validKey;
       commandUpdateStub.resetHistory();
-      expect(await Commands.setCommand(command, key)).to.be.true; // redundant?
+      await expect(Commands.setCommand(command, key)).to.eventually.become(key);
       expect(browser.commands.update).to.be.calledOnceWith({name: command, shortcut: key});
     });
   });
@@ -52,7 +52,7 @@ describe("commands.js", () => {
     it("should call browser.commands.update", async () => {
       const key = validKey;
       commandUpdateStub.resetHistory();
-      expect(await Commands.setBrowserAction(key)).to.be.true; // redundant?
+      await expect(Commands.setBrowserAction(key)).to.eventually.become(key);
       expect(browser.commands.update).to.be.calledOnceWith({name: browserAction, shortcut: key});
     });
   });

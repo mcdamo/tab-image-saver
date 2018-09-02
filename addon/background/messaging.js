@@ -22,12 +22,17 @@ const Messaging = {
         break;
       }
       case MESSAGE_TYPES.OPTIONS_ONSAVE: {
-        let name = request.body.name;
-        let value = request.body.value;
-        let opt = Options.getOptionMeta(name);
+        const name = request.body.name;
+        const value = request.body.value;
+        const opt = Options.getOptionMeta(name);
         try {
-          await opt.onSave.function(value);
-          msg = {type: MESSAGE_TYPES.OK};
+          msg = {
+            type: MESSAGE_TYPES.OPTIONS_ONSAVE,
+            body: {
+              name,
+              value: await opt.onSave.function(value)
+            }
+          };
         } catch (err) {
           msg = {
             type: MESSAGE_TYPES.ERROR,
@@ -45,11 +50,12 @@ const Messaging = {
         break;
       }
       default: {
-        console.error("Unexpected message from tab", request);
+        console.error("Unexpected message from tab", request); /* RemoveLogging:skip */
         break;
       }
     }
-    return msg;
+    // strip unserializable objects to prevent console warnings
+    return JSON.parse(JSON.stringify(msg));
   }
 };
 

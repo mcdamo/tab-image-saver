@@ -1,4 +1,4 @@
-/* globals Commands ACTION CONFLICT_ACTION FILTER */
+/* globals Commands ACTION CONFLICT_ACTION FILTER Global */
 
 const T = {
   BOOL: "BOOL",
@@ -46,8 +46,9 @@ const Options = {
     {
       name: "downloadPath",
       type: T.VALUE,
+      onLoad: {function: v => Global.sanitizePath(v)},
+      onSave: {function: v => Global.sanitizePath(v)},
       default: ""
-      // TODO onLoad/onSave add/remove slashes?
     },
     {
       name: "filter",
