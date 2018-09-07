@@ -26,10 +26,10 @@ const Commands = {
     return key;
   },
 
-  setBrowserAction: async key => await Commands.setCommand(SHORTCUT_TYPES.BROWSER_ACTION, key),
+  setBrowserAction: async (key) => await Commands.setCommand(SHORTCUT_TYPES.BROWSER_ACTION, key),
 
   // throw if command not found
-  commandHandler: command => {
+  commandHandler: (command) => {
     if (Object.prototype.hasOwnProperty.call(Commands.COMMANDS, command)) {
       return Commands.COMMANDS[command]();
     }

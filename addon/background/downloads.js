@@ -5,9 +5,9 @@ const Downloads = {
   // details: { tabId, windowId, callback }
   addDownload: (dlid, context) => Downloads.dlMap.set(dlid, context),
 
-  getDownload: dlid => Downloads.dlMap.get(dlid),
+  getDownload: (dlid) => Downloads.dlMap.get(dlid),
 
-  removeDownload: dlid => Downloads.dlMap.delete(dlid),
+  removeDownload: (dlid) => Downloads.dlMap.delete(dlid),
 
   downloadsHaveProp: (prop, val) => {
     for (const dl of Downloads.dlMap.values()) {
@@ -19,13 +19,13 @@ const Downloads = {
   },
 
   // is finished when all downloads for tabid have been removed
-  hasTabDownloads: tabId => Downloads.downloadsHaveProp("tabId", tabId),
+  hasTabDownloads: (tabId) => Downloads.downloadsHaveProp("tabId", tabId),
 
   // is finished when all downloads for tabid have been removed
-  hasWindowDownloads: windowId => Downloads.downloadsHaveProp("windowId", windowId),
+  hasWindowDownloads: (windowId) => Downloads.downloadsHaveProp("windowId", windowId),
 
   // call when download ends to cleanup and close tab
-  downloadEnded: async download => {
+  downloadEnded: async (download) => {
     const dlid = download.id;
     const context = Downloads.getDownload(dlid);
     if (!context) {
@@ -38,19 +38,19 @@ const Downloads = {
       download.mime !== "text/html"
     ) {
       Downloads.removeDownload(dlid);
-      const fn = context.then || (x => x);
+      const fn = context.then || ((x) => x);
       fn();
       return;
     }
     Downloads.removeDownload(dlid);
-    const fn = context.error || (x => x);
+    const fn = context.error || ((x) => x);
     fn();
     return;
   },
 
   // handle downloads changed events
   // note: catches all changes to Downloads, not just from this webext
-  downloadChangedHandler: async delta => {
+  downloadChangedHandler: async (delta) => {
     console.log("downloadChangedHandler", delta);
     let dlid = delta.id;
     // if (delta.state && delta.state.current !== "in_progress") {
@@ -60,7 +60,7 @@ const Downloads = {
     }
   },
 
-  removeWindowDownloads: windowId => {
+  removeWindowDownloads: (windowId) => {
     for (const [dlid, val] of Downloads.dlMap.entries()) {
       if (val.windowId === windowId) {
         console.warn("Removing orphan download", dlid, val); /* RemoveLogging:skip */
@@ -69,7 +69,7 @@ const Downloads = {
     }
   },
 
-  cancelWindowDownloads: windowId => {
+  cancelWindowDownloads: (windowId) => {
     let promises = [];
     for (const [dlid, val] of Downloads.dlMap.entries()) {
       if (val.windowId === windowId) {
@@ -79,7 +79,7 @@ const Downloads = {
           console.log("Cancelled download", dlid);
           return true;
         })
-          .catch(err => {
+          .catch((err) => {
             console.log(`Failed cancelling download ${dlid}`, err);
             return false;
           })
@@ -89,7 +89,7 @@ const Downloads = {
     }
     return Global.allPromises(promises,
       () => {console.log("Cancelled all downloads");},
-      err => {console.error("cancelDownloads", err);}
+      (err) => {console.error("cancelDownloads", err);}
     );
   },
 
@@ -112,7 +112,7 @@ const Downloads = {
       // catch errors related to Access Denied for data:image URLs
       console.error("Download failed", err, download); /* RemoveLogging:skip */
     }
-    const fn = context.error || (x => x);
+    const fn = context.error || ((x) => x);
     fn();
     return false;
   }

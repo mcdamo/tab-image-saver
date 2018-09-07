@@ -1,4 +1,4 @@
-const reporters = ["mocha", "coverage-istanbul"];
+const reporters = ["mocha", "coverage-istanbul" ];
 if (process.env.COVERALLS_REPO_TOKEN) {
   reporters.push("coveralls");
 }
@@ -22,9 +22,9 @@ module.exports = function(config) {
 
       // Files
       // "addon/**/*.js",
-      "addon/background/constants.js",
+      //"addon/background/constants.js",
       //"addon/background/global.js",
-      "addon/**/*.js",
+      //"addon/**/*.js",
 
       // Tests
       "test/unit/**/*.test.js",
@@ -39,10 +39,16 @@ module.exports = function(config) {
 
     // change Karma's debug.html to the mocha web reporter
     client: {
+      captureConsole: true, // output browser.console messages
       mocha: {
         // change Karma's debug.html to the mocha web reporter
         reporter: 'html',
       },
+    },
+    browserConsoleLogOptions: {
+      level: 'debug',
+      format: '%b %T: %m',
+      terminal: true
     },
 
     // preprocess matching files before serving them to the browser
@@ -62,7 +68,7 @@ module.exports = function(config) {
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR ||
     //                  config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_INFO,
+    //logLevel: config.LOG_INFO,
 
     // enable/disable watching file and executing tests when any file changes
     autoWatch: false,
@@ -119,7 +125,7 @@ module.exports = function(config) {
       fixWebpackSourcePaths: true,
  
       // Omit files with no statements, no functions and no branches from the report
-      skipFilesWithNoCoverage: true,
+      skipFilesWithNoCoverage: false,
  
       // Most reporters accept additional config options. You can pass these through the `report-config` option
       'report-config': {

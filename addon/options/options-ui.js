@@ -5,7 +5,7 @@ const OptionsUI = {
   },
 
   // option object with name and value
-  onSaveOption: async o => {
+  onSaveOption: async (o) => {
     const type = "OPTIONS_ONSAVE";
     const res = await browser.runtime.sendMessage({
       type,
@@ -20,16 +20,18 @@ const OptionsUI = {
     throw new Error("Invalid option");
   },
 
-  saveOptions: async e => {
+  saveOptions: async (e) => {
     if (e) {
       e.preventDefault();
     }
     const schema = await OptionsUI.getOptionsSchema();
     const toSave = await schema.keys.reduce(async (accP, val) => {
       const acc = await accP;
-      const sel = (val.type === schema.types.RADIO) ? ":checked" : "";
-      const el = document.querySelector(`[name=${val.name}]${sel}`);
+      const opt = (val.type === schema.types.RADIO) ? ":checked" : "";
+      const sel = `[name=${val.name}]${opt}`;
+      const el = document.querySelector(sel);
       if (!el) {
+        console.warn("Element not found", sel); /* RemoveLogging:skip */
         return acc;// TODO
       }
       const propMap = {
@@ -70,15 +72,17 @@ const OptionsUI = {
 
   // Set UI elements' value/checked
   restoreOptionsHandler: (result, schema) => {
-    const schemaWithValues = schema.keys.map(o =>
+    const schemaWithValues = schema.keys.map((o) =>
       Object.assign({}, o, {value: result[o.name]})
     );
-    schemaWithValues.forEach(o => {
+    schemaWithValues.forEach((o) => {
       // const fn = o.onOptionsLoad || (x => x); // onLoad is triggered in background script
       const val = typeof o.value === "undefined" ? o.default : o.value;
-      const sel = (o.type === schema.types.RADIO) ? `[value=${val}]` : "";
-      const el = document.querySelector(`[name=${o.name}]${sel}`);
+      const opt = (o.type === schema.types.RADIO) ? `[value=${val}]` : "";
+      const sel = `[name=${o.name}]${opt}`;
+      const el = document.querySelector(sel);
       if (!el) {
+        console.warn("Element not found", sel); /* RemoveLogging:skip */
         return;
       }
 
@@ -93,29 +97,34 @@ const OptionsUI = {
 
   restoreOptions: async () => {
     const schema = await OptionsUI.getOptionsSchema();
-    const keys = schema.keys.map(o => o.name);
+    const keys = schema.keys.map((o) => o.name);
     const loaded = await browser.storage.local.get(keys);
     OptionsUI.restoreOptionsHandler(loaded, schema);
   },
 
-  setupAutosave: el => {
-    const autosaveCb = e => {
+  setupAutosave: (el) => {
+    const autosaveCb = (e) => {
       console.log("autosaveCb", e);
       OptionsUI.saveOptions(e);
     };
 
-    let sel = "";
+    let opt = "";
     if (el.type === "radio") {
-      sel = `[value=${el.value}]`;
+      opt = `[value=${el.value}]`;
     }
-    document.querySelector(`input[name=${el.name}]${sel}`)
-      .addEventListener("change", autosaveCb);
+    const sel = `[name=${el.name}]${opt}`;
+    try {
+      document.querySelector(sel)
+        .addEventListener("change", autosaveCb);
+    } catch (err) {
+      console.warn("Element not found", sel); /* RemoveLogging:skip */
+    }
   }
 };
 
 document.addEventListener("DOMContentLoaded", OptionsUI.restoreOptions);
 
-["textarea", "input", "select"].forEach(type => {
+["textarea", "input", "select"].forEach((type) => {
   document.querySelectorAll(type).forEach(OptionsUI.setupAutosave);
 });
 

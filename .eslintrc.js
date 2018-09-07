@@ -44,7 +44,7 @@ module.exports = {
     "array-bracket-spacing": [2, "never"],
     "array-callback-return": 2,
     "arrow-body-style": [2, "as-needed"],
-    "arrow-parens": [2, "as-needed"],
+    "arrow-parens": [2, "always"],
     "arrow-spacing": 2,
     "block-scoped-var": 2,
     "block-spacing": [2, "never"],

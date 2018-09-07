@@ -3,33 +3,38 @@
 import {T, Options} from 'background/options';
 
 describe("options.js", () => {
-  var onLoadStub = sinon.stub().returnsArg(0);
-  var onSaveStub = sinon.stub().returnsArg(0);
-  Options.OPTION_KEYS = 
-    [
-    {name: "myradio", type: "RADIO", default: "radiodefault"},
-    {name: "mycheckbox", type: "BOOL", default: false},
-    {name: "mytext", type: "VALUE", default: "textdefault"},
-    {name: "shortcut", type: "VALUE", default: "x", onLoad: {function: onLoadStub}, onSave: {function: onSaveStub} },
-  ];
-  const cache = {
-    myradio: "radiodefault",
-    mycheckbox: false,
-    mytext: "textdefault",
-    shortcut: "x",
-  };
-  const keys = ["myradio", "mycheckbox", "mytext", "shortcut"];
-  const storage = {
-    myradio: "radio",
-    mycheckbox: true,
-    mytext: "text",
-    shortcut: "x",
-  };
-  browser.storage.local.get.resolves(storage);
+  var onLoadStub, onSaveStub, cache, keys, storage, origOpts;
+  before(() => {
+    onLoadStub = sinon.stub().returnsArg(0);
+    onSaveStub = sinon.stub().returnsArg(0);
+    origOpts = Options.OPTION_KEYS;
+    Options.OPTION_KEYS = [
+      {name: "myradio", type: "RADIO", default: "radiodefault"},
+      {name: "mycheckbox", type: "BOOL", default: false},
+      {name: "mytext", type: "VALUE", default: "textdefault"},
+      {name: "shortcut", type: "VALUE", default: "x", onLoad: {function: onLoadStub}, onSave: {function: onSaveStub} },
+    ];
+    cache = {
+      myradio: "radiodefault",
+      mycheckbox: false,
+      mytext: "textdefault",
+      shortcut: "x",
+    };
+    storage = {
+      myradio: "radio",
+      mycheckbox: true,
+      mytext: "text",
+      shortcut: "x",
+    };
+    keys = Object.keys(storage);
+    Options.init();
+  });
+  after(() => {
+    Options.OPTION_KEYS = origOpts; // TODO use sandbox
+  });
 
   describe("init", () => {
     it("should populate cache with option defaults", () => {
-      Options.init();
       //expect(Options.cache).to.have.property("action").that.equals("current");
       expect(Options.OPTIONS).to.deep.equal(cache);
     });
@@ -51,10 +56,17 @@ describe("options.js", () => {
       Options.OPTIONS["testkey"] = "testval";
       Options.setOption("testkey", "newval");
       expect(Options.OPTIONS["testkey"]).to.equal("newval");
-      delete Options.OPTIONS["testkey"];
+      delete Options.OPTIONS["testkey"]; // TODO use sandbox
     });
   });
   describe("loadOptions", () => {
+    before(async () => {
+      //await browser.storage.local.clear(); // clear() is not faked
+      await browser.storage.local.set(storage);
+    });
+    after(async () => {
+      await browser.storage.local.remove(Object.keys(storage)); // TODO use sandbox
+    });
     it("should load options from local storage", async () => {
 /*
       browser.storage.local.get.resetHistory();
@@ -74,7 +86,31 @@ describe("options.js", () => {
     it("should not call onSave function", () => {
       expect(onSaveStub).to.not.be.called;
     });
-
   });
+  describe("onLoadRules", () => {
+    it("should trim and omit empty lines", () => {
+      expect(Options.onLoadRules(` line1 \n\n line2 \n `))
+        .to.deep.equal(["line1", "line2"]);
+    });
+
+    it("should throw for empty rules", () => {
+      expect(() => Options.onLoadRules("")).to.throw(Error);
+      expect(() => Options.onLoadRules(`  \n\n`)).to.throw(Error);
+    });
+  });
+
+  describe("onSaveRules", () => {
+    it("should trim and omit empty lines", () => {
+      expect(Options.onSaveRules(` line1 \n\n line2 \n `))
+        .to.equal("line1\nline2");
+    });
+
+    it("should throw for empty rules", () => {
+      expect(() => Options.onSaveRules("")).to.throw(Error);
+      expect(() => Options.onSaveRules(`  \n\n`)).to.throw(Error);
+    });
+  });
+
+
 
 });

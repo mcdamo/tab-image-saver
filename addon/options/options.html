@@ -9,50 +9,43 @@
 <body>
   <form id="options">
 <p>
-	<legend>Tab direction</legend>
-	<label><input type="radio" name="action" value="active" >Active tab</label>
-	<label><input type="radio" name="action" value="left" >Left of active tab</label>
-	<label><input type="radio" name="action" value="right" >Right of active tab</label>
+	<legend>Tabs to include</legend>
+	<label><input type="radio" name="action" value="active" >Active tab</label><br/>
+	<label><input type="radio" name="action" value="left" >Left of active tab</label><br/>
+	<label><input type="radio" name="action" value="right" >Right of active tab</label><br/>
 	<label><input type="radio" name="action" value="all" >All tabs</label>
 
 	<br/>
-      <label><input type="checkbox" name="activeTab" >Include active tab</label>
+      <label><input type="checkbox" name="activeTab" >Include active tab (with Left/Right directions)</label>
 </p>
 <p>
-	<legend>Filter</legend>
-	<label><input type="radio" name="filter" value="max" >Largest image</label>
-	<label><input type="radio" name="filter" value="all" >All images</label>
-	<label><input type="radio" name="filter" value="direct" >Image tabs only</label> 
+	<legend>Image filter</legend>
+	<label><input type="radio" name="filter" value="max" >Largest image</label><br/>
+	<label><input type="radio" name="filter" value="all" >All images</label><br/>
+	<label><input type="radio" name="filter" value="direct" >Image tabs only</label>
  (ignore tabs with webpages)
 </p>
 <p>
 	<legend>Minimum dimensions (pixels)</legend>
-      <label>Width
+      <label>Width:
       <input type="text" name="minWidth" >
       </label>
       <br/>
-      <label>Height
+      <label>Height:
       <input type="text" name="minHeight" >
       </label>
 </p>
 <p>
 <legend>Images are saved in your Downloads path.<br>Optionally you can name a subfolder to save into.</legend>
-      <label>Folder
+      <label>Subfolder:
       <input type="text" name="downloadPath" size="60">
       </label>
 </p>
 <p>
-      <legend>Use image "alt" attribute for save file name, if available</legend>
-      <label>
-	<input type="checkbox" name="altIsFilename">
-	Use "alt" attribute for filename
-      </label>
-      <br/>
-      <label>
-	Optionally add file extension (e.g. ".jpg")
-	<input type="text" name="altFilenameExt"/>
-      </label>
-</p>
+	<legend>Path rules <a href="https://github.com/mcdamo/tab-image-saver/#path-rules">Learn more</a></legend>
+	<label>Paths will be appended to your Download Subfolder<br/>
+	Leave empty to restore default</label><br/>
+	<textarea name="pathRules" cols="60" rows="6"></textarea>
 <p>
 	<legend>Duplicate filename action</legend>
 	<label><input type="radio" name="conflictAction" value="uniquify" >Rename (automatic)</label>
@@ -64,15 +57,17 @@
       <br/>
       <label><input type="checkbox" name="notifyEnded" >Show notification popups</label>
       <br/>
-      <label><input type="checkbox" name="removeEnded" >Incognito mode</label> (hide from download history)
+      <label><input type="checkbox" name="removeEnded" >Incognito mode</label> (hide from history, may break images that require login)
 </p>
 </form>
 <div id="shortcuts">
 <p>
 	<legend>Keyboard shortcuts</legend>
 Example: "Alt+X", "Ctrl+Shift+U". <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/commands#Shortcut_values">Allowed values</a>
-      <br/>
-      <input type="text" name="shortcut" >
+    <br/>
+    <label>Run:
+		<input type="text" name="shortcut" >
+	</label>
 </p>
 </div>
   <script src="options-ui.js"></script>

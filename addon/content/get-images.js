@@ -7,7 +7,7 @@
 
   function sleep(ms) {
     console.log("sleep", ms);
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   function isImageVisible(img) {
@@ -30,7 +30,7 @@
     options: {},
     runtime: undefined,
 
-    waitForDomImage: async i => {
+    waitForDomImage: async (i) => {
       let img = true;
       while (img) {
         img = document.images[i];
@@ -48,7 +48,7 @@
     },
 
     // verify image meets minimum requirements
-    validImage: img => {
+    validImage: (img) => {
       if (img.naturalWidth >= App.options.minWidth && img.naturalHeight >= App.options.minHeight) {
         console.log(`valid image (${img.naturalWidth}x${img.naturalHeight}):`, img);
         return true;
@@ -111,7 +111,7 @@
       return results;
     },
 
-    sendMessage: async type => {
+    sendMessage: async (type) => {
       try {
         const message = await browser.runtime.sendMessage({type});
         console.log("Message received:", message);

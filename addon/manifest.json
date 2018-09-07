@@ -47,6 +47,7 @@
     "scripts": [
       "background/global.js",
       "background/constants.js",
+      "background/version.js",
       "background/options.js",
       "background/messaging.js",
       "background/downloads.js",

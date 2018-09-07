@@ -3,14 +3,17 @@ import {SHORTCUT_TYPES, Commands} from 'background/commands';
 //import {App} from 'background/background';
 
 describe("commands.js", () => {
-  const browserAction = "_execute_browser_action";
-  const invalidAction = "_x";
-  const validKey = "Alt+X";
-  const invalidKey = "x";
-  const commandUpdateStub = sinon.stub().resolves();
+  var browserAction, invalidAction, invalidKey, validKey, commandUpdateStub, commandResetStub;
+  before(() => {
+  browserAction = "_execute_browser_action";
+  invalidAction = "_x";
+  validKey = "Alt+X";
+  invalidKey = "x";
+  commandUpdateStub = sinon.stub().resolves();
   browser.commands.update = commandUpdateStub;
-  const commandResetStub = sinon.stub().resolves();
+  commandResetStub = sinon.stub().resolves();
   browser.commands.reset = commandResetStub;
+  });
 
   describe("browser", () => {
     it("should register a listener for onCommand", () => {
@@ -30,7 +33,7 @@ describe("commands.js", () => {
       }
     });
 
-    it("should throw on invalid shortcut key", async () => {
+    it("should reject on invalid shortcut key", async () => {
       const command = browserAction;
       const key = invalidKey;
       commandUpdateStub.withArgs({name: browserAction, shortcut: invalidKey}).rejects();

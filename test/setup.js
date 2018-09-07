@@ -15,9 +15,11 @@ global.expect = chai.expect;
 const browserFake = require('webextensions-api-fake');
 const browser = browserFake();
 
+/*
 browser.windows = {
-  getCurrent: sinon.stub().resolves({id: 1}), // return window object. This is condensed promise resolve of above
+  getCurrent: sinon.stub().resolves({id: 1}), // return window object.
 };
+*/
 global.browser = browser;
 
 // stub document to prevent options-ui from running on-load

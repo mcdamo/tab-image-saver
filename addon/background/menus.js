@@ -10,7 +10,7 @@ if (typeof browser.menus !== "undefined") {
     contexts: ["browser_action"]
   });
 
-  browser.menus.onClicked.addListener(info => {
+  browser.menus.onClicked.addListener((info) => {
     switch (info.menuItemId) {
       case "browser_action_options": {
         browser.runtime.openOptionsPage().catch(console.error);

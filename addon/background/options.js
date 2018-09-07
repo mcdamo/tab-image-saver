@@ -1,5 +1,13 @@
 /* globals Commands ACTION CONFLICT_ACTION FILTER Global */
 
+// import for testing
+if (typeof module !== "undefined") {
+  const c = require("background/constants");
+  window.ACTION = c.ACTION;
+  window.CONFLICT_ACTION = c.CONFLICT_ACTION;
+  window.FILTER = c.FILTER;
+}
+
 const T = {
   BOOL: "BOOL",
   RADIO: "RADIO",
@@ -23,16 +31,6 @@ const Options = {
       default: false
     },
     {
-      name: "altIsFilename",
-      type: T.BOOL,
-      default: false
-    },
-    {
-      name: "altIsFilenameExt",
-      type: T.VALUE,
-      default: ""
-    },
-    {
       name: "closeTab",
       type: T.BOOL,
       default: false
@@ -46,8 +44,8 @@ const Options = {
     {
       name: "downloadPath",
       type: T.VALUE,
-      onLoad: {function: v => Global.sanitizePath(v)},
-      onSave: {function: v => Global.sanitizePath(v)},
+      onLoad: {function: (v) => Global.sanitizePath(v)}, // App
+      onSave: {function: (v) => Global.sanitizePath(v)}, // UI
       default: ""
     },
     {
@@ -72,6 +70,13 @@ const Options = {
       default: true
     },
     {
+      name: "pathRules",
+      type: T.VALUE,
+      onLoad: {function: (v) => Options.onLoadRules(v)}, // App
+      onSave: {function: (v) => Options.onSaveRules(v)}, // UI
+      default: "<name><ext>\n<xName><xExt|xMimeExt>\n<host>/img_<###index><ext|xExt|xMimeExt|.jpg>"
+    },
+    {
       name: "removeEnded",
       type: T.BOOL,
       default: false
@@ -80,11 +85,36 @@ const Options = {
       name: "shortcut",
       type: T.VALUE,
       // onLoad/onSave wrap in object so that the property name is included in sendMessage
-      onLoad: {function: v => Commands.setBrowserAction(v)},
-      onSave: {function: v => Commands.setBrowserAction(v)},
+      onLoad: {function: (v) => Commands.setBrowserAction(v)}, // App
+      onSave: {function: (v) => Commands.setBrowserAction(v)}, // UI
       default: ""
     }
   ],
+
+  // param multi-line string
+  // return array of rules
+  // throw if empty string
+  onLoadRules: (str) => {
+    const arr = str.split("\n").reduce(
+      (acc, val) => {
+        const s = val.trim();
+        if (s.length > 0) {
+          acc.push(s);
+        }
+        return acc;
+      },
+      []
+    );
+    if (!arr || arr.length === 0) {
+      throw new Error("Empty ruleset");
+    }
+    return arr;
+  },
+
+  // param multi-line string
+  // return multi-line trimmed string
+  // throw if empty string
+  onSaveRules: (str) => Options.onLoadRules(str).join("\n"),
 
   // global
   init: () => {
@@ -100,7 +130,7 @@ const Options = {
       []
     ),
 
-  getOptionMeta: name => Options.OPTION_KEYS.reduce(
+  getOptionMeta: (name) => Options.OPTION_KEYS.reduce(
     (acc, val) => {
       if (val.name === name) {
         return val;
@@ -125,21 +155,28 @@ const Options = {
     if (area !== "local") {
       return Options.OPTIONS;
     }
-    const loadedOptions = Object.keys(changes).reduce(
-      (acc, val) => Object.assign(acc, {[val]: changes[val].newValue}),
-      {}
-    );
+    const keys = Options.getKeys();
+    const loadedOptions = Object.keys(changes)
+      .filter((k) => keys.includes(k)) // ignore stored items that are not options
+      .reduce(
+        (acc, val) => Object.assign(acc, {[val]: changes[val].newValue}),
+        {}
+      );
     return Options.setOptions(loadedOptions);
   },
 
-  setOptions: loadedOptions => {
-    console.log("loadedOptions", loadedOptions);
+  setOptions: (loadedOptions) => {
+    console.debug("loadedOptions", loadedOptions);
     const localKeys = Object.keys(loadedOptions);
-    localKeys.forEach(k => {
+    localKeys.forEach((k) => {
       const optionType = Options.OPTION_KEYS.find(
-        ok => ok.name === k
+        (ok) => ok.name === k
       );
-      const fn = (optionType.onLoad) ? optionType.onLoad.function : (x => x);
+      if (optionType === undefined) {
+        console.warn("Failed loading option:", k);
+        return;
+      }
+      const fn = (optionType.onLoad) ? optionType.onLoad.function : ((x) => x);
       Options.setOption(k, fn(loadedOptions[k]));
     });
     return Options.OPTIONS;

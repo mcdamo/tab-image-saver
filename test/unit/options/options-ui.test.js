@@ -1,71 +1,102 @@
 "use strict";
-//import {MESSAGE_TYPES} from 'background/constants';
+import {MESSAGE_TYPES} from 'background/constants';
 import {OptionsUI} from 'options/options-ui';
 
 describe("options-ui.js", () => {
+  var documentStub, schema;
+  before(() => {
+    //TODO, taken from setup.js
+    //documentStub = sinon.stub(document, "addEventListener");
+    schema = {
+      types: {
+        BOOL: "BOOL",
+        RADIO: "RADIO",
+        VALUE: "VALUE",
+      },
+      keys: [
+        {name: "myradio", type: "RADIO", default: "radiodefault"},
+        {name: "mycheckbox", type: "BOOL", default: false},
+        {name: "mytext", type: "VALUE", default: "textdefault"},
+        {name: "shortcut", type: "VALUE", default: "x", onLoad: {function: undefined}, onSave: {function: undefined} },
+     ],
+    };
+  });
 /*
   // TODO functional test
     it("should restore options on load", () => {
       expect(restoreOptions).to.be.calledOnce;
     });OPTIONS_
 */
-  const schema = {
-    types: {
-      BOOL: "BOOL",
-      RADIO: "RADIO",
-      VALUE: "VALUE",
-    },
-    keys: [
-    {name: "myradio", type: "RADIO", default: "radiodefault"},
-    {name: "mycheckbox", type: "BOOL", default: false},
-    {name: "mytext", type: "VALUE", default: "textdefault"},
-    {name: "shortcut", type: "VALUE", default: "x", onLoad: {function: undefined}, onSave: {function: undefined} },
-  ]
-  };
   describe("getOptionsSchema", () => {
-  browser.runtime.sendMessage.withArgs({type: MESSAGE_TYPES.OPTIONS_SCHEMA})
-    .resolves({body: schema});
+    before(() => {
+      browser.runtime.sendMessage
+        .withArgs({type: MESSAGE_TYPES.OPTIONS_SCHEMA})
+        .resolves({body: schema});
+    });
+    after(() => {
+      browser.runtime.sendMessage.reset();
+    });
     it("should sendMessage and return body", () => {
       return expect(OptionsUI.getOptionsSchema()).to.eventually.become(schema);
     });
   });
   describe("onSaveOption", () => {
-    const onsaveErBody = {
-      name: "shortcut",
-      value: "x"
-    };
-    const onsaveOkBody = {
-      name: "test",
-      value: "x"
-    };
-    browser.runtime.sendMessage.resolves({type: MESSAGE_TYPES.ERROR});
-    browser.runtime.sendMessage.withArgs({type: MESSAGE_TYPES.OPTIONS_ONSAVE, body: onsaveOkBody})
-      .resolves({type: MESSAGE_TYPES.OPTIONS_ONSAVE, body: onsaveOkBody});
+    var onSaveErBody, onSaveOkBody;
+    before(() => {
+      onSaveErBody = {
+        name: "shortcut",
+        value: "x"
+      };
+      onSaveOkBody = {
+        name: "test",
+        value: "x"
+      };
+      browser.runtime.sendMessage.resolves({type: MESSAGE_TYPES.ERROR});
+      browser.runtime.sendMessage
+        .withArgs({type: MESSAGE_TYPES.OPTIONS_ONSAVE, body: onSaveOkBody})
+        .resolves({type: MESSAGE_TYPES.OPTIONS_ONSAVE, body: onSaveOkBody});
+    });
+    after(() => {
+      browser.runtime.sendMessage.reset();
+    });
     it("should return value for valid shortcut", async () => {
-      const o = onsaveOkBody;
+      const o = onSaveOkBody;
       await expect(OptionsUI.onSaveOption(o)).to.eventually.become(o.value);
     });
     it("should throw Error for invalid shortcut", async () => {
-      const o = onsaveErBody;
+      const o = onSaveErBody;
       await expect(OptionsUI.onSaveOption(o)).to.eventually.be.rejected
         .and.be.an.instanceOf(Error);
     });
   });
   describe("saveOptions", () => {
-    browser.runtime.sendMessage.withArgs({type: MESSAGE_TYPES.OPTIONS_SCHEMA})
-      .resolves({body: schema});
-    var spy = sinon.spy(OptionsUI, "onSaveOption"); //TODO
-
-    var stub = sinon.stub().returns(undefined);
-    stub.withArgs("[name=mycheckbox]").returns({checked: true, stub: true});
-    stub.withArgs("[name=myradio]:checked").returns({value: "radioval", stub: true});
-    stub.withArgs("[name=mytext]").returns({value: "textval", stub: true});
-    stub.withArgs("[name=shortcut]").returns({value: "shortcutval", stub: true});
-    document.querySelector = stub;
-
+    var onSaveSpy, qsStub;
+    before(() => {
+      browser.runtime.sendMessage
+        .withArgs({type: MESSAGE_TYPES.OPTIONS_SCHEMA})
+        .resolves({body: schema});
+      onSaveSpy = sinon.spy(OptionsUI, "onSaveOption"); //TODO
+      //qsStub = sinon.stub().returns(undefined);
+      qsStub = sinon.stub(document, "querySelector")
+        .returns(undefined)
+        .withArgs("[name=mycheckbox]")
+        .returns({checked: true, stub: true})
+        .withArgs("[name=myradio]:checked")
+        .returns({value: "radioval", stub: true})
+        .withArgs("[name=mytext]")
+        .returns({value: "textval", stub: true})
+        .withArgs("[name=shortcut]")
+        .returns({value: "shortcutval", stub: true});
+    });
+    after(() => {
+      browser.runtime.sendMessage.reset();
+      qsStub.reset();
+    });
+    beforeEach(() => {
+      onSaveSpy.resetHistory();
+    });
     //saveOptions().then(() => {
     it("should update local storage and call 'onsave'", async () => {
-      spy.resetHistory();
       await OptionsUI.saveOptions();
       //expect(OptionsUI.onSaveOption).to.be.calledOnce;
       //expect(document.querySelector).to.be.calledWith(`[name=mycheckbox]`);
@@ -74,11 +105,9 @@ describe("options-ui.js", () => {
       expect(browser.storage.local.set).to.be.calledWith({
         mycheckbox: true, myradio: "radioval", mytext: "textval", shortcut: "x"
       });
+      expect(onSaveSpy).to.be.calledOnce;
     });
 
-    it("should call onSaveOption for 'onsave'", () => {
-      expect(spy).to.be.calledOnce;
-    });
 /*
     it("should get checkbox value", () => {
       expect(document.querySelector).to.be.calledWith(`[name=mycheckbox]`);
