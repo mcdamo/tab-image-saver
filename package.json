@@ -1,6 +1,6 @@
 {
   "name": "tabimagesaver",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "id": "tab-image-saver@mcdamo.addons.mozilla.org",
   "description": "Save images from open tabs. Default action saves largest image in active tab.",
   "homepage": "https://github.com/mcdamo/tab-image-saver",
