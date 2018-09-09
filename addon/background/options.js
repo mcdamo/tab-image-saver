@@ -6,6 +6,8 @@ if (typeof module !== "undefined") {
   window.ACTION = c.ACTION;
   window.CONFLICT_ACTION = c.CONFLICT_ACTION;
   window.FILTER = c.FILTER;
+  const m = require("background/commands");
+  window.Commands = m.Commands;
 }
 
 const T = {
@@ -118,10 +120,12 @@ const Options = {
 
   // global
   init: () => {
-    Options.OPTIONS = Options.OPTION_KEYS.reduce(
-      (acc, val) => Object.assign(acc, {[val.name]: val.default}),
+    const defaults = Options.OPTION_KEYS.reduce(
+      (acc, optionType) =>
+        Object.assign(acc, {[optionType.name]: optionType.default}),
       {}
     );
+    Options.setOptions(defaults);
   },
 
   getKeys: () =>

@@ -235,7 +235,12 @@ describe("background.js", () => {
   });
 
   describe("loadOptions", () => {
-    // TODO
+    it("should load defaults", async () => {
+      await App.loadOptions();
+      expect(App.options).to.be.an("object")
+        .and.to.have.property("pathRules")
+        .to.be.an("array");
+    });
   });
 
   describe("run", () => {

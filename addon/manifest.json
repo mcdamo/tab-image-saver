@@ -48,12 +48,12 @@
       "background/global.js",
       "background/constants.js",
       "background/version.js",
+      "background/commands.js",
       "background/options.js",
       "background/messaging.js",
       "background/downloads.js",
       "background/background.js",
-      "background/menus.js",
-      "background/commands.js"
+      "background/menus.js"
     ]
   },
   "commands": {
