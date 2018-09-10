@@ -132,7 +132,7 @@ describe("background.js", () => {
   describe("createFilename", () => {
     var stub;
     before(() => {
-      stub = sinon.stub(Global, "getHeaderFilename").resolves({filename: "xhrname.xhrext", mimeExt: ".xm"});
+      stub = sinon.stub(Global, "getHeaderFilename").resolves({filename: "xhr name.xhrext", mimeExt: ".xm"});
     });
 
     after(() => {
@@ -147,11 +147,27 @@ describe("background.js", () => {
       var rules = {
         "<alt>.jpg": "alt string.jpg",
         "<name>,<ext>": "file,.ext",
-        "<xName>,<xExt>,<xMimeExt>": "xhrname,.xhrext,.xm",
+        "<xName>,<xExt>,<xMimeExt>": "xhr name,.xhrext,.xm",
         "<####index>": "0042",
         "<hostname>": "domain.tld",
         "<path>": "path/part",
         " <undef> ": "undef", // strip whitespace and treat as literal
+      };
+      //Object.entries(rules).forEach(async ([test, result]) => {
+      for (const test in rules) {
+        const result = rules[test];
+        await expect(App.createFilename(img, 42, [test]), `Rule: ${test}`).to.eventually.become(result);
+      };
+    });
+
+    it("should decode URI components", async () => {
+      var img = {
+        src: "http://domain.tld/path%20name/part/file%20name.ext?query",
+      }
+      var rules = {
+        "<name>,<ext>": "file name,.ext",
+        "<hostname>": "domain.tld",
+        "<path>": "path name/part"
       };
       //Object.entries(rules).forEach(async ([test, result]) => {
       for (const test in rules) {
@@ -166,6 +182,7 @@ describe("background.js", () => {
       }
       await expect(App.createFilename(img, 42, ["<name>,<ext>"])).to.eventually.become("file,.ext");
     });
+
     it("should return null when filename is not valid", async () => {
       var img = {};
       var rules = [

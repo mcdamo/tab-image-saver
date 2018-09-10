@@ -255,16 +255,17 @@ const App = {
   // return null if failed
   createFilename: async (image, index, rules) => {
     let xhrLoaded = false;
-    const parse = Global.parseURL(image.src);
+    const parse = Global.parseURL(image.src); // URI components will be encoded
+    const path = decodeURI(parse.pathname);
     // obj properties should be lowercase
     let obj = {
       alt: "",
-      ext: Global.getFileExt(parse.pathname),
+      ext: Global.getFileExt(path),
       hostname: parse.hostname,
       host: parse.hostname,
       index: index.toString(),
-      name: Global.getFilePart(parse.pathname),
-      path: Global.getDirname(parse.pathname),
+      name: Global.getFilePart(path),
+      path: Global.getDirname(path),
       xname: "",
       xext: "",
       xmimeext: ""

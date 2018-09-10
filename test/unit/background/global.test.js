@@ -228,7 +228,7 @@ describe("global.js", () => {
     before(() => {
       headers = {
         "Content-Type": "image/jpeg",
-        "Content-Disposition": "filename=file.ext;",
+        "Content-Disposition": "filename=file%20name.ext;",
       };
       server = sinon.createFakeServer();
       url = "/test";
@@ -253,8 +253,9 @@ describe("global.js", () => {
       var p = Global.getHeaderFilename(url);
       //expect(requests.length).to.equal(1);
       //requests[0].respond(200, headers, "");
-      await expect(p).to.eventually.become({filename: "file.ext", mimeExt: ".jpg"});
+      await expect(p).to.eventually.become({filename: "file name.ext", mimeExt: ".jpg"});
     });
+
   });
 
 

@@ -66,6 +66,7 @@ const Global = {
     return s;
   },
 
+  // returned values may be URI encoded
   parseURL: (url) => {
     let parser = document.createElement("a");
     let searchObject = {};
@@ -187,8 +188,7 @@ const Global = {
       const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
       let matches = filenameRegex.exec(disposition);
       if (matches !== null && matches[1]) {
-        const filename = matches[1].replace(/['"]/g, "");
-        obj.filename = filename;
+        obj.filename = decodeURI(matches[1].replace(/['"]/g, ""));
       }
     }
     return obj;
