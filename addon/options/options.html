@@ -2,75 +2,83 @@
 
 <html>
   <head>
+	<title>__MSG_options_title__</title>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="options.css">
 </head>
 
 <body>
+<div id="container">
+  <div id="content">
+<h1 id="header">__MSG_options_title__</h1>
   <form id="options">
 <p>
-	<legend>Tabs to include</legend>
-	<label><input type="radio" name="action" value="active" >Active tab</label><br/>
-	<label><input type="radio" name="action" value="left" >Left of active tab</label><br/>
-	<label><input type="radio" name="action" value="right" >Right of active tab</label><br/>
-	<label><input type="radio" name="action" value="all" >All tabs</label>
+	<legend>__MSG_options_action_title__</legend>
+	<label><input type="radio" name="action" value="active" />__MSG_options_action_label_active__</label><br/>
+	<label><input type="radio" name="action" value="left" >__MSG_options_action_label_left__</label><br/>
+	<label><input type="radio" name="action" value="right" >__MSG_options_action_label_right__</label><br/>
+	<label><input type="radio" name="action" value="all" >__MSG_options_action_label_all__</label>
 
 	<br/>
-      <label><input type="checkbox" name="activeTab" >Include active tab (with Left/Right directions)</label>
+      <label><input type="checkbox" name="activeTab" >__MSG_options_active_tab__</label>
 </p>
 <p>
-	<legend>Image filter</legend>
-	<label><input type="radio" name="filter" value="max" >Largest image</label><br/>
-	<label><input type="radio" name="filter" value="all" >All images</label><br/>
-	<label><input type="radio" name="filter" value="direct" >Image tabs only</label>
- (ignore tabs with webpages)
+	<legend>__MSG_options_filter_title__</legend>
+	<label><input type="radio" name="filter" value="max" >__MSG_options_filter_label_max__</label><br/>
+	<label><input type="radio" name="filter" value="all" >__MSG_options_filter_label_all__</label><br/>
+	<label><input type="radio" name="filter" value="direct" >__MSG_options_filter_label_direct__</label>
+__MSG_options_filter_label_direct_note__
 </p>
 <p>
-	<legend>Minimum dimensions (pixels)</legend>
-      <label>Width:
+	<legend>__MSG_options_dimensions_title__</legend>
+      <label>__MSG_options_dimensions_width_label__
       <input type="text" name="minWidth" >
       </label>
       <br/>
-      <label>Height:
+      <label>__MSG_options_dimensions_height_label__
       <input type="text" name="minHeight" >
       </label>
 </p>
 <p>
-<legend>Images are saved in your Downloads path.<br>Optionally you can name a subfolder to save into.</legend>
-      <label>Subfolder:
+<legend>__MSG_options_download_path_title__</legend>
+__MSG_options_download_path_note__<br />
+      <label>__MSG_options_download_path_label__
       <input type="text" name="downloadPath" size="60">
       </label>
 </p>
 <p>
-	<legend>Path rules <a href="https://github.com/mcdamo/tab-image-saver/#path-rules">Learn more</a></legend>
-	<label>Paths will be appended to your Download Subfolder<br/>
-	Leave empty to restore default</label><br/>
+	<legend>__MSG_options_path_rules_title__ <a href="https://github.com/mcdamo/tab-image-saver/#path-rules">__MSG_options_learn_more__</a></legend>
+	__MSG_options_path_rules_note__<br/>
+	<label>__MSG_options_path_rules_label__</label><br/>
 	<textarea name="pathRules" cols="60" rows="6"></textarea>
 <p>
-	<legend>Duplicate filename action</legend>
-	<label><input type="radio" name="conflictAction" value="uniquify" >Rename (automatic)</label>
-	<label><input type="radio" name="conflictAction" value="overwrite" >Overwrite</label>
+	<legend>__MSG_options_conflict_action_title__</legend>
+	<label><input type="radio" name="conflictAction" value="uniquify" >__MSG_options_conflict_action_label_uniquify__</label>
+      <br/>
+	<label><input type="radio" name="conflictAction" value="overwrite" >__MSG_options_conflict_action_label_overwrite__</label>
 </p>
 <p>
-	<legend>Advanced options</legend>
-      <label><input type="checkbox" name="closeTab" >Close tabs after saving</label>
+	<legend>__MSG_options_advanced_title__</legend>
+      <label><input type="checkbox" name="closeTab" >__MSG_options_close_tab__</label>
       <br/>
-      <label><input type="checkbox" name="notifyEnded" >Show notification popups</label>
+      <label><input type="checkbox" name="notifyEnded" >__MSG_options_notify_ended__</label>
       <br/>
-      <label><input type="checkbox" name="removeEnded" >Incognito mode</label> (hide from history, may break images that require login)
+      <label><input type="checkbox" name="removeEnded" >__MSG_options_remove_ended__</label> __MSG_options_remove_ended_note__
 </p>
-</form>
-<div id="shortcuts">
 <p>
-	<legend>Keyboard shortcuts</legend>
-Example: "Alt+X", "Ctrl+Shift+U". <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/commands#Shortcut_values">Allowed values</a>
+	<legend>__MSG_options_shortcut_title__</legend>
+__MSG_options_shortcut_example__
+ <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/commands#Shortcut_values">__MSG_options_learn_more__</a>
     <br/>
-    <label>Run:
+    <label>__MSG_options_shortcut_label__
 		<input type="text" name="shortcut" >
 	</label>
 </p>
+</form>
 </div>
-  <script src="options-ui.js"></script>
+</div>
+  <script type="application/javascript" src="l10n.js"></script>
+  <script type="application/javascript" src="options-ui.js"></script>
 </body>
 
 </html>

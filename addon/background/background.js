@@ -16,7 +16,6 @@ async function getWindowId() {
 
 const App = {
   constants: {
-    title: "",
     contentScript: "/content/get-images.js",
     icon: "" // icon used on notifications
   },
@@ -43,7 +42,7 @@ const App = {
   isUniqueUrl: (url, windowId) => !App.getRuntime(windowId).urls.has(url),
 
   setTitle: async () => {
-    const title = `${App.constants.title}: ${App.options.action}`;
+    const title = browser.i18n.getMessage("browser_action_tooltip", browser.i18n.getMessage(`options_action_label_${App.options.action}`));
     await browser.browserAction.setTitle({title});
   },
 
@@ -160,19 +159,23 @@ const App = {
     const tabsError = App.getRuntime(windowId).tabsError;
     if (tabsError > 0) {
       if (App.options.action === ACTION.ACTIVE) {
-        msgErr = "active tab does not have permission";
+        msgErr = browser.i18n.getMessage("notification_content_permission_error_active");
       } else {
-        msgErr = `${tabsError} tabs do not have permission`;
+        msgErr = browser.i18n.getMessage("notification_content_permission_error_tabs", tabsError);
       }
     }
     let msg = "";
+    let title = browser.i18n.getMessage("notification_title_finished");
     if (App.isCancelled(windowId)) {
-      msg += "User Cancelled\n";
+      title = browser.i18n.getMessage("notification_title_cancelled");
+      msg += browser.i18n.getMessage("notification_content_cancelled");
+      msg += "\n";
     }
     if (App.getRuntime(windowId).tabsLoaded === 0) {
-      msg += `No tabs processed: ${App.options.action}\n${msgErr}`;
+      msg += browser.i18n.getMessage("notification_content_no_tabs", browser.i18n.getMessage(`options_action_label_${App.options.action}`));
+      msg += `\n${msgErr}`;
       App.notify(`finished_${windowId}`, {
-        title: "Tab Image Saver",
+        title,
         message: msg
       });
       return;
@@ -184,16 +187,19 @@ const App = {
     if (imagesSaved === 0 &&
       imagesFailed === 0 &&
       pathsFailed === 0) {
-      msg += "No images";
+      msg += browser.i18n.getMessage("notification_content_no_images");
     } else {
       if (imagesSaved > 0) {
-        msg += `Saved: ${imagesSaved}\n`;
+        msg += browser.i18n.getMessage("notification_content_images_saved", imagesSaved);
+        msg += "\n";
       }
       if (imagesFailed > 0) {
-        msg += `Failed downloads: ${imagesFailed}\n`;
+        msg += browser.i18n.getMessage("notification_content_images_failed", imagesFailed);
+        msg += "\n";
       }
       if (pathsFailed > 0) {
-        msg += `Path rules failed: ${pathsFailed}\n`;
+        msg += browser.i18n.getMessage("notification_content_paths_failed", pathsFailed);
+        msg += "\n";
       }
     }
     msg += "\n";
@@ -202,7 +208,7 @@ const App = {
     // }
     console.log("Notify finished");
     App.notify(`finished_${windowId}`, {
-      title: "Tab Image Saver",
+      title,
       message: `${msg}${msgErr}`
     });
   },
@@ -572,7 +578,6 @@ const App = {
       const mf = await browser.runtime.getManifest();
       console.log(mf);
       App.constants.icon = mf.icons["48"];
-      App.constants.title = mf.name;
       App.loadedManifest = true;
       return mf;
     }

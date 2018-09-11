@@ -1,0 +1,283 @@
+{
+  "extension_name": {
+    "description": "Name of the extension.",
+    "message": "Tab Image Saver"
+  },
+
+  "extension_description": {
+    "description": "Description of the extension.",
+    "message": "Save images from open tabs. Default action saves largest image in active tab."
+  },
+
+  "commands_execute_browser_action_description": {
+    "description": "Description of the default Browser Action command",
+    "message": "Run Tab Image Saver with current settings."
+  },
+
+  "browser_action_tooltip": {
+    "description": "Tooltip with extension name and currently selected ACTION",
+    "message": "Tab Image Saver: $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example" : "Right of active tab"
+      }
+    }
+  },
+
+  "browser_action_menu_options": {
+    "description": "Menu label to open extension options",
+    "message": "Preferences"
+  },
+
+  "browser_action_menu_downloads": {
+    "description": "Menu label to open downloads folder",
+    "message": "Downloads Folder"
+  },
+
+  "options_title": {
+    "description": "Page title for extension options with extension name",
+    "message": "Tab Image Saver Preferences"
+  },
+
+  "options_action_title": {
+    "description": "Title for the action option, which tabs to run the extension in",
+    "message": "Tabs to include"
+  },
+
+  "options_action_label_active": {
+    "description": "Option label for the action to run on the active tab",
+    "message": "Active tab"
+  },
+
+  "options_action_label_left": {
+    "description": "Option label for the action to run on tabs to the left of the active tab",
+    "message": "Left of active tab"
+  },
+
+  "options_action_label_right": {
+    "message": "Right of active tab",
+    "description": "Option label for the action to run on tabs to the right of the active tab"
+  },
+
+  "options_action_label_all": {
+    "description": "Option label for the action to run on all tabs",
+    "message": "All tabs"
+  },
+
+  "options_active_tab": {
+    "description": "Option label for the action to include the active tab (when action is Left or Right of the active tab)",
+    "message": "Include active tab (with Left/Right actions)"
+  },
+
+  "options_conflict_action_title": {
+    "description": "Title for the filename conflict options",
+    "message": "Duplicate filename action"
+  },
+
+  "options_conflict_action_label_uniquify": {
+    "description": "Option label for filename conflict to rename",
+    "message": "Rename"
+  },
+
+  "options_conflict_action_label_overwrite": {
+    "description": "Option label for filename conflict to overwrite",
+    "message": "Overwrite"
+  },
+
+  "options_filter_title": {
+    "description": "Title of the image filtering options",
+    "message": "Image filter"
+  },
+
+  "options_filter_label_max": {
+    "description": "Option label for selecting only the largest image",
+    "message": "Largest image"
+  },
+
+  "options_filter_label_all": {
+    "description": "Option label for selecting all images",
+    "message": "All images"
+  },
+
+  "options_filter_label_direct": {
+    "description": "Option label for selecting tabs that are only images",
+    "message": "Image tabs only"
+  },
+
+  "options_filter_label_direct_note": {
+    "description": "Additional note for selecting tabs that are only images",
+    "message": "(ignore tabs with webpages)"
+  },
+
+  "options_dimensions_title": {
+    "description": "Title of the minimum image dimensions option",
+    "message": "Minimum dimensions (pixels)"
+  },
+
+  "options_dimensions_width_label": {
+    "description": "Option label for minimum image width",
+    "message": "Width:"
+  },
+
+  "options_dimensions_height_label": {
+    "description": "Option label for minimum image height",
+    "message": "Height:"
+  },
+
+  "options_download_path_title": {
+    "description": "Title for download folder option",
+    "message": "Download folder"
+  },
+
+  "options_download_path_note": {
+    "description": "Additional note for download folder option",
+    "message": "Images are saved in your browsers download folder, you may name a subfolder to save into."
+  },
+
+  "options_download_path_label": {
+    "description": "Option label for downloads folder",
+    "message": "Subfolder:"
+  },
+
+  "options_path_rules_title": {
+    "description": "Title for path rules option",
+    "message": "Path rules"
+  },
+
+  "options_path_rules_note": {
+    "description": "Additional note for path rules option",
+    "message": "Paths will be appended to your Download Subfolder. Leave empty to restore default"
+  },
+
+  "options_path_rules_label": {
+    "description": "Label for path rules option",
+    "message": "Rules:"
+  },
+
+  "options_advanced_title": {
+    "description": "Title for additional options",
+    "message": "Advanced options"
+  },
+
+  "options_close_tab": {
+    "description": "Option label to close tabs after saving",
+    "message": "Close tabs after saving"
+  },
+
+  "options_notify_ended": {
+    "description": "Option label to show notifications",
+    "message": "Show notifications"
+  },
+
+  "options_remove_ended": {
+    "description": "Option label to download in browser's incognito mode",
+    "message": "Incognito mode"
+  },
+
+  "options_remove_ended_note": {
+    "description": "Additional note for download in incognito mode option",
+    "message": "(hide from history, may break images that require login)"
+  },
+
+  "options_shortcut_title": {
+    "description": "Title for keyboard shortcut option",
+    "message": "Keyboard shortcuts"
+  },
+
+  "options_shortcut_label": {
+    "description": "Option label for keyboard shortcut",
+    "message": "Run shortcut:"
+  },
+
+  "options_shortcut_example": {
+    "description": "Examples for keyboard shortcut",
+    "message": "Example: \"Alt+X\", \"Ctrl+Shift+U\"."
+  },
+
+  "options_learn_more": {
+    "description": "Link text for additional information",
+    "message": "Learn more"
+  },
+
+  "notification_title_finished": {
+    "description": "Notification title when finished",
+    "message": "Tab Image Saver finished"
+   },
+  
+  "notification_title_cancelled": {
+    "description": "Notification title when cancelled by user",
+    "message": "Tab Image Saver cancelled"
+  },
+
+  "notification_content_permission_error_active": {
+    "description": "Notification message when extension could run in active tab",
+    "message": "active tab does not have permission"
+  },
+
+  "notification_content_permission_error_tabs": {
+    "description": "Notification message when extension could not run in some tabs",
+    "message": "$NUM$ tabs do not have permission",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_cancelled": {
+    "description": "Notification message when cancelled by user",
+    "message": "User Cancelled"
+  },
+
+  "notification_content_no_tabs": {
+    "description": "Notification message when the extension did not find any tabs to run in, listing the current extension action",
+    "message": "No tabs processed: $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example" : "Right of active tab"
+      }
+    }
+  },
+
+  "notification_content_no_images": {
+    "description": "Notification message when no images were found on tabs",
+    "message": "No images"
+  },
+
+  "notification_content_images_saved": {
+    "description": "Notification message when some images were saved",
+    "message": "Saved: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_images_failed": {
+    "description": "Notification message when some images were not saved",
+    "message": "Failed downloads: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_paths_failed": {
+    "description": "Notification message when some images did not have filenames",
+    "message": "Path rules failed: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  }
+
+}

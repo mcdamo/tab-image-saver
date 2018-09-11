@@ -2,7 +2,7 @@
   "name": "tabimagesaver",
   "version": "2.2.2",
   "id": "tab-image-saver@mcdamo.addons.mozilla.org",
-  "description": "Save images from open tabs. Default action saves largest image in active tab.",
+  "description": "__MSG_extension_description__",
   "homepage": "https://github.com/mcdamo/tab-image-saver",
   "repository": {
     "type": "git",
@@ -24,7 +24,8 @@
   ],
   "webextensionManifest": {
     "manifest_version": 2,
-    "name": "Tab Image Saver",
+    "name": "__MSG_extension_name__",
+    "default_locale": "en",
     "applications": {
       "gecko": {
         "strict_min_version": "60.0"
@@ -59,12 +60,13 @@
           "size": 48
         }
       ],
-      "default_title": "Tab Image Saver",
+      "default_title": "__MSG_extension_name__",
       "browser_style": true
     },
     "options_ui": {
       "page": "options/options.html",
-      "browser_style": true
+      "browser_style": true,
+      "open_in_tab": true
     },
     "background": {
       "scripts": [
@@ -82,7 +84,7 @@
     "commands": {
       "_execute_browser_action": {
         "suggested_key": {},
-        "description": "Run Tab Image Saver with current settings"
+        "description": "__MSG_commands_execute_browser_action_description__"
       }
     }
   },
