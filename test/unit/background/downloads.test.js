@@ -81,7 +81,7 @@ describe("downloads.js", () => {
     });
   });
 
-  describe("downloadChangedHandler", () => {
+  describe("handleDownloadChanged", () => {
     // TODO
   });
 

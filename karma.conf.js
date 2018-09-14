@@ -46,7 +46,7 @@ module.exports = function(config) {
       },
     },
     browserConsoleLogOptions: {
-      level: 'debug',
+      level: 'log',
       format: '%b %T: %m',
       terminal: true
     },

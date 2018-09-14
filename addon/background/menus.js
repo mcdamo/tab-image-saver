@@ -10,10 +10,10 @@ if (typeof browser.menus !== "undefined") {
     }
   };
 
-  for (const menu of Object.keys(menus)) {
+  for (const [id, menu] of Object.entries(menus)) {
     browser.menus.create({
-      id: menu,
-      title: browser.i18n.getMessage(menu),
+      id,
+      title: browser.i18n.getMessage(id),
       contexts: menu.contexts
     });
   }

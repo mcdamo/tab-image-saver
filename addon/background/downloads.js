@@ -31,7 +31,7 @@ const Downloads = {
     if (!context) {
       return; // multiple triggers may fire for one download
     }
-    console.log("Download ended", download);
+    console.debug("Download ended", download);
     if (
       download.state === "complete" &&
       download.fileSize > 0 && // totalBytes may be undefined
@@ -50,8 +50,8 @@ const Downloads = {
 
   // handle downloads changed events
   // note: catches all changes to Downloads, not just from this webext
-  downloadChangedHandler: async (delta) => {
-    console.log("downloadChangedHandler", delta);
+  handleDownloadChanged: async (delta) => {
+    console.debug("handleDownloadChanged", delta);
     let dlid = delta.id;
     // if (delta.state && delta.state.current !== "in_progress") {
     let downloads = await browser.downloads.search({"id": dlid});

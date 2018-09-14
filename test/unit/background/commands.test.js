@@ -60,21 +60,26 @@ describe("commands.js", () => {
     });
   });
 
-  describe("commandHandler", () => {
+  describe("handleCommand", () => {
+    var stub;
+    before(() => {
+      stub = sinon.stub(Commands.COMMANDS, SHORTCUT_TYPES.BROWSER_ACTION);
+    });
+    after(() => {
+      stub.reset();
+    });
 
-    var stub = sinon.stub(Commands.COMMANDS, SHORTCUT_TYPES.BROWSER_ACTION);
     //App.run = sinon.stub();
     //var stub = sinon.stub(App, "run");
     it("should call command on browserAction", () => {
       const command = browserAction;
-      Commands.commandHandler(command);
+      Commands.handleCommand(command);
       expect(stub).to.be.calledOnce;
     });
-    stub.reset();
 
     it("should throw on undefined command", () => {
       const command = invalidAction;
-      expect(() => Commands.commandHandler(command)).to.throw(Error);
+      expect(() => Commands.handleCommand(command)).to.throw(Error);
     });
 
   });

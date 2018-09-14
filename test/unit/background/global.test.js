@@ -56,7 +56,7 @@ describe("global.js", () => {
         pathname: "/path/to/file.ext",
       };
       expect(Global.parseURL("http://example.com/path/to/file.ext?query#hash"))
-        .to.include(obj);
+        .to.deep.include(obj);
     });
   });
 

@@ -31,7 +31,7 @@ const Version = {
           console.debug("Updated rules", rules);
           await browser.storage.local.set({pathRules: rules});
         }
-        if (oldOpts.action === "current") {
+        if (oldOpts.action && oldOpts.action === "current") {
           await browser.storage.local.set({action: "active"});
         }
         // delete converted options
@@ -50,7 +50,7 @@ const Version = {
   init: async () => {
     const loadedOptions = await browser.storage.local.get("version");
     Version.VERSION = loadedOptions.version;
-    console.log("Version.init", Version.VERSION);
+    console.debug("Version.init", Version.VERSION);
     return Version.VERSION;
   }
 };

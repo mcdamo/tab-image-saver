@@ -55,7 +55,7 @@ const OptionsUI = {
         try {
           optionValue = await OptionsUI.onSaveOption({name: val.name, value: optionValue});
         } catch (err) {
-          console.log("onSave rejected");
+          console.debug("onSave rejected");
           optionValue = val.default;
           // TODO error message
         }
@@ -63,7 +63,7 @@ const OptionsUI = {
 
       return Object.assign(acc, {[val.name]: optionValue});
     }, {});
-    console.log("toSave", toSave);
+    console.debug("toSave", toSave);
 
     await browser.storage.local.set(toSave);
     // redraw ui incase some options where rejected

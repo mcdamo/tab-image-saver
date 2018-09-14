@@ -155,7 +155,7 @@ const Options = {
     return Options.OPTIONS;
   },
 
-  storageChangeHandler: (changes, area) => {
+  handleStorageChanged: (changes, area) => {
     if (area !== "local") {
       return Options.OPTIONS;
     }
