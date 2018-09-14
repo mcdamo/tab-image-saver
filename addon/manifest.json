@@ -64,7 +64,7 @@
       "description": "__MSG_commands_execute_browser_action_description__"
     }
   },
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "__MSG_extension_description__",
   "homepage_url": "https://github.com/mcdamo/tab-image-saver"
 }
