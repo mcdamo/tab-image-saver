@@ -1,0 +1,283 @@
+{
+  "extension_name": {
+    "description": "Name of the extension.",
+    "message": "Tab Image Saver"
+  },
+
+  "extension_description": {
+    "description": "Description of the extension.",
+    "message": "Salvar imagens de abas abertas. A ação padrão salva a maior imagem na guia ativa."
+  },
+
+  "commands_execute_browser_action_description": {
+    "description": "Description of the default Browser Action command",
+    "message": "Executar Tab Image Saver com as configurações atuais."
+  },
+
+  "browser_action_tooltip": {
+    "description": "Tooltip with extension name and currently selected ACTION",
+    "message": "Tab Image Saver: $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example" : "Right of active tab"
+      }
+    }
+  },
+
+  "browser_action_menu_options": {
+    "description": "Menu label to open extension options",
+    "message": "Preferências"
+  },
+
+  "browser_action_menu_downloads": {
+    "description": "Menu label to open downloads folder",
+    "message": "Pasta downloads"
+  },
+
+  "options_title": {
+    "description": "Page title for extension options with extension name",
+    "message": "Preferências do Tab Image Saver"
+  },
+
+  "options_action_title": {
+    "description": "Title for the action option, which tabs to run the extension in",
+    "message": "Abas inclusas"
+  },
+
+  "options_action_label_active": {
+    "description": "Option label for the action to run on the active tab",
+    "message": "Aba ativa"
+  },
+
+  "options_action_label_left": {
+    "description": "Option label for the action to run on tabs to the left of the active tab",
+    "message": "Esquerda da aba ativa"
+  },
+
+  "options_action_label_right": {
+    "description": "Option label for the action to run on tabs to the right of the active tab",
+    "message": "Direito de aba ativa"
+  },
+
+  "options_action_label_all": {
+    "description": "Option label for the action to run on all tabs",
+    "message": "Todas as abas"
+  },
+
+  "options_active_tab": {
+    "description": "Option label for the action to include the active tab (when action is Left or Right of the active tab)",
+    "message": "Incluir Aba ativa (Com açoes direita/esquerda)"
+  },
+
+  "options_conflict_action_title": {
+    "description": "Title for the filename conflict options",
+    "message": "Ação de nome de arquivo duplicado"
+  },
+
+  "options_conflict_action_label_uniquify": {
+    "description": "Option label for filename conflict to rename",
+    "message": "Renomear"
+  },
+
+  "options_conflict_action_label_overwrite": {
+    "description": "Option label for filename conflict to overwrite",
+    "message": "Sobrescrever"
+  },
+
+  "options_filter_title": {
+    "description": "Title of the image filtering options",
+    "message": "Filtro de imagem"
+  },
+
+  "options_filter_label_max": {
+    "description": "Option label for selecting only the largest image",
+    "message": "Maior imagem"
+  },
+
+  "options_filter_label_all": {
+    "description": "Option label for selecting all images",
+    "message": "Todas as imagens"
+  },
+
+  "options_filter_label_direct": {
+    "description": "Option label for selecting tabs that are only images",
+    "message": "Somente abas de imagem"
+  },
+
+  "options_filter_label_direct_note": {
+    "description": "Additional note for selecting tabs that are only images",
+    "message": "(ignorar abas com paginas web)"
+  },
+
+  "options_dimensions_title": {
+    "description": "Title of the minimum image dimensions option",
+    "message": "Dimensões mínimas (pixels)"
+  },
+
+  "options_dimensions_width_label": {
+    "description": "Option label for minimum image width",
+    "message": "Largura:"
+  },
+
+  "options_dimensions_height_label": {
+    "description": "Option label for minimum image height",
+    "message": "Altura:"
+  },
+
+  "options_download_path_title": {
+    "description": "Title for download folder option",
+    "message": "Pasta de download"
+  },
+
+  "options_download_path_note": {
+    "description": "Additional note for download folder option",
+    "message": "As imagens são salvas na pasta de download do seu navegador, você pode nomear uma subpasta para salvar."
+  },
+
+  "options_download_path_label": {
+    "description": "Option label for downloads folder",
+    "message": "Subpasta:"
+  },
+
+  "options_path_rules_title": {
+    "description": "Title for path rules option",
+    "message": "Regras de caminho"
+  },
+
+  "options_path_rules_note": {
+    "description": "Additional note for path rules option",
+    "message": "Os caminhos serão anexados à sua subpasta de download. Deixe em branco para restaurar o padrão"
+  },
+
+  "options_path_rules_label": {
+    "description": "Label for path rules option",
+    "message": "Regras:"
+  },
+
+  "options_advanced_title": {
+    "description": "Title for additional options",
+    "message": "Opções avançadas"
+  },
+
+  "options_close_tab": {
+    "description": "Option label to close tabs after saving",
+    "message": "Fechar abas depois de salvar"
+  },
+
+  "options_notify_ended": {
+    "description": "Option label to show notifications",
+    "message": "Mostrar notificações"
+  },
+
+  "options_remove_ended": {
+    "description": "Option label to download in browser's incognito mode",
+    "message": "Modo de navegação anônima"
+  },
+
+  "options_remove_ended_note": {
+    "description": "Additional note for download in incognito mode option",
+    "message": "(esconder do histórico, pode quebrar imagens que exigem login)"
+  },
+
+  "options_shortcut_title": {
+    "description": "Title for keyboard shortcut option",
+    "message": "Atalhos do teclado"
+  },
+
+  "options_shortcut_label": {
+    "description": "Option label for keyboard shortcut",
+    "message": "Executar atalho:"
+  },
+
+  "options_shortcut_example": {
+    "description": "Examples for keyboard shortcut",
+    "message": "Exemplo: \"Alt+X\", \"Ctrl+Shift+U\"."
+  },
+
+  "options_learn_more": {
+    "description": "Link text for additional information",
+    "message": "Saiba mais"
+  },
+
+  "notification_title_finished": {
+    "description": "Notification title when finished",
+    "message": "Tab Image Saver terminou"
+   },
+
+  "notification_title_cancelled": {
+    "description": "Notification title when cancelled by user",
+    "message": "Tab Image Saver cancelado"
+  },
+
+  "notification_content_permission_error_active": {
+    "description": "Notification message when extension could run in active tab",
+    "message": "aba ativa não tem permissão"
+  },
+
+  "notification_content_permission_error_tabs": {
+    "description": "Notification message when extension could not run in some tabs",
+    "message": "$NUM$ abas não têm permissão",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_cancelled": {
+    "description": "Notification message when cancelled by user",
+    "message": "Cancelado pelo usuário"
+  },
+
+  "notification_content_no_tabs": {
+    "description": "Notification message when the extension did not find any tabs to run in, listing the current extension action",
+    "message": "Sem abas processada em: $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example" : "Right of active tab"
+      }
+    }
+  },
+
+  "notification_content_no_images": {
+    "description": "Notification message when no images were found on tabs",
+    "message": "Sem imagens"
+  },
+
+  "notification_content_images_saved": {
+    "description": "Notification message when some images were saved",
+    "message": "Salvo: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_images_failed": {
+    "description": "Notification message when some images were not saved",
+    "message": "Downloads com falha: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_paths_failed": {
+    "description": "Notification message when some images did not have filenames",
+    "message": "Regras de caminho falhadas: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  }
+
+}
