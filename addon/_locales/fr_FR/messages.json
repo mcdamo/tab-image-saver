@@ -6,12 +6,12 @@
 
   "extension_description": {
     "description": "Description of the extension.",
-    "message": "Save images from open tabs. Default action saves largest image in active tab."
+    "message": "Sauvegarde les images des onglets ouverts. L'action par défaut sauvegarde la plus lourde image de l'onglet actif."
   },
 
   "commands_execute_browser_action_description": {
     "description": "Description of the default Browser Action command",
-    "message": "Run Tab Image Saver with current settings."
+    "message": "Lancer Tab Image Saver avec les paramètres actuels."
   },
 
   "browser_action_tooltip": {
@@ -27,147 +27,147 @@
 
   "browser_action_menu_options": {
     "description": "Menu label to open extension options",
-    "message": "Preferences"
+    "message": "Paramètres"
   },
 
   "browser_action_menu_downloads": {
     "description": "Menu label to open downloads folder",
-    "message": "Downloads Folder"
+    "message": "Dossier de téléchargement"
   },
 
   "options_title": {
     "description": "Page title for extension options with extension name",
-    "message": "Tab Image Saver Preferences"
+    "message": "Paramètres de Tab Image Saver"
   },
 
   "options_action_title": {
     "description": "Title for the action option, which tabs to run the extension in",
-    "message": "Tabs to include"
+    "message": "Onglets à inclure"
   },
 
   "options_action_label_active": {
     "description": "Option label for the action to run on the active tab",
-    "message": "Active tab"
+    "message": "Onglet actif"
   },
 
   "options_action_label_left": {
     "description": "Option label for the action to run on tabs to the left of the active tab",
-    "message": "Left of active tab"
+    "message": "A gauche de l'onglet actif"
   },
 
   "options_action_label_right": {
-    "message": "Right of active tab",
+    "message": "A droite de l'onglet actif",
     "description": "Option label for the action to run on tabs to the right of the active tab"
   },
 
   "options_action_label_all": {
     "description": "Option label for the action to run on all tabs",
-    "message": "All tabs"
+    "message": "Tous les onglets"
   },
 
   "options_active_tab": {
     "description": "Option label for the action to include the active tab (when action is Left or Right of the active tab)",
-    "message": "Include active tab (with Left/Right actions)"
+    "message": "Inclure l'onglet actif (Avec les actions Gauche/Droite)"
   },
 
   "options_conflict_action_title": {
     "description": "Title for the filename conflict options",
-    "message": "Duplicate filename action"
+    "message": "Action sur doublon de nom de fichier"
   },
 
   "options_conflict_action_label_uniquify": {
     "description": "Option label for filename conflict to rename",
-    "message": "Rename"
+    "message": "Renommer"
   },
 
   "options_conflict_action_label_overwrite": {
     "description": "Option label for filename conflict to overwrite",
-    "message": "Overwrite"
+    "message": "Ecraser"
   },
 
   "options_filter_title": {
     "description": "Title of the image filtering options",
-    "message": "Image filter"
+    "message": "Filtres d'images"
   },
 
   "options_filter_label_max": {
     "description": "Option label for selecting only the largest image",
-    "message": "Largest image"
+    "message": "La plus grande"
   },
 
   "options_filter_label_all": {
     "description": "Option label for selecting all images",
-    "message": "All images"
+    "message": "Toutes les images"
   },
 
   "options_filter_label_direct": {
     "description": "Option label for selecting tabs that are only images",
-    "message": "Image tabs only"
+    "message": "Seulement les onglets contenant des images"
   },
 
   "options_filter_label_direct_note": {
     "description": "Additional note for selecting tabs that are only images",
-    "message": "(ignore tabs with webpages)"
+    "message": "(ignorer les onglets pages web)"
   },
 
   "options_dimensions_title": {
     "description": "Title of the minimum image dimensions option",
-    "message": "Minimum dimensions (pixels)"
+    "message": "Dimensions minimum (pixels)"
   },
 
   "options_dimensions_width_label": {
     "description": "Option label for minimum image width",
-    "message": "Width:"
+    "message": "Largeur :"
   },
 
   "options_dimensions_height_label": {
     "description": "Option label for minimum image height",
-    "message": "Height:"
+    "message": "Hauteur :"
   },
 
   "options_download_path_title": {
     "description": "Title for download folder option",
-    "message": "Download folder"
+    "message": "Dossier de téléchargement"
   },
 
   "options_download_path_note": {
     "description": "Additional note for download folder option",
-    "message": "Images are saved in your browsers download folder, you may name a subfolder to save into."
+    "message": "Les images sont sauvegardées dans le dossier de téléchargement de votre navigateur, vous pouvez ajouter un sous-dossier dans lequel les placer."
   },
 
   "options_download_path_label": {
     "description": "Option label for downloads folder",
-    "message": "Subfolder:"
+    "message": "Sous-dossier :"
   },
 
   "options_path_rules_title": {
     "description": "Title for path rules option",
-    "message": "Path rules"
+    "message": "Règles de chemins de fichier"
   },
 
   "options_path_rules_note": {
     "description": "Additional note for path rules option",
-    "message": "Paths will be appended to your Download Subfolder. Leave empty to restore default"
+    "message": "Les chemins seront ajoutés au sous-dossier de téléchargement. Laissez vide pour restaurer le comportement par défaut."
   },
 
   "options_path_rules_label": {
     "description": "Label for path rules option",
-    "message": "Rules:"
+    "message": "Régles "
   },
 
   "options_advanced_title": {
     "description": "Title for additional options",
-    "message": "Advanced options"
+    "message": "Options avancées"
   },
 
   "options_close_tab": {
     "description": "Option label to close tabs after saving",
-    "message": "Close tabs after saving"
+    "message": "Fermer les onglets après la sauvegarde"
   },
 
   "options_notify_ended": {
     "description": "Option label to show notifications",
-    "message": "Show notifications"
+    "message": "Afficher les notifications"
   },
 
   "options_remove_ended": {
@@ -177,47 +177,47 @@
 
   "options_remove_ended_note": {
     "description": "Additional note for download in incognito mode option",
-    "message": "(hide from history, may break images that require login)"
+    "message": "(ne pas mettre en historique, peut ne pas fonctionner avec les onglets qui requièrent un login)"
   },
 
   "options_shortcut_title": {
     "description": "Title for keyboard shortcut option",
-    "message": "Keyboard shortcuts"
+    "message": "Raccourcis clavier"
   },
 
   "options_shortcut_label": {
     "description": "Option label for keyboard shortcut",
-    "message": "Run shortcut:"
+    "message": "Raccourci :"
   },
 
   "options_shortcut_example": {
     "description": "Examples for keyboard shortcut",
-    "message": "Example: \"Alt+X\", \"Ctrl+Shift+U\"."
+    "message": "Exemple: \"Alt+X\", \"Ctrl+Shift+U\"."
   },
 
   "options_learn_more": {
     "description": "Link text for additional information",
-    "message": "Learn more"
+    "message": "En savoir plus"
   },
 
   "notification_title_finished": {
     "description": "Notification title when finished",
-    "message": "Tab Image Saver finished"
+    "message": "Tab Image Saver terminé"
    },
   
   "notification_title_cancelled": {
     "description": "Notification title when cancelled by user",
-    "message": "Tab Image Saver cancelled"
+    "message": "Tab Image Saver annulé"
   },
 
   "notification_content_permission_error_active": {
     "description": "Notification message when extension could run in active tab",
-    "message": "active tab does not have permission"
+    "message": "L'onglet actif n'a pas les droits requis"
   },
 
   "notification_content_permission_error_tabs": {
     "description": "Notification message when extension could not run in some tabs",
-    "message": "$NUM$ tabs do not have permission",
+    "message": "$NUM$ onglets n'ont pas les droits requis",
     "placeholders": {
       "num": {
         "content": "$1",
@@ -228,12 +228,12 @@
 
   "notification_content_cancelled": {
     "description": "Notification message when cancelled by user",
-    "message": "User Cancelled"
+    "message": "Annulation de l'utilisateur"
   },
 
   "notification_content_no_tabs": {
     "description": "Notification message when the extension did not find any tabs to run in, listing the current extension action",
-    "message": "No tabs processed: $ACTION$",
+    "message": "Aucun onglet traité : $ACTION$",
     "placeholders": {
       "action": {
         "content": "$1",
@@ -244,7 +244,7 @@
 
   "notification_content_no_images": {
     "description": "Notification message when no images were found on tabs",
-    "message": "No images"
+    "message": "Pas d'image"
   },
 
   "notification_content_images_saved": {
@@ -260,7 +260,7 @@
 
   "notification_content_images_failed": {
     "description": "Notification message when some images were not saved",
-    "message": "Failed downloads: $NUM$",
+    "message": "Téléchargements échoués : $NUM$",
     "placeholders": {
       "num": {
         "content": "$1",
@@ -271,7 +271,7 @@
 
   "notification_content_paths_failed": {
     "description": "Notification message when some images did not have filenames",
-    "message": "Path rules failed: $NUM$",
+    "message": "Règles de noms de fichier échouée : $NUM$",
     "placeholders": {
       "num": {
         "content": "$1",
