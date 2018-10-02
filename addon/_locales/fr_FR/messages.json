@@ -1,0 +1,283 @@
+{
+  "extension_name": {
+    "description": "Name of the extension.",
+    "message": "Tab Image Saver"
+  },
+
+  "extension_description": {
+    "description": "Description of the extension.",
+    "message": "Sauvegarde les images des onglets ouverts. L'action par défaut sauvegarde la plus lourde image de l'onglet actif."
+  },
+
+  "commands_execute_browser_action_description": {
+    "description": "Description of the default Browser Action command",
+    "message": "Lancer Tab Image Saver avec les paramètres actuels."
+  },
+
+  "browser_action_tooltip": {
+    "description": "Tooltip with extension name and currently selected ACTION",
+    "message": "Tab Image Saver: $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example" : "Right of active tab"
+      }
+    }
+  },
+
+  "browser_action_menu_options": {
+    "description": "Menu label to open extension options",
+    "message": "Paramètres"
+  },
+
+  "browser_action_menu_downloads": {
+    "description": "Menu label to open downloads folder",
+    "message": "Dossier de téléchargement"
+  },
+
+  "options_title": {
+    "description": "Page title for extension options with extension name",
+    "message": "Paramètres de Tab Image Saver"
+  },
+
+  "options_action_title": {
+    "description": "Title for the action option, which tabs to run the extension in",
+    "message": "Onglets à inclure"
+  },
+
+  "options_action_label_active": {
+    "description": "Option label for the action to run on the active tab",
+    "message": "Onglet actif"
+  },
+
+  "options_action_label_left": {
+    "description": "Option label for the action to run on tabs to the left of the active tab",
+    "message": "A gauche de l'onglet actif"
+  },
+
+  "options_action_label_right": {
+    "message": "A droite de l'onglet actif",
+    "description": "Option label for the action to run on tabs to the right of the active tab"
+  },
+
+  "options_action_label_all": {
+    "description": "Option label for the action to run on all tabs",
+    "message": "Tous les onglets"
+  },
+
+  "options_active_tab": {
+    "description": "Option label for the action to include the active tab (when action is Left or Right of the active tab)",
+    "message": "Inclure l'onglet actif (Avec les actions Gauche/Droite)"
+  },
+
+  "options_conflict_action_title": {
+    "description": "Title for the filename conflict options",
+    "message": "Action sur doublon de nom de fichier"
+  },
+
+  "options_conflict_action_label_uniquify": {
+    "description": "Option label for filename conflict to rename",
+    "message": "Renommer"
+  },
+
+  "options_conflict_action_label_overwrite": {
+    "description": "Option label for filename conflict to overwrite",
+    "message": "Ecraser"
+  },
+
+  "options_filter_title": {
+    "description": "Title of the image filtering options",
+    "message": "Filtres d'images"
+  },
+
+  "options_filter_label_max": {
+    "description": "Option label for selecting only the largest image",
+    "message": "La plus grande"
+  },
+
+  "options_filter_label_all": {
+    "description": "Option label for selecting all images",
+    "message": "Toutes les images"
+  },
+
+  "options_filter_label_direct": {
+    "description": "Option label for selecting tabs that are only images",
+    "message": "Seulement les onglets contenant des images"
+  },
+
+  "options_filter_label_direct_note": {
+    "description": "Additional note for selecting tabs that are only images",
+    "message": "(ignorer les onglets pages web)"
+  },
+
+  "options_dimensions_title": {
+    "description": "Title of the minimum image dimensions option",
+    "message": "Dimensions minimum (pixels)"
+  },
+
+  "options_dimensions_width_label": {
+    "description": "Option label for minimum image width",
+    "message": "Largeur :"
+  },
+
+  "options_dimensions_height_label": {
+    "description": "Option label for minimum image height",
+    "message": "Hauteur :"
+  },
+
+  "options_download_path_title": {
+    "description": "Title for download folder option",
+    "message": "Dossier de téléchargement"
+  },
+
+  "options_download_path_note": {
+    "description": "Additional note for download folder option",
+    "message": "Les images sont sauvegardées dans le dossier de téléchargement de votre navigateur, vous pouvez ajouter un sous-dossier dans lequel les placer."
+  },
+
+  "options_download_path_label": {
+    "description": "Option label for downloads folder",
+    "message": "Sous-dossier :"
+  },
+
+  "options_path_rules_title": {
+    "description": "Title for path rules option",
+    "message": "Règles de chemins de fichier"
+  },
+
+  "options_path_rules_note": {
+    "description": "Additional note for path rules option",
+    "message": "Les chemins seront ajoutés au sous-dossier de téléchargement. Laissez vide pour restaurer le comportement par défaut."
+  },
+
+  "options_path_rules_label": {
+    "description": "Label for path rules option",
+    "message": "Régles "
+  },
+
+  "options_advanced_title": {
+    "description": "Title for additional options",
+    "message": "Options avancées"
+  },
+
+  "options_close_tab": {
+    "description": "Option label to close tabs after saving",
+    "message": "Fermer les onglets après la sauvegarde"
+  },
+
+  "options_notify_ended": {
+    "description": "Option label to show notifications",
+    "message": "Afficher les notifications"
+  },
+
+  "options_remove_ended": {
+    "description": "Option label to download in browser's incognito mode",
+    "message": "Incognito mode"
+  },
+
+  "options_remove_ended_note": {
+    "description": "Additional note for download in incognito mode option",
+    "message": "(ne pas mettre en historique, peut ne pas fonctionner avec les onglets qui requièrent un login)"
+  },
+
+  "options_shortcut_title": {
+    "description": "Title for keyboard shortcut option",
+    "message": "Raccourcis clavier"
+  },
+
+  "options_shortcut_label": {
+    "description": "Option label for keyboard shortcut",
+    "message": "Raccourci :"
+  },
+
+  "options_shortcut_example": {
+    "description": "Examples for keyboard shortcut",
+    "message": "Exemple: \"Alt+X\", \"Ctrl+Shift+U\"."
+  },
+
+  "options_learn_more": {
+    "description": "Link text for additional information",
+    "message": "En savoir plus"
+  },
+
+  "notification_title_finished": {
+    "description": "Notification title when finished",
+    "message": "Tab Image Saver terminé"
+   },
+  
+  "notification_title_cancelled": {
+    "description": "Notification title when cancelled by user",
+    "message": "Tab Image Saver annulé"
+  },
+
+  "notification_content_permission_error_active": {
+    "description": "Notification message when extension could run in active tab",
+    "message": "L'onglet actif n'a pas les droits requis"
+  },
+
+  "notification_content_permission_error_tabs": {
+    "description": "Notification message when extension could not run in some tabs",
+    "message": "$NUM$ onglets n'ont pas les droits requis",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_cancelled": {
+    "description": "Notification message when cancelled by user",
+    "message": "Annulation de l'utilisateur"
+  },
+
+  "notification_content_no_tabs": {
+    "description": "Notification message when the extension did not find any tabs to run in, listing the current extension action",
+    "message": "Aucun onglet traité : $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example" : "Right of active tab"
+      }
+    }
+  },
+
+  "notification_content_no_images": {
+    "description": "Notification message when no images were found on tabs",
+    "message": "Pas d'image"
+  },
+
+  "notification_content_images_saved": {
+    "description": "Notification message when some images were saved",
+    "message": "Saved: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_images_failed": {
+    "description": "Notification message when some images were not saved",
+    "message": "Téléchargements échoués : $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  },
+
+  "notification_content_paths_failed": {
+    "description": "Notification message when some images did not have filenames",
+    "message": "Règles de noms de fichier échouée : $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example" : "2"
+      }
+    }
+  }
+
+}
