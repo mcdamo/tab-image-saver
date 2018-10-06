@@ -180,7 +180,12 @@
     "message": "(esconder do histórico, pode quebrar imagens que exigem login)"
   },
 
-  "options_shortcut_title": {
+  "options_ignore_discarded_tab": {
+    "description": "Option label to ignore discarded tabs",
+    "message": "Ignorar guias descartadas"
+  },
+
+   "options_shortcut_title": {
     "description": "Title for keyboard shortcut option",
     "message": "Atalhos do teclado"
   },

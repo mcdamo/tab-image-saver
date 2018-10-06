@@ -242,11 +242,12 @@ describe("background.js", () => {
   });
 
   describe("checkTabs", () => {
-    var getStub, cancelStub, objs;
+    var getStub, cancelStub, objs, updateStub;
     before(() => {
       objs = [
         {index:1, tab:{id:3, status:"complete", discarded: false}},
         {index:2, tab:{id:1, status:"complete", discarded: false}},
+        {index:3, tab:{id:2, url: "http://example.com", status:"complete", discarded: true}},
       ];
       getStub = browser.tabs.get;
       let idx=0;
@@ -254,16 +255,33 @@ describe("background.js", () => {
       idx=1;
       getStub.withArgs(objs[idx].tab.id).resolves(objs[idx].tab);
       cancelStub = sinon.stub(App, "isCancelled").returns(false);
+      updateStub = browser.tabs.update;
+      idx=2;
+      updateStub.withArgs(objs[idx].tab.id, {url: objs[idx].tab.url})
+        .resolves({id: objs[idx].tab.id, url: objs[idx].tab.url, status: "complete", discarded: false});
+    });
+    beforeEach(() => {
+      updateStub.resetHistory();
     });
     after(() => {
       cancelStub.restore();
       getStub.reset();
+      updateStub.reset();
     });
     it("should return object with keys: ready, waiting, sleepMore", async () => {
+      var ready = JSON.parse(JSON.stringify(objs));
+      ready[2].tab.discarded=false;
       await expect(App.checkTabs(objs, windowId)).to.eventually.be.an("object")
-        .and.to.deep.include({ready:objs,waiting:[]});
+        .and.to.deep.include({ready:ready,waiting:[]});
+      expect(updateStub).to.be.calledOnce;
     });
-    // TODO it should reload discarded tab
+    it("should ignore discarded tab when option is set", async () => {
+      var ready = objs.slice(0,2); // remove discarded tab from array
+      App.options.ignoreDiscardedTab = true;
+      await expect(App.checkTabs(objs, windowId)).to.eventually.be.an("object")
+        .and.to.deep.include({ready:ready,waiting:[]});
+      expect(updateStub).to.be.not.be.called;
+    });
   });
 
   describe("waitForTabs", () => {

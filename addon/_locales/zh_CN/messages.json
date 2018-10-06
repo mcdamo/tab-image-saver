@@ -172,6 +172,10 @@
         "description": "Option label to download in browser's incognito mode",
         "hash": "01b460e5abf4ce833f325271b19feb8b"
     },
+    "options_ignore_discarded_tab": {
+        "description": "Option label to ignore discarded tabs",
+        "message": "忽略丢弃的标签"
+    },
     "options_remove_ended_note": {
         "message": "（不保留历史记录，可能影响需要登录的图像）",
         "description": "Additional note for download in incognito mode option",

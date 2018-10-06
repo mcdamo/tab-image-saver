@@ -180,7 +180,12 @@
     "message": "(ne pas mettre en historique, peut ne pas fonctionner avec les onglets qui requièrent un login)"
   },
 
-  "options_shortcut_title": {
+  "options_ignore_discarded_tab": {
+    "description": "Option label to ignore discarded tabs",
+    "message": "Ignorer les onglets mis au rebut"
+  },
+
+   "options_shortcut_title": {
     "description": "Title for keyboard shortcut option",
     "message": "Raccourcis clavier"
   },

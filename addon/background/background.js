@@ -495,6 +495,10 @@ const App = {
       }
       // scripts do not run in discarded tabs
       if (tab.discarded) {
+        if (App.options.ignoreDiscardedTab) {
+          console.log(`Tab ${tab.id} discarded, ignoring:`, tab.url);
+          return waiting;
+        }
         try {
           console.log(`Tab ${tab.id} discarded, reloading:`, tab.url);
           tab = await browser.tabs.update(tab.id, {url: tab.url}); // reload() does not affect discarded state

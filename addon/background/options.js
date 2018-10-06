@@ -57,6 +57,11 @@ const Options = {
       values: Object.values(FILTER)
     },
     {
+      name: "ignoreDiscardedTab",
+      type: T.BOOL,
+      default: false
+    },
+    {
       name: "minHeight",
       type: T.VALUE,
       default: "100"

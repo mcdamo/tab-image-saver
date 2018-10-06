@@ -180,7 +180,12 @@
     "message": "(hide from history, may break images that require login)"
   },
 
-  "options_shortcut_title": {
+  "options_ignore_discarded_tab": {
+    "description": "Option label to ignore discarded tabs",
+    "message": "Ignore discarded tabs"
+  },
+
+   "options_shortcut_title": {
     "description": "Title for keyboard shortcut option",
     "message": "Keyboard shortcuts"
   },
