@@ -1,0 +1,267 @@
+{
+    "extension_name": {
+        "message": "Tab Image Saver",
+        "description": "Name of the extension.",
+        "hash": "bf7fab5bd5a67d764d52285a25b7ee57"
+    },
+    "extension_description": {
+        "message": "从打开的标签页中保存图像。默认保存活动标签页中的较大图像。",
+        "description": "Description of the extension.",
+        "hash": "e4370fcf3baaaede6a9ba511142384d9"
+    },
+    "commands_execute_browser_action_description": {
+        "message": "使用当前设置运行 Tab Image Saver。",
+        "description": "Description of the default Browser Action command",
+        "hash": "873b8fe2c937003001155cb9a36fa929"
+    },
+    "browser_action_tooltip": {
+        "message": "Tab Image Saver：$ACTION$",
+        "description": "Tooltip with extension name and currently selected ACTION",
+        "placeholders": {
+            "action": { "content": "$1", "example": "Right of active tab" }
+        },
+        "hash": "7e1a362a339920851fab77e6f9750d3b"
+    },
+    "browser_action_menu_options": {
+        "message": "选项",
+        "description": "Menu label to open extension options",
+        "hash": "cff69d729afa8b0a49c47869ff65660a"
+    },
+    "browser_action_menu_downloads": {
+        "message": "下载文件夹",
+        "description": "Menu label to open downloads folder",
+        "hash": "bb1beb879e2005edd96acdabc4d5d7cf"
+    },
+    "options_title": {
+        "message": "Tab Image Saver 选项",
+        "description": "Page title for extension options with extension name",
+        "hash": "164c14488e5bdfc7840873d7a7784a58"
+    },
+    "options_action_title": {
+        "message": "包括哪些标签页",
+        "description": "Title for the action option, which tabs to run the extension in",
+        "hash": "65b9a77329ca8601e3a841a16962b348"
+    },
+    "options_action_label_active": {
+        "message": "活动标签页",
+        "description": "Option label for the action to run on the active tab",
+        "hash": "48ea4daa5677290df09563bd2b4a98ad"
+    },
+    "options_action_label_left": {
+        "message": "活动标签页左侧",
+        "description": "Option label for the action to run on tabs to the left of the active tab",
+        "hash": "317d9943d9aafd733aa48e842be1480c"
+    },
+    "options_action_label_right": {
+        "message": "活动标签页右侧",
+        "description": "Option label for the action to run on tabs to the right of the active tab",
+        "hash": "fa5ed02a43ebc0d480cf4ae434cbeacb"
+    },
+    "options_action_label_all": {
+        "message": "所有标签页",
+        "description": "Option label for the action to run on all tabs",
+        "hash": "d7d03186bcb8767043247b5a4896df0c"
+    },
+    "options_active_tab": {
+        "message": "左侧/右侧的选项包括活动标签页",
+        "description": "Option label for the action to include the active tab (when action is Left or Right of the active tab)",
+        "hash": "867cde0bd47a52083418cdd55348607b"
+    },
+    "options_conflict_action_title": {
+        "message": "重复文件名处理",
+        "description": "Title for the filename conflict options",
+        "hash": "23d3d71f081835f8ec86b8ae049e1065"
+    },
+    "options_conflict_action_label_uniquify": {
+        "message": "重命名",
+        "description": "Option label for filename conflict to rename",
+        "hash": "bbb8ac10d999ce1eeab3f0ba56fe8349"
+    },
+    "options_conflict_action_label_overwrite": {
+        "message": "覆盖",
+        "description": "Option label for filename conflict to overwrite",
+        "hash": "7f7b65223a9c18acb0e4c34e7f9c238a"
+    },
+    "options_filter_title": {
+        "message": "图像过滤器",
+        "description": "Title of the image filtering options",
+        "hash": "f772d2381f26acb89ea078ff755619bc"
+    },
+    "options_filter_label_max": {
+        "message": "最大的图像",
+        "description": "Option label for selecting only the largest image",
+        "hash": "10649f35dba3b094f892e7ffa525372e"
+    },
+    "options_filter_label_all": {
+        "message": "所有图像",
+        "description": "Option label for selecting all images",
+        "hash": "b7e910114a4ecddb46e2563afa9867c0"
+    },
+    "options_filter_label_direct": {
+        "message": "仅图像的标签页",
+        "description": "Option label for selecting tabs that are only images",
+        "hash": "f02c4849570df8aa86af720bbf195518"
+    },
+    "options_filter_label_direct_note": {
+        "message": "（忽略内容是网页的标签页）",
+        "description": "Additional note for selecting tabs that are only images",
+        "hash": "da234d86f3ac5522a26201241d93d3df"
+    },
+    "options_dimensions_title": {
+        "message": "最小尺寸（像素）",
+        "description": "Title of the minimum image dimensions option",
+        "hash": "8276959a480f39b8c3fa8c5a8d20f220"
+    },
+    "options_dimensions_width_label": {
+        "message": "宽度：",
+        "description": "Option label for minimum image width",
+        "hash": "1ddcf7e15fc24602d2e051c89ec908e9"
+    },
+    "options_dimensions_height_label": {
+        "message": "高度：",
+        "description": "Option label for minimum image height",
+        "hash": "1625f9a7b068fde411a5842c4acb86b4"
+    },
+    "options_download_path_title": {
+        "message": "下载文件夹",
+        "description": "Title for download folder option",
+        "hash": "951a06181e15b31af9dfb0fd9414e9d8"
+    },
+    "options_download_path_note": {
+        "message": "图像保存在您的浏览器设置的下载文件夹中，您可以指定一个子文件夹来保存。",
+        "description": "Additional note for download folder option",
+        "hash": "7c47c937f48cffdba8630ef2880d11f0"
+    },
+    "options_download_path_label": {
+        "message": "子文件夹：",
+        "description": "Option label for downloads folder",
+        "hash": "cf0c7bfbe4303efb57784ab40c03b309"
+    },
+    "options_path_rules_title": {
+        "message": "路径规则",
+        "description": "Title for path rules option",
+        "hash": "f7d011bd1a1cc2c4aa5b0b3a437332bc"
+    },
+    "options_path_rules_note": {
+        "message": "路径将追加到您的下载子文件夹之后。留空恢复默认设置。",
+        "description": "Additional note for path rules option",
+        "hash": "ed76f897edfe41c8d9d788666b92a79e"
+    },
+    "options_path_rules_label": {
+        "message": "规则：",
+        "description": "Label for path rules option",
+        "hash": "11e74f475f296e958f614e88aff38033"
+    },
+    "options_advanced_title": {
+        "message": "高级选项",
+        "description": "Title for additional options",
+        "hash": "6ff5ba23f7a507042725f8853b465965"
+    },
+    "options_close_tab": {
+        "message": "保存后关闭标签页",
+        "description": "Option label to close tabs after saving",
+        "hash": "1f33b9cd2e209b85df437958a0c179cf"
+    },
+    "options_notify_ended": {
+        "message": "显示通知",
+        "description": "Option label to show notifications",
+        "hash": "3997fd62090d71d3cb341a22e5a5919d"
+    },
+    "options_remove_ended": {
+        "message": "隐身模式",
+        "description": "Option label to download in browser's incognito mode",
+        "hash": "01b460e5abf4ce833f325271b19feb8b"
+    },
+    "options_remove_ended_note": {
+        "message": "（不保留历史记录，可能影响需要登录的图像）",
+        "description": "Additional note for download in incognito mode option",
+        "hash": "e5bf90513f1ad9359493758aab077a29"
+    },
+    "options_shortcut_title": {
+        "message": "键盘快捷键",
+        "description": "Title for keyboard shortcut option",
+        "hash": "3e4c94412820831fbea1494aa4d5ecf4"
+    },
+    "options_shortcut_label": {
+        "message": "启动快捷键：",
+        "description": "Option label for keyboard shortcut",
+        "hash": "fcc375bd21f391a30b469f7efd156d0f"
+    },
+    "options_shortcut_example": {
+        "message": "例如：Alt+X、Ctrl+Shift+U。",
+        "description": "Examples for keyboard shortcut",
+        "hash": "f4082aeddcd253af3df99a925e443108"
+    },
+    "options_learn_more": {
+        "message": "详细了解",
+        "description": "Link text for additional information",
+        "hash": "9085b09f4748be12ab0c241d2e643b31"
+    },
+    "notification_title_finished": {
+        "message": "Tab Image Saver 完成",
+        "description": "Notification title when finished",
+        "hash": "9f76ae371fd24609f27c16d52ec67feb"
+    },
+    "notification_title_cancelled": {
+        "message": "Tab Image Saver 取消",
+        "description": "Notification title when cancelled by user",
+        "hash": "c723d0f3c6dcd066b0ef0d4c488cd199"
+    },
+    "notification_content_permission_error_active": {
+        "message": "对活动标签页没有权限",
+        "description": "Notification message when extension could run in active tab",
+        "hash": "1b36b356c1835572e7cb6ab3e30c0bc3"
+    },
+    "notification_content_permission_error_tabs": {
+        "message": "对 $NUM$ 个标签页没有权限",
+        "description": "Notification message when extension could not run in some tabs",
+        "placeholders": {
+            "num": { "content": "$1", "example": "2" }
+        },
+        "hash": "c3f2b308056ae8e8a491b3891f06def9"
+    },
+    "notification_content_cancelled": {
+        "message": "用户取消",
+        "description": "Notification message when cancelled by user",
+        "hash": "5d66bb5458f853d953c9a0be452565e4"
+    },
+    "notification_content_no_tabs": {
+        "message": "标签页未能处理：$ACTION$",
+        "description": "Notification message when the extension did not find any tabs to run in, listing the current extension action",
+        "placeholders": {
+            "action": { "content": "$1", "example": "Right of active tab" }
+        },
+        "hash": "db16d47b1c13a7f315f4cfa2a59acb7e"
+    },
+    "notification_content_no_images": {
+        "message": "没有图像",
+        "description": "Notification message when no images were found on tabs",
+        "hash": "d7bfad42f18c4d0f8452222ae62d9ad9"
+    },
+    "notification_content_images_saved": {
+        "message": "已保存：$NUM$ 张图片",
+        "description": "Notification message when some images were saved",
+        "placeholders": {
+            "num": { "content": "$1", "example": "2" }
+        },
+        "hash": "2dda91164d4af4a105392ff20c7c4789"
+    },
+    "notification_content_images_failed": {
+        "message": "下载失败：$NUM$ 项",
+        "description": "Notification message when some images were not saved",
+        "placeholders": {
+            "num": { "content": "$1", "example": "2" }
+        },
+        "hash": "3412f224f14233b7827ec7aa2c05af60"
+    },
+    "notification_content_paths_failed": {
+        "message": "路径规则失败：$NUM$ 项",
+        "description": "Notification message when some images did not have filenames",
+        "placeholders": {
+            "num": { "content": "$1", "example": "2" }
+        },
+        "hash": "d814ca2136824621d52033217521e0ad"
+    },
+
+    "__WET_LOCALE__": { "message": "zh-cn" }
+}
