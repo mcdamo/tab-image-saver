@@ -648,11 +648,11 @@ const App = {
   init: async () => {
     console.debug("Background.init");
     if (browser.storage.onChanged.hasListener(App.handleStorageChanged)) {
-      browser.storage.onChanged.removeListener(App.handleStorageChanged);
+      await browser.storage.onChanged.removeListener(App.handleStorageChanged);
     }
     await App.loadManifest(); // will skip if already loaded
     await App.loadOptions();
-    browser.storage.onChanged.addListener(App.handleStorageChanged);
+    await browser.storage.onChanged.addListener(App.handleStorageChanged);
   },
 
   // load manifest.json and apply some fields to constants
@@ -702,6 +702,11 @@ const App = {
     const mytab = await App.getActiveTab(windowId);
     const tabId = mytab.id;
     console.debug("running", {windowId, tabId});
+    // workaround for private browsing mode does not trigger onStartup callback
+    if (!browser.storage.onChanged.hasListener(App.handleStorageChanged)) {
+      console.debug("storage listener not detected - forcing init()");
+      await App.init();
+    }
     App.setupBadge(); // run before clearing runtime
     browser.downloads.onChanged.addListener(Downloads.handleDownloadChanged);
     App.runtime.set(windowId, {
