@@ -7,7 +7,10 @@ const Downloads = {
 
   getDownload: (dlid) => Downloads.dlMap.get(dlid),
 
-  removeDownload: (dlid) => Downloads.dlMap.delete(dlid),
+  removeDownload: (dlid) => {
+    Downloads.dlMap.delete(dlid);
+    browser.downloads.erase({id: dlid}); /* TODO: await? */
+  },
 
   downloadsHaveProp: (prop, val) => {
     for (const dl of Downloads.dlMap.values()) {
@@ -56,7 +59,7 @@ const Downloads = {
     // if (delta.state && delta.state.current !== "in_progress") {
     let downloads = await browser.downloads.search({"id": dlid});
     for (let download of downloads) {
-      Downloads.downloadEnded(download); // await?
+      await Downloads.downloadEnded(download); // await?
     }
   },
 

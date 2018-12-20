@@ -155,29 +155,39 @@
     "message": "Rules:"
   },
 
+  "options_download_complete_title": {
+    "description": "Title for after downloading options",
+    "message": "After downloading"
+  },
+
+  "options_close_tab": {
+    "description": "Option label to close tabs after downloading",
+    "message": "Close tabs"
+  },
+
+  "options_notify_ended": {
+    "description": "Option label to show notification after downloading",
+    "message": "Show notification"
+  },
+
+  "options_remove_ended": {
+    "description": "Option label to remove downloads from history",
+    "message": "Clear download history"
+  },
+
   "options_advanced_title": {
     "description": "Title for additional options",
     "message": "Advanced options"
   },
 
-  "options_close_tab": {
-    "description": "Option label to close tabs after saving",
-    "message": "Close tabs after saving"
+  "options_download_private": {
+    "description": "Option label to download in Private Browsing mode",
+    "message": "Download in Private Browsing mode"
   },
 
-  "options_notify_ended": {
-    "description": "Option label to show notifications",
-    "message": "Show notifications"
-  },
-
-  "options_remove_ended": {
-    "description": "Option label to download in browser's incognito mode",
-    "message": "Incognito mode"
-  },
-
-  "options_remove_ended_note": {
-    "description": "Additional note for download in incognito mode option",
-    "message": "(hide from history, may break images that require login)"
+  "options_download_private_note": {
+    "description": "Additional note for download in Private Browsing mode option",
+    "message": "(will break downloads that require authentication or cookies)"
   },
 
   "options_ignore_discarded_tab": {

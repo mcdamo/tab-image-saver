@@ -155,28 +155,38 @@
     "message": "Regras:"
   },
 
+  "options_download_complete_title": {
+    "description": "Title for after downloading options",
+    "message": "After downloading"
+  },
+
+  "options_close_tab": {
+    "description": "Option label to close tabs after downloading",
+    "message": "Fechar abas depois de salvar"
+  },
+
+  "options_notify_ended": {
+    "description": "Option label to show notification after downloading",
+    "message": "Mostrar notificações"
+  },
+
+  "options_remove_ended": {
+    "description": "Option label to remove downloads from history",
+    "message": "Clear download history"
+  },
+
   "options_advanced_title": {
     "description": "Title for additional options",
     "message": "Opções avançadas"
   },
 
-  "options_close_tab": {
-    "description": "Option label to close tabs after saving",
-    "message": "Fechar abas depois de salvar"
-  },
-
-  "options_notify_ended": {
-    "description": "Option label to show notifications",
-    "message": "Mostrar notificações"
-  },
-
-  "options_remove_ended": {
-    "description": "Option label to download in browser's incognito mode",
+  "options_download_private": {
+    "description": "Option label to download in Private Browsing mode",
     "message": "Modo de navegação anônima"
   },
 
-  "options_remove_ended_note": {
-    "description": "Additional note for download in incognito mode option",
+  "options_download_private_note": {
+    "description": "Additional note for download in Private Browsing mode option",
     "message": "(esconder do histórico, pode quebrar imagens que exigem login)"
   },
 

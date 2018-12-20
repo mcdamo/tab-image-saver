@@ -152,33 +152,41 @@
         "description": "Label for path rules option",
         "hash": "11e74f475f296e958f614e88aff38033"
     },
+    "options_download_complete_title": {
+      "description": "Title for after downloading options",
+      "message": "After downloading"
+    },
+    "options_close_tab": {
+        "message": "保存后关闭标签页",
+        "description": "Option label to close tabs after downloading",
+        "hash": "1f33b9cd2e209b85df437958a0c179cf"
+    },
+    "options_notify_ended": {
+        "message": "显示通知",
+        "description": "Option label to show notification after downloading",
+        "hash": "3997fd62090d71d3cb341a22e5a5919d"
+    },
+    "options_remove_ended": {
+        "message": "Clear download history",
+        "description": "Option label to remove downloads from history"
+    },
     "options_advanced_title": {
         "message": "高级选项",
         "description": "Title for additional options",
         "hash": "6ff5ba23f7a507042725f8853b465965"
     },
-    "options_close_tab": {
-        "message": "保存后关闭标签页",
-        "description": "Option label to close tabs after saving",
-        "hash": "1f33b9cd2e209b85df437958a0c179cf"
-    },
-    "options_notify_ended": {
-        "message": "显示通知",
-        "description": "Option label to show notifications",
-        "hash": "3997fd62090d71d3cb341a22e5a5919d"
-    },
-    "options_remove_ended": {
-        "message": "隐身模式",
-        "description": "Option label to download in browser's incognito mode",
-        "hash": "01b460e5abf4ce833f325271b19feb8b"
-    },
     "options_ignore_discarded_tab": {
         "description": "Option label to ignore discarded tabs",
         "message": "忽略丢弃的标签"
     },
-    "options_remove_ended_note": {
+    "options_download_private": {
+        "message": "隐身模式",
+        "description": "Option label to download in Private Browsing mode",
+        "hash": "01b460e5abf4ce833f325271b19feb8b"
+    },
+    "options_download_private_note": {
         "message": "（不保留历史记录，可能影响需要登录的图像）",
-        "description": "Additional note for download in incognito mode option",
+        "description": "Additional note for download in Private Browsing mode option",
         "hash": "e5bf90513f1ad9359493758aab077a29"
     },
     "options_shortcut_title": {

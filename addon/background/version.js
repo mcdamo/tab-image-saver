@@ -37,11 +37,18 @@ const Version = {
         // delete converted options
         await browser.storage.local.remove(["altIsFilename", "altIsFilenameExt"]);
       }
-      /*
-      if (prev <= "2.2.0") {
-
+      if (prev <= "2.4.1") {
+        // removeEnded option is renamed to downloadPrivate to align with option label
+        // and removeEnded option is reused for its original purpose as a new option
+        const keys = ["removeEnded"];
+        const oldOpts = await browser.storage.local.get(keys);
+        if (oldOpts.removeEnded) {
+          await browser.storage.local.set({
+            removeEnded: false,
+            downloadPrivate: true
+          });
+        }
       }
-      */
     }
     await browser.storage.local.set({version: ver});
     Version.VERSION = ver;

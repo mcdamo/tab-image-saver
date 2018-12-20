@@ -51,6 +51,11 @@ const Options = {
       default: ""
     },
     {
+      name: "downloadPrivate",
+      type: T.BOOL,
+      default: false
+    },
+    {
       name: "filter",
       type: T.RADIO,
       default: FILTER.MAX,

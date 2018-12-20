@@ -155,28 +155,38 @@
     "message": "Régles "
   },
 
+  "options_download_complete_title": {
+    "description": "Title for after downloading options",
+    "message": "After downloading"
+  },
+
+  "options_close_tab": {
+    "description": "Option label to close tabs after downloading",
+    "message": "Fermer les onglets après la sauvegarde"
+  },
+
+  "options_notify_ended": {
+    "description": "Option label to show notification after downloading",
+    "message": "Afficher les notifications"
+  },
+
+  "options_remove_ended": {
+    "description": "Option label to remove downloads from history",
+    "message": "Clear download history"
+  },
+
   "options_advanced_title": {
     "description": "Title for additional options",
     "message": "Options avancées"
   },
 
-  "options_close_tab": {
-    "description": "Option label to close tabs after saving",
-    "message": "Fermer les onglets après la sauvegarde"
-  },
-
-  "options_notify_ended": {
-    "description": "Option label to show notifications",
-    "message": "Afficher les notifications"
-  },
-
-  "options_remove_ended": {
-    "description": "Option label to download in browser's incognito mode",
+  "options_download_private": {
+    "description": "Option label to download in Private Browsing mode",
     "message": "Incognito mode"
   },
 
-  "options_remove_ended_note": {
-    "description": "Additional note for download in incognito mode option",
+  "options_download_private_note": {
+    "description": "Additional note for download in Private Browsing mode option",
     "message": "(ne pas mettre en historique, peut ne pas fonctionner avec les onglets qui requièrent un login)"
   },
 
