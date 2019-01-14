@@ -33,12 +33,12 @@ const Global = {
     return true;
   },
 
-  // string contains varnames in curly braces
+  // string contains varnames in angled brackets
   // optional pipe to define 'or'
   // optional #'s to define zero padding
   // vars defined in obj
-  // {var1|var2} => var1 || var2
-  // {###index} => 000
+  // <var1|var2> => var1 || var2
+  // <###index> => 000
   template: (string, obj) => {
     let s = string;
     const r = /<([^>]+)>/g;

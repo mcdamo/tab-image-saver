@@ -44,6 +44,17 @@ const Options = {
       values: Object.values(CONFLICT_ACTION)
     },
     {
+      name: "downloadAsync",
+      type: T.BOOL,
+      default: false
+    },
+    {
+      name: "downloadNum",
+      type: T.VALUE,
+      default: "1",
+      regex: "^[1-9][0-9]*$" // integer >= 1
+    },
+    {
       name: "downloadPath",
       type: T.VALUE,
       onLoad: {function: (v) => Global.sanitizePath(v)}, // App
@@ -69,12 +80,14 @@ const Options = {
     {
       name: "minHeight",
       type: T.VALUE,
-      default: "100"
+      default: "100",
+      regex: "^[1-9][0-9]*$" // integer >= 1
     },
     {
       name: "minWidth",
       type: T.VALUE,
-      default: "100"
+      default: "100",
+      regex: "^[1-9][0-9]*$" // integer >= 1
     },
     {
       name: "notifyEnded",

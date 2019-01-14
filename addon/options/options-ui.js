@@ -51,6 +51,13 @@ const OptionsUI = {
         console.log("Invalid radio option", optionValue, val.values);
         optionValue = val.default;
       }
+      if (val.regex) {
+        let re = new RegExp(val.regex);
+        if (!re.test(optionValue)) {
+          console.warn(`Regex failed for ${val.name}:${optionValue}`);
+          optionValue = val.default;
+        }
+      }
       if (val.onSave) {
         try {
           optionValue = await OptionsUI.onSaveOption({name: val.name, value: optionValue});

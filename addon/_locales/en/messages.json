@@ -180,6 +180,21 @@
     "message": "Advanced options"
   },
 
+  "options_download_num": {
+    "description": "Option label for maximum number of concurrent downloads",
+    "message": "Maximum concurrent downloads"
+  },
+
+  "options_download_async": {
+    "description": "Option label to download in asynchronous mode",
+    "message": "Asynchronous downloads"
+  },
+
+  "options_download_async_note": {
+    "description": "Additional note for download in asynchronous mode",
+    "message": "(downloads using #index path rules may be numbered out of order)"
+  },
+
   "options_download_private": {
     "description": "Option label to download in Private Browsing mode",
     "message": "Download in Private Browsing mode"
@@ -192,7 +207,7 @@
 
   "options_ignore_discarded_tab": {
     "description": "Option label to ignore discarded tabs",
-    "message": "Ignore discarded tabs"
+    "message": "Skip discarded tabs"
   },
 
    "options_shortcut_title": {
