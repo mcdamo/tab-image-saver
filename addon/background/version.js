@@ -12,7 +12,7 @@ const Version = {
   update: async (ver) => {
     let prev = Version.VERSION;
     if (prev !== ver) {
-      console.debug(`Update ${prev} => ${ver}`);
+      console.log(`Update ${prev} => ${ver}`);
       // do updates from oldest to most recent
       if (prev === undefined) {
         // workaround: manually set a version number
@@ -57,7 +57,7 @@ const Version = {
   init: async () => {
     const loadedOptions = await browser.storage.local.get("version");
     Version.VERSION = loadedOptions.version;
-    console.debug("Version.init", Version.VERSION);
+    console.log("Version.init", Version.VERSION);
     return Version.VERSION;
   }
 };

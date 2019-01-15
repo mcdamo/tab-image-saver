@@ -51,7 +51,7 @@ const Options = {
     {
       name: "downloadNum",
       type: T.VALUE,
-      default: "1",
+      default: "6",
       regex: "^[1-9][0-9]*$" // integer >= 1
     },
     {

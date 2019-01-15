@@ -146,6 +146,10 @@ const App = {
     if (App.getRuntime(windowId).imagesSaved > 0) {
       return false;
     }
+    // update loading badge every 200ms
+    if ((new Date() - App.getRuntime(windowId).badgeLoadingDate) <= 200) {
+      return false;
+    }
     let text = "";
     if (percent !== undefined) {
       const icons = "○◔◑◕●";
@@ -161,6 +165,7 @@ const App = {
       }
       App.getRuntime(windowId).badgeLoading = num;
     }
+    App.getRuntime(windowId).badgeLoadingDate = new Date();
     App.setBadgeText({text, windowId});
     return true;
   },
@@ -267,7 +272,7 @@ const App = {
     if (!App.isRunning(windowId) && // test app is not in progress
       !App.isFinished(windowId) && // test downloads have finished
       Downloads.hasWindowDownloads(windowId) === false) {
-      console.log("window has ended", windowId);
+      console.log(`Window(${windowId}) has ended`, new Date() - App.getRuntime(windowId).startDate);
       if (!App.isCancelled(windowId)) {
         App.setFinished(windowId);
       }
@@ -284,7 +289,7 @@ const App = {
       if (Downloads.hasTabDownloads(tabId) === false) {
         try {
           await browser.tabs.remove(tabId);
-          console.log(`Tab removed ${tabId}`);
+          console.log(`Closed Tab(${tabId})`);
         } catch (err) {
           console.error(`Failed removing tab ${tabId}:`, err); /* RemoveLogging:skip  */
         }
@@ -301,11 +306,18 @@ const App = {
   },
 
   // generate file path from image attributes, index number, and rules template
+  // param expected to have these properties: tab, image, index, rules
   // return null if failed
-  createFilename: async (image, index, rules) => {
+  createFilename: async (param) => {
+    const tab = param.tab;
+    const image = param.image;
+    const index = param.index;
+    const rules = param.rules;
     let xhrLoaded = false;
     const parse = Global.parseURL(image.src); // URI components will be encoded
     const path = decodeURI(parse.pathname);
+    const tabParse = Global.parseURL(tab.url);
+    const tabPath = decodeURI(tabParse.pathname);
     // obj properties should be lowercase
     let obj = {
       alt: "",
@@ -315,12 +327,17 @@ const App = {
       index: index.toString(),
       name: Global.getFilePart(path),
       path: Global.getDirname(path),
+      tabtitle: tab.title,
+      tabhost: tabParse.hostname,
+      tabpath: Global.getDirname(tabPath),
+      tabfile: Global.getFilePart(tabPath),
+      tabext: Global.getFileExt(tabPath),
       xname: "",
       xext: "",
       xmimeext: ""
     };
     if (image.alt) {
-      obj.alt = Global.sanitizeFilename(image.alt);
+      obj.alt = image.alt;
     }
     for (const rule of rules) {
       // check current rule for XHR variables and load XHR if required
@@ -335,7 +352,7 @@ const App = {
         }
         xhrLoaded = true;
       }
-      const filename = Global.template(rule, obj).trim();
+      const filename = Global.sanitizePath(Global.template(rule, obj).trim());
       console.debug(`rule: ${rule}, filename: ${filename}, valid: ${Global.isValidPath(filename)}`);
       if (Global.isValidPath(filename)) {
         console.debug("createFilename", rule, filename); /* RemoveLogging: skip */
@@ -345,8 +362,9 @@ const App = {
     return null;
   },
 
-  createPath: async (image, index, rules) => {
-    const filename = await App.createFilename(image, index, rules);
+  // param passed to createFilename
+  createPath: async (param) => {
+    const filename = await App.createFilename(param);
     if (filename === null) {
       throw new Error("Unable to generate filename");
     }
@@ -382,14 +400,20 @@ const App = {
       if (result === false) {
         continue;
       }
-      const tabId = result.tabId;
+      const tab = result.tab;
+      const tabId = tab.id;
       const images = result.images;
       for (const image of images) {
         if (App.isCancelled(windowId)) {
           return promiseDownloads;
         }
         try {
-          const path = await App.createPath(image, App.getRuntime(windowId).imageIndex++, App.options.pathRules);
+          const path = await App.createPath({
+            tab,
+            image,
+            index: App.getRuntime(windowId).imageIndex++,
+            rules: App.options.pathRules
+          });
           await App.throttleDownloads(windowId);
           App.getRuntime(windowId).imagesDownloading++;
           promiseDownloads.push(Downloads.startDownload({
@@ -419,9 +443,9 @@ const App = {
 
   // return false if no downloads
   downloadTab: async (tabResults, windowId) => {
-    // executeTab returns: {tabId, [results]}
+    // executeTab returns: {tab{}, images[]}
     let results;
-    console.log("tabResults", tabResults);
+    console.debug("downloadTab", tabResults);
     if (Array.isArray(tabResults)) {
       // sync downloads pass all results in an array
       if (tabResults.length === 0) {
@@ -437,7 +461,7 @@ const App = {
     return await Global.allPromises(
       promiseDownloads,
       (downloads) => {
-        console.log("downloads", downloads);
+        console.debug("downloadTab promises", downloads);
         if (downloads.length === 0) {
           // No downloads found, finish immediately
           console.debug("downloadTab:allPromises:finished");
@@ -467,7 +491,7 @@ const App = {
         App.getRuntime(windowId).imagesSkipped++;
       } else {
         App.addUrl(url, windowId);
-        console.log("Found image:", url);
+        console.debug("URL queued:", url);
         App.getRuntime(windowId).imagesMatched++;
         result.push(image);
       }
@@ -486,27 +510,35 @@ const App = {
     } else {
       tab = aTab;
     }
-    const tabId = tab.id;
     try {
-      console.log(`Sending tab ${tabId}: ${App.constants.contentScript}`, tab);
+      console.log(`Executing Tab(${tab.id})`);
+      console.debug(`Sending tab ${tab.id}: ${App.constants.contentScript}`, tab);
       // returns array of script result for each loaded tab
       const results = await browser.tabs.executeScript(
-        tabId, {
+        tab.id, {
           file: App.constants.contentScript,
           runAt: "document_end" // "document_idle" may block if page is manually stopped
         }
       );
       App.getRuntime(windowId).tabsLoaded++;
-      console.log(`Response from tab ${tabId}`, results);
+      console.log(`Result from Tab(${tab.id})`);
+      console.debug(`Response from tab ${tab.id}`, results);
       const images = App.filterImages(results[0], windowId);
       if (images.length > 0) {
         App.getRuntime(windowId).tabsEnded++;
-        return {tabId, images};
+        return {
+          tab: {
+            id: tab.id,
+            title: tab.title,
+            url: tab.url
+          },
+          images
+        };
       }
       App.getRuntime(windowId).tabsSkipped++;
     } catch (err) {
       App.getRuntime(windowId).tabsError++;
-      console.error(`Error executing tab ${tabId}: ${tab.url}`, err); /* RemoveLogging:skip */
+      console.error(`Error executing tab ${tab.id}: ${tab.url}`, err); /* RemoveLogging:skip */
     }
     return false;
   },
@@ -747,7 +779,7 @@ const App = {
   loadManifest: async (reload = false) => {
     if (!App.loadedManifest || reload) {
       const mf = await browser.runtime.getManifest();
-      console.log(mf);
+      console.debug("loadManifest", mf);
       App.constants.icon = mf.icons["48"];
       App.loadedManifest = true;
       return mf;
@@ -813,6 +845,7 @@ const App = {
       pathsFailed: 0, // failed creating path using rules
       badgeTimeout: undefined,
       badgeLoading: 0,
+      badgeLoadingDate: 0,
       urls: new Set(), // unique urls for this window's tabs only
       cancel: false
     });
@@ -829,7 +862,7 @@ const App = {
         const tabsReady = await App.waitForTabs(tabsWaiting, windowId);
         ret = await App.executeTabs(tabsReady, windowId, App.downloadTab);
       }
-      console.debug("Run finished", ret);
+      console.debug(`Run finished: ${ret}`, new Date() - App.getRuntime(windowId).startDate);
       if (!ret) {
         // no tabs or downloads found
         App.setFinished(windowId);

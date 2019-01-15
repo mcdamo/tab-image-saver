@@ -22,7 +22,7 @@ const Commands = {
       console.error(`Unable to use shortcut: ${key}`, err); /* RemoveLogging:skip */
       throw new Error(`Unable to use shortcut: ${key}`);
     }
-    console.debug("Shortcut updated", key);
+    console.log("Shortcut updated", key);
     return key;
   },
 

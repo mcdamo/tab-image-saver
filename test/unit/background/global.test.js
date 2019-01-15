@@ -221,6 +221,18 @@ describe("global.js", () => {
     it("should zero-pad number", () => {
       expect(Global.template("<####var1>", {var1: "42"})).to.equal("0042");
     });
+    it("should replace outer regex", () => {
+      expect(Global.template('<var1|var2>"/replace/\\s*\\|.*//"', {var1: "", var2: "title | site"})).to.equal("title");
+    });
+    it("should replace inner regex", () => {
+      expect(Global.template('<var1"/replace/.*/"|var2"/replace/([a-z]+)/_$1_/g">', {var1: "", var2: "title | site"})).to.equal("_title_ | _site_");
+    });
+    it("should replace inner regex with escaped quotation marks", () => {
+      expect(Global.template('<var1|var2"/replace/\\"([a-z]+)\\"/_$1_/g">', {var1: "", var2: '"title" | "site"'})).to.equal("_title_ | _site_");
+    });
+    it("should replace inner & outer regex", () => {
+      expect(Global.template('<var1|var2"/replace/([a-z]+)/_$1_/g">"/replace/\\s*\\|.*//"', {var1: "", var2: "title | site"})).to.equal("_title_");
+    });
   });
 
   describe("getHeaders & getHeaderFilename", () => {

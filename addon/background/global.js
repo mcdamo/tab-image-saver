@@ -33,6 +33,31 @@ const Global = {
     return true;
   },
 
+  // code: "|command|param|..."
+  // eg.   "|replace|pattern|newSubstr[|regexp flags]"
+  templateCode: (input, code) => {
+    if (code === undefined) {
+      return input;
+    }
+    let delim = code.substr(1, 1);
+    let aCode = code.substr(2).slice(0, -1).split(delim); // remove 2 leading and 1 trailing characters and split
+    switch (aCode[0]) {
+      case "replace": {
+        let rMod;
+        if (aCode.length >= 3) {
+          rMod = aCode[3]; // optional regex modifier
+        }
+        let regex = new RegExp(aCode[1], rMod);
+        let newStr = (aCode[2] !== undefined) ? aCode[2] : "";
+        return input.replace(regex, newStr);
+      }
+      default: {
+        console.warn("Ignoring invalid templateCode", code); /* RemoveLogging:skip */
+        return input;
+      }
+    }
+  },
+
   // string contains varnames in angled brackets
   // optional pipe to define 'or'
   // optional #'s to define zero padding
@@ -41,18 +66,26 @@ const Global = {
   // <###index> => 000
   template: (string, obj) => {
     let s = string;
-    const r = /<([^>]+)>/g;
-    s = s.replace(r, (match, p) => {
-      const vars = p.split("|");
-      for (const v of vars) {
-        const rx = /^([#]*)(.*)/;
-        const m = v.match(rx);
-        const pad = m[1];
-        const key = m[2];
+    // greedy match <.> with optional templateCode
+    const r = /<([^>]+)>("[^"\\]*(?:\\.[^"\\]*)*")?/g;
+    s = s.replace(r, (match, p, globalCode) => {
+      // match #key with optional templateCode, repeating separated by pipe '|'
+      const vars = p.match(/([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?(?:\|([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?)*/);
+      console.debug("template vars", vars);
+      for (let i = 1; i < vars.length; i += 3) {
+        const pad = vars[i];
+        const key = vars[i + 1];
+        const localCode = vars[i + 2];
         const lkey = key.toLowerCase();
-        if (Object.prototype.hasOwnProperty.call(obj, lkey)) {
+        if (Object.prototype.hasOwnProperty.call(obj, lkey) && obj[lkey] !== undefined) {
           if (obj[lkey].length > 0) {
-            const ret = obj[lkey].padStart(pad.length, "0");
+            let ret = obj[lkey].padStart(pad.length, "0");
+            if (localCode !== undefined) {
+              ret = Global.templateCode(ret, localCode);
+            }
+            if (globalCode !== undefined) {
+              ret = Global.templateCode(ret, globalCode);
+            }
             return ret;
           }
         } else {
@@ -120,7 +153,7 @@ const Global = {
 
   // replace invalid characters and strip leading/trailing slashes
   sanitizePath: (path, str = "_") =>
-    path.replace(/[*":<>|?]/g, str) // remove invalid characters
+    path.replace(/[*":<>|?]/g, str) // replace invalid characters
       .replace(/[/\\]+/g, "/") // replace backslash with forward slash
       .replace(/^[/]/, "") // strip leading slash
       .replace(/[/]$/, ""), // strip trailing slash

@@ -142,23 +142,52 @@ describe("background.js", () => {
     });
 
     it("should replace string using template", async () => {
+      var tab = {
+        id: 6,
+        title: "tab title - site name",
+        url: "http://my.tab.url/path/to/page.html",
+      };
       var img = {
         src: "http://domain.tld/path/part/file.ext?query",
         alt: "alt string",
-      }
+      };
       var rules = {
         "<alt>.jpg": "alt string.jpg",
         "<name>,<ext>": "file,.ext",
         "<xName>,<xExt>,<xMimeExt>": "xhr name,.xhrext,.xm",
         "<####index>": "0042",
+        "<host>": "domain.tld",
         "<hostname>": "domain.tld",
         "<path>": "path/part",
         " <undef> ": "undef", // strip whitespace and treat as literal
+        "<tabtitle>": "tab title - site name",
+        "<tabhost>,<tabpath>,<tabfile>,<tabext>": "my.tab.url,path/to,page,.html",
       };
       //Object.entries(rules).forEach(async ([test, result]) => {
       for (const test in rules) {
         const result = rules[test];
-        await expect(App.createFilename(img, 42, [test]), `Rule: ${test}`).to.eventually.become(result);
+        await expect(App.createFilename({tab, image: img, index: 42, rules: [test]}), `Rule: ${test}`).to.eventually.become(result);
+      };
+    });
+
+    it("should replace invalid characters in path", async () => {
+      var tab = {
+        id: 6,
+        title: "*\":<>|?tab title*\":<>|?",
+        //url: "http://my.tab.url/path/to/page.html",
+      };
+      var img = {
+        //src: "http://domain.tld/path/part/file.ext?query",
+        alt: "*\":<>|?alt string*\":<>|?",
+      };
+      var rules = {
+        "<alt>.jpg": "_______alt string_______.jpg",
+        "<tabtitle>": "_______tab title_______",
+      };
+      //Object.entries(rules).forEach(async ([test, result]) => {
+      for (const test in rules) {
+        const result = rules[test];
+        await expect(App.createFilename({tab, image: img, index: 42, rules: [test]}), `Rule: ${test}`).to.eventually.become(result);
       };
     });
 
@@ -174,7 +203,7 @@ describe("background.js", () => {
       //Object.entries(rules).forEach(async ([test, result]) => {
       for (const test in rules) {
         const result = rules[test];
-        await expect(App.createFilename(img, 42, [test]), `Rule: ${test}`).to.eventually.become(result);
+        await expect(App.createFilename({tab: {}, image: img, index: 42, rules: [test]}), `Rule: ${test}`).to.eventually.become(result);
       };
     });
 
@@ -182,7 +211,7 @@ describe("background.js", () => {
       var img = {
         src: "https://pbs.twimg.com/media/file.ext:large",
       }
-      await expect(App.createFilename(img, 42, ["<name>,<ext>"])).to.eventually.become("file,.ext");
+      await expect(App.createFilename({tab: {}, image: img, index: 42, rules: ["<name>,<ext>"]})).to.eventually.become("file,.ext");
     });
 
     it("should return null when filename is not valid", async () => {
@@ -193,7 +222,7 @@ describe("background.js", () => {
         ".ext", // extension only
       ];
       for (const test of rules) {
-        await expect(App.createFilename(img, 42, [test]), `Rule: ${test}`).to.eventually.become(null);
+        await expect(App.createFilename({tab: {}, image: img, index: 42, rules: [test]}), `Rule: ${test}`).to.eventually.become(null);
       }
     });
   });
@@ -209,11 +238,11 @@ describe("background.js", () => {
 
     it("should join path with options.downloadPath", async () => {
       var rules = ["<name><ext>"];
-      await expect(App.createPath(img, 0, rules)).to.eventually.become("t/file.ext");
+      await expect(App.createPath({tab: {}, image: img, index: 0, rules})).to.eventually.become("t/file.ext");
     });
     it("should reject when filename not generated", async () => {
       var rules = [];
-      await expect(App.createPath(img, 0, rules)).to.eventually.be.rejected;
+      await expect(App.createPath({tab: {}, image: img, index: 0, rules})).to.eventually.be.rejected;
     });
   });
 

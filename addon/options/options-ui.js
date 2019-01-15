@@ -111,7 +111,7 @@ const OptionsUI = {
 
   setupAutosave: (el) => {
     const autosaveCb = (e) => {
-      console.log("autosaveCb", e);
+      console.debug("autosaveCb", e);
       OptionsUI.saveOptions(e);
     };
 

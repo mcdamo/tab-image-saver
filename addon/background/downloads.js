@@ -34,7 +34,8 @@ const Downloads = {
     if (!context) {
       return; // multiple triggers may fire for one download
     }
-    console.debug("Download ended", download);
+    console.log(`Download(${dlid}) ${download.state}:`, download.filename);
+    console.debug("Download status", download);
     if (
       download.state === "complete" &&
       download.fileSize > 0 && // totalBytes may be undefined
@@ -108,7 +109,7 @@ const Downloads = {
         incognito: download.incognito
       };
       const dlid = await browser.downloads.download(dlOpts);
-      console.log(`Download ${dlid} from tab ${context.tabId}`);
+      console.log(`Started Download(${dlid}) from Tab(${context.tabId}):`, dlOpts.filename);
       Downloads.addDownload(dlid, context);
       return dlid;
     } catch (err) {
