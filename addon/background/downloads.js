@@ -97,19 +97,44 @@ const Downloads = {
     );
   },
 
+  fetchDownload: async (download, context) => {
+    try {
+      const response = await fetch(download.url, {
+        mode: "cors",
+        credentials: "same-origin",
+        cache: "force-cache",
+        signal: download.signal
+      });
+      console.debug("fetchDownload response:", response);
+      if (response.ok) {
+        console.log(`fetchDownload from Tab(${context.tabId}):`, download.path);
+        let myDownload = download;
+        const myBlob = await response.blob();
+        myDownload.url = URL.createObjectURL(myBlob);
+        return Downloads.saveDownload(myDownload, context);
+      }
+      console.error(`HTTP error, status = ${response.status}`, response);
+    } catch (err) {
+      console.error("fetchDownload", err);
+    }
+    const fn = context.error || ((x) => x);
+    fn();
+    return false;
+  },
+
   // start the download
-  startDownload: async (download, context) => {
+  saveDownload: async (download, context) => {
     try {
       const dlOpts = {
         saveAs: false, // required from FF58, min_ver FF52
         headers: [{name: "cache", value: "force-cache"}],
         url: download.url,
-        filename: download.filename,
+        filename: download.path,
         conflictAction: download.conflictAction,
         incognito: download.incognito
       };
       const dlid = await browser.downloads.download(dlOpts);
-      console.log(`Started Download(${dlid}) from Tab(${context.tabId}):`, dlOpts.filename);
+      console.log(`saveDownload(${dlid}) from Tab(${context.tabId}):`, download.path);
       Downloads.addDownload(dlid, context);
       return dlid;
     } catch (err) {

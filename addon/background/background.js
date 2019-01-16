@@ -114,8 +114,8 @@ const App = {
   setBadgeFinished: (windowId) => {
     const num = App.getRuntime(windowId).imagesSaved;
     let color = "#579900d0"; // green
-    if (App.getRuntime(windowId).imagesFailed > 0 ||
-      App.getRuntime(windowId).pathsFailed > 0) {
+    if (App.getRuntime(windowId).imagesFailed.size > 0 ||
+      App.getRuntime(windowId).pathsFailed.size > 0) {
       color = "#d3290fd0"; // red
     } else if (App.getRuntime(windowId).imagesSaved === 0) {
       color = "#cc9a23d0"; // yellow
@@ -220,8 +220,8 @@ const App = {
       return;
     }
     const imagesSaved = App.getRuntime(windowId).imagesSaved;
-    const imagesFailed = App.getRuntime(windowId).imagesFailed;
-    const pathsFailed = App.getRuntime(windowId).pathsFailed;
+    const imagesFailed = App.getRuntime(windowId).imagesFailed.size;
+    const pathsFailed = App.getRuntime(windowId).pathsFailed.size;
     console.log(`${imagesSaved} Saved, ${imagesFailed} Failed`);
     if (imagesSaved === 0 &&
       imagesFailed === 0 &&
@@ -254,7 +254,14 @@ const App = {
 
   // cleanup and remove runtime for selected window
   setFinished: (windowId) => {
+    if (App.getRuntime(windowId).pathsFailed.size) {
+      console.info("pathsFailed", App.getRuntime(windowId).pathsFailed); /* RemoveLogging:skip  */
+    }
+    if (App.getRuntime(windowId).imagesFailed.size) {
+      console.info("imagesFailed", App.getRuntime(windowId).imagesFailed); /* RemoveLogging:skip  */
+    }
     App.notifyFinished(windowId);
+
     // cleanup orphans in Downloads
     Downloads.removeWindowDownloads(windowId);
     App.runtime.delete(windowId); // cleanup
@@ -267,15 +274,20 @@ const App = {
     }
   },
 
-  downloadFinished: (windowId) => {
-    // guard against same download sending concurrent triggers
-    if (!App.isRunning(windowId) && // test app is not in progress
-      !App.isFinished(windowId) && // test downloads have finished
+  tabsFinished: (windowId) => {
+    if (!App.isFinished(windowId) && // test downloads have finished
       Downloads.hasWindowDownloads(windowId) === false) {
       console.log(`Window(${windowId}) has ended`, new Date() - App.getRuntime(windowId).startDate);
       if (!App.isCancelled(windowId)) {
         App.setFinished(windowId);
       }
+    }
+  },
+
+  downloadFinished: (windowId) => {
+    // guard against same download sending concurrent triggers
+    if (!App.isRunning(windowId)) { // test app is not in progress
+      App.tabsFinished(windowId);
     }
   },
 
@@ -300,7 +312,7 @@ const App = {
 
   handleDownloadFailed: (context) => {
     const windowId = context.windowId;
-    App.getRuntime(windowId).imagesFailed++;
+    App.getRuntime(windowId).imagesFailed.set(context.url, context.path);
     App.getRuntime(windowId).imagesDownloading--;
     App.downloadFinished(windowId);
   },
@@ -394,7 +406,9 @@ const App = {
     }
   },
 
-  createDownloads: async (tabResults, windowId) => {
+  createDownloads: async (param) => {
+    const tabResults = param.response;
+    const windowId = param.windowId;
     let promiseDownloads = [];
     for (const result of tabResults) {
       if (result === false) {
@@ -416,16 +430,17 @@ const App = {
           });
           await App.throttleDownloads(windowId);
           App.getRuntime(windowId).imagesDownloading++;
-          promiseDownloads.push(Downloads.startDownload({
+          promiseDownloads.push(Downloads.fetchDownload({
             url: image.src,
-            filename: path,
+            path,
             conflictAction: App.options.conflictAction,
-            incognito: App.options.removeEnded // min_ver FF57
+            incognito: App.options.removeEnded, // min_ver FF57
+            signal: App.getRuntime(windowId).abortControl.signal
           }, {
             tabId,
             windowId,
             then: (v) => App.handleDownloadComplete({tabId, windowId}),
-            error: (v) => App.handleDownloadFailed({tabId, windowId})
+            error: (v) => App.handleDownloadFailed({tabId, windowId, url: image.src, path})
           }));
         } catch (err) {
           if (err instanceof AppCancelled) {
@@ -434,7 +449,7 @@ const App = {
           }
           // unable to generate filename from rules
           console.error(err, image); /* RemoveLogging:skip */
-          App.getRuntime(windowId).pathsFailed++;
+          App.getRuntime(windowId).pathsFailed.set(image.src, undefined);
         }
       }
     }
@@ -442,22 +457,23 @@ const App = {
   },
 
   // return false if no downloads
-  downloadTab: async (tabResults, windowId) => {
+  downloadTab: async (param) => {
     // executeTab returns: {tab{}, images[]}
     let results;
-    console.debug("downloadTab", tabResults);
-    if (Array.isArray(tabResults)) {
+    const windowId = param.windowId;
+    console.debug("downloadTab", param.response);
+    if (Array.isArray(param.response)) {
       // sync downloads pass all results in an array
-      if (tabResults.length === 0) {
+      if (param.response.length === 0) {
         console.debug("downloadTab:finished");
         return false;
       }
-      results = tabResults;
+      results = param.response;
     } else {
       // async downloads pass single results at a time
-      results = [tabResults];
+      results = [param.response];
     }
-    const promiseDownloads = await App.createDownloads(results, windowId);
+    const promiseDownloads = await App.createDownloads({response: results, windowId});
     return await Global.allPromises(
       promiseDownloads,
       (downloads) => {
@@ -475,7 +491,9 @@ const App = {
 
   // select valid images and remove duplicates
   // return array of images to be downloaded
-  filterImages: (images, windowId) => {
+  filterImages: (param) => {
+    const images = param.images;
+    const windowId = param.windowId;
     let result = [];
     if (!images) {
       return result;
@@ -483,7 +501,7 @@ const App = {
     for (const image of images) {
       const url = image.src;
       if (url.indexOf("data:") === 0) {
-        App.getRuntime(windowId).imagesFailed++;
+        App.getRuntime(windowId).imagesFailed.set(url, "(embedded images not supported)");
         // TODO support embedded images
         console.warn("Embedded image is unsupported"); /* RemoveLogging:skip */
       } else if (App.isUniqueUrl(url, windowId) === false) {
@@ -499,16 +517,17 @@ const App = {
     return result;
   },
 
-  executeTab: async (aTab, windowId) => {
-    if (!aTab) {
+  executeTab: async (param) => {
+    const windowId = param.windowId;
+    if (!param.tab) {
       App.getRuntime(windowId).tabsSkipped++;
       return false;
     }
     let tab;
-    if (Array.isArray(aTab)) {
-      tab = aTab[0];
+    if (Array.isArray(param.tab)) {
+      tab = param.tab[0];
     } else {
-      tab = aTab;
+      tab = param.tab;
     }
     try {
       console.log(`Executing Tab(${tab.id})`);
@@ -523,7 +542,7 @@ const App = {
       App.getRuntime(windowId).tabsLoaded++;
       console.log(`Result from Tab(${tab.id})`);
       console.debug(`Response from tab ${tab.id}`, results);
-      const images = App.filterImages(results[0], windowId);
+      const images = App.filterImages({images: results[0], windowId});
       if (images.length > 0) {
         App.getRuntime(windowId).tabsEnded++;
         return {
@@ -544,14 +563,18 @@ const App = {
   },
 
   // execute all tabs and run callback on each tab
-  executeTabs: async (tabs, windowId, callback) => {
+  executeTabs: async (param) => {
+    const tabs = param.tabs;
+    const windowId = param.windowId;
+    const execute = param.execute;
+    const callback = param.callback;
     let promiseTabs = [];
     for (const tab of tabs) {
-      promiseTabs.push(App.executeTab(tab, windowId));
+      promiseTabs.push(execute({tab, windowId}));
     }
     return await Global.allPromises(
       promiseTabs,
-      async (tabResults) => await callback(tabResults, windowId),
+      async (tabResults) => await callback({response: tabResults, windowId}),
       (err) => {
         if (err instanceof AppCancelled) {
           console.debug("executeTabs passed cancelled");
@@ -568,7 +591,9 @@ const App = {
   // loops through tabs checking for loaded status
   // refresh tabs if discarded
   // returns object with arrays ready and waiting
-  checkTabs: async (objs, windowId) => {
+  checkTabs: async (param) => {
+    const objs = param.tabs;
+    const windowId = param.windowId;
     let ready = [];
     let sleepMore = false;
     let waiting = await objs.reduce(async (aacc, aval) => {
@@ -611,7 +636,10 @@ const App = {
   // wait for all tabs to have status=complete
   // callback: optional, used for asynchronous downloading of tabs
   // returns array of tabs
-  waitForTabs: async (tabs, windowId, callback = undefined) => {
+  waitForTabs: async (param) => {
+    const tabs = param.tabs;
+    const windowId = param.windowId;
+    const callback = param.callback;
     let waiting = tabs.reduce((acc, val, idx) => {
       acc.push({index: idx, tab: val});
       return acc;
@@ -631,7 +659,7 @@ const App = {
         throw new AppCancelled("waitForTabs");
       }
       try {
-        const ret = await App.checkTabs(waiting, windowId);
+        const ret = await App.checkTabs({tabs: waiting, windowId});
         sleepMore = ret.sleepMore;
         for (let i = 0; i < ret.ready.length; i++) {
           let val = ret.ready[i];
@@ -668,12 +696,26 @@ const App = {
   },
 
   // wait for tabs and execute asynchronously
-  waitAndExecuteTabs: async (tabs, windowId, callback) => {
+  waitAndExecuteTabs: async (param) => {
+    let tabs = param.tabs;
+    const windowId = param.windowId;
+    const wait = param.wait;
+    const filter = param.filter;
+    const execute = param.execute;
+    const callback = param.callback;
     let promiseTabs = [];
     for (const tab of tabs) {
-      let ret = App.waitForTabs([tab], windowId, async (tab) => {
-        let ret = await App.executeTab(tab, windowId);
-        return callback(ret, windowId);
+      let ret = wait({
+        tabs: [tab],
+        windowId,
+        callback: async (tab) => {
+          let tabs = filter({tabs: [tab], windowId});
+          if (tabs.length === 0) {
+            return false;
+          }
+          let ret = await execute({tab: tabs, windowId});
+          return callback({response: ret, windowId});
+        }
       });
       promiseTabs.push(ret);
     }
@@ -693,7 +735,16 @@ const App = {
     );
   },
 
-  filterTabs: async (method, includeActive, windowId) => {
+  filterTabs: (param) => {
+    const tabs = param.tabs;
+    // filter tabs without URLs
+    return tabs.filter((tab) => /^(https?|ftps?):\/\/.+/.test(tab.url));
+  },
+
+  selectTabs: async (param) => {
+    const method = param.method;
+    const includeActive = param.includeActive;
+    const windowId = param.windowId;
     let doTab = false;
     let doAfter = false;
     let doCurrent = false;
@@ -712,7 +763,7 @@ const App = {
         doCurrent = true;
         break;
       default:
-        throw new Error("Invalid method for filterTabs:", method); /* RemoveLogging:skip */
+        throw new Error("Invalid method for selectTabs:", method); /* RemoveLogging:skip */
     }
     let tabsWaiting = [];
     const allTabs = await App.getWindowTabs(windowId);
@@ -738,8 +789,6 @@ const App = {
         break;
       }
     }
-    // filter tabs without URLs
-    tabsWaiting = tabsWaiting.filter((tab) => /^(https?|ftps?):\/\/.+/.test(tab.url));
     return tabsWaiting;
   },
 
@@ -802,6 +851,7 @@ const App = {
     console.info("Cancelling windowId:", windowId);
     if (!App.isFinished(windowId)) {
       App.getRuntime(windowId).cancel = true;
+      App.getRuntime(windowId).abortControl.abort(); // cancel fetch()
       if (!App.isRunning(windowId)) {
         await Downloads.cancelWindowDownloads(windowId);
         console.debug("cancelWindowDownloads completed");
@@ -840,27 +890,40 @@ const App = {
       imagesMatched: 0, // valid images
       imagesSkipped: 0, // skipped duplicates
       imagesDownloading: 0, // active downloads
-      imagesFailed: 0, // failed downloads
+      imagesFailed: new Map(), // failed downloads
       imagesSaved: 0, // saved images
-      pathsFailed: 0, // failed creating path using rules
+      pathsFailed: new Map(), // failed creating path using rules
       badgeTimeout: undefined,
       badgeLoading: 0,
       badgeLoadingDate: 0,
       urls: new Set(), // unique urls for this window's tabs only
+      abortControl: new AbortController(), // for cancelling fetch()
       cancel: false
     });
     App.setBadgeStart(windowId);
     App.setBadgeLoading(windowId);
     try {
-      const tabsWaiting = await App.filterTabs(App.options.action, App.options.activeTab, windowId);
+      let tabs = await App.selectTabs({
+        method: App.options.action,
+        includeActive: App.options.activeTab,
+        windowId
+      });
       let ret;
       if (App.options.downloadAsync) {
         // asynchronous - files saved in parallel
-        ret = await App.waitAndExecuteTabs(tabsWaiting, windowId, App.downloadTab);
+        ret = await App.waitAndExecuteTabs({
+          tabs,
+          windowId,
+          wait: App.waitForTabs,
+          filter: App.filterTabs,
+          execute: App.executeTab,
+          callback: App.downloadTab
+        });
       } else {
         // synchronous - files saved in tab order, waits for all tabs to be ready
-        const tabsReady = await App.waitForTabs(tabsWaiting, windowId);
-        ret = await App.executeTabs(tabsReady, windowId, App.downloadTab);
+        tabs = await App.waitForTabs({tabs, windowId});
+        tabs = App.filterTabs({tabs, windowId});
+        ret = await App.executeTabs({tabs, windowId, execute: App.executeTab, callback: App.downloadTab});
       }
       console.debug(`Run finished: ${ret}`, new Date() - App.getRuntime(windowId).startDate);
       if (!ret) {
@@ -870,6 +933,9 @@ const App = {
         await Downloads.cancelWindowDownloads(windowId);
         console.debug("cancelWindowDownloads completed");
         App.setFinished(windowId);
+      } else {
+        // for condition where all downloads completed before run() finished
+        App.tabsFinished(windowId);
       }
     } catch (err) {
       if (err instanceof AppCancelled) {

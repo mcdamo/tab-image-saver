@@ -93,7 +93,11 @@ describe("downloads.js", () => {
     // TODO
   });
 
-  describe("startDownload", () => {
+  describe("fetchDownload", () => {
+    // TODO
+  });
+
+  describe("saveDownload", () => {
     // TODO
   });
 

@@ -63,11 +63,23 @@ describe("background.js", () => {
     });
   });
 
+  describe("getRuntime", () => {
+    // TODO
+  });
+
   describe("isFinished", () => {
     // TODO
   });
 
   describe("isCancelled", () => {
+    // TODO
+  });
+
+  describe("isRunning", () => {
+    // TODO
+  });
+
+  describe("isIdle", () => {
     // TODO
   });
 
@@ -95,11 +107,19 @@ describe("background.js", () => {
     // TODO
   });
 
+  describe("setBadgeTextColor", () => {
+    // TODO
+  });
+
   describe("setBadgeFinished", () => {
     // TODO
   });
 
   describe("setBadgeSaving", () => {
+    // TODO
+  });
+
+  describe("setBadgeStart", () => {
     // TODO
   });
 
@@ -115,7 +135,11 @@ describe("background.js", () => {
     // TODO
   });
 
-  describe("finished", () => {
+  describe("setFinished", () => {
+    // TODO
+  });
+
+  describe("tabsFinished", () => {
     // TODO
   });
 
@@ -167,6 +191,20 @@ describe("background.js", () => {
       for (const test in rules) {
         const result = rules[test];
         await expect(App.createFilename({tab, image: img, index: 42, rules: [test]}), `Rule: ${test}`).to.eventually.become(result);
+      };
+    });
+
+    it("should return empty string if template doesn't match", async () => {
+      var img = {
+        src: "http://domain.tld/path/",
+      }
+      var rules = {
+        "<alt>,<name>,<ext>": ",,",
+      };
+      //Object.entries(rules).forEach(async ([test, result]) => {
+      for (const test in rules) {
+        const result = rules[test];
+        await expect(App.createFilename({tab: {}, image: img, index: 42, rules: [test]}), `Rule: ${test}`).to.eventually.become(result);
       };
     });
 
@@ -246,6 +284,10 @@ describe("background.js", () => {
     });
   });
 
+  describe("getActiveDownloadNum", () => {
+    // TODO
+  });
+
   describe("createDownloads", () => {
     // TODO
   });
@@ -300,14 +342,14 @@ describe("background.js", () => {
     it("should return object with keys: ready, waiting, sleepMore", async () => {
       var ready = JSON.parse(JSON.stringify(objs));
       ready[2].tab.discarded=false;
-      await expect(App.checkTabs(objs, windowId)).to.eventually.be.an("object")
+      await expect(App.checkTabs({tabs: objs, windowId})).to.eventually.be.an("object")
         .and.to.deep.include({ready:ready,waiting:[]});
       expect(updateStub).to.be.calledOnce;
     });
     it("should ignore discarded tab when option is set", async () => {
       var ready = objs.slice(0,2); // remove discarded tab from array
       App.options.ignoreDiscardedTab = true;
-      await expect(App.checkTabs(objs, windowId)).to.eventually.be.an("object")
+      await expect(App.checkTabs({tabs: objs, windowId})).to.eventually.be.an("object")
         .and.to.deep.include({ready:ready,waiting:[]});
       expect(updateStub).to.be.not.be.called;
     });
@@ -341,7 +383,7 @@ describe("background.js", () => {
       //Global.sleepCallback.restore();
     });
     it("should return tabs in same order as provided", async () => {
-      var readyTabs = await App.waitForTabs(tabs, windowId);
+      var readyTabs = await App.waitForTabs({tabs, windowId});
       expect(readyTabs).to.be.an("array");
       var readyTabIds = readyTabs.reduce((acc, val) => { acc.push(val.id); return acc; }, [] );
       expect(tabIds).to.deep.equal(readyTabIds);
@@ -349,9 +391,12 @@ describe("background.js", () => {
     // TODO it should return early if cancelled
   });
 
+  describe("waitAndExecuteTabs", () => {
+    // TODO
+  });
+
   describe("filterTabs", () => {
-    var tabs, stub;
-    const ctabs = [
+    const tabs = [
       {id:0, url:"https://x"},
       {id:1, url:"ftps://x"},
       {id:2, url:""},
@@ -359,26 +404,46 @@ describe("background.js", () => {
       {id:4, url:"http://x"},
       {id:5, url:"ftp://x"},
     ];
+    it("should return all tabs with urls", () => {
+      var mytabs = [ tabs[0], tabs[1], tabs[4], tabs[5] ];
+      expect(App.filterTabs({tabs, windowId})).to.deep.equal(mytabs);
+    });
+  });
+
+  describe("selectTabs", () => {
+    var stub, tabs;
+    const ctabs = [
+      {id:0},
+      {id:1},
+      {id:2},
+      {id:3},
+      {id:4},
+      {id:5},
+    ];
     before(() => {
       stub = sinon.stub(App, "getWindowTabs").resolves(tabs);
     });
     after(() => {
       stub.restore();
     });
-    describe("tab undef", () => {
+    describe("active tab not defined", () => {
       before(() => {
         tabs = JSON.parse(JSON.stringify(ctabs));
       });
       beforeEach(() => {
         stub.resolves(tabs);
       });
-      it("should return all tabs with urls", async () => {
+      it("should return all tabs", async () => {
         stub.resolves(tabs);
-        var mytabs = [ tabs[0], tabs[1], tabs[4], tabs[5] ];
-        await expect(App.filterTabs(ACTION.ALL, false, windowId)).to.eventually.become(mytabs);
+        var mytabs = tabs.slice();
+        await expect(App.selectTabs({
+          method: ACTION.ALL,
+          includeActive: false,
+          windowId
+        })).to.eventually.become(mytabs);
       });
     });
-    describe("tab 0", () => {
+    describe("active tab 0", () => {
       before(() => {
         tabs = JSON.parse(JSON.stringify(ctabs));
       });
@@ -388,10 +453,14 @@ describe("background.js", () => {
       });
       it("should return no left tabs", async () => {
         var mytabs = [];
-        await expect(App.filterTabs(ACTION.LEFT, false, windowId)).to.eventually.become(mytabs);
+        await expect(App.selectTabs({
+          method: ACTION.LEFT,
+          includeActive: false,
+          windowId
+        })).to.eventually.become(mytabs);
       });
     });
-    describe("tab 1", () => {
+    describe("active tab 1", () => {
       before(() => {
         tabs = JSON.parse(JSON.stringify(ctabs));
       });
@@ -400,15 +469,23 @@ describe("background.js", () => {
         stub.resolves(tabs);
       });
       it("should return right tabs", async () => {
-        var mytabs = [ tabs[4], tabs[5] ];
-        await expect(App.filterTabs(ACTION.RIGHT, false, windowId)).to.eventually.become(mytabs);
+        var mytabs = tabs.slice(2);
+        await expect(App.selectTabs({
+          method: ACTION.RIGHT,
+          includeActive: false,
+          windowId
+        })).to.eventually.become(mytabs);
       });
       it("should return right tabs + active", async () => {
-        var mytabs = [ tabs[1], tabs[4], tabs[5] ];
-        await expect(App.filterTabs(ACTION.RIGHT, true, windowId)).to.eventually.become(mytabs);
+        var mytabs = tabs.slice(1);
+        await expect(App.selectTabs({
+          method: ACTION.RIGHT,
+          includeActive: true,
+          windowId
+        })).to.eventually.become(mytabs);
       });
     });
-    describe("tab 4", () => {
+    describe("active tab 4", () => {
       before(() => {
         tabs = JSON.parse(JSON.stringify(ctabs));
       });
@@ -417,19 +494,31 @@ describe("background.js", () => {
         stub.resolves(tabs);
       });
       it("should return active tab", async () => {
-        var mytabs = [ tabs[4] ];
-        await expect(App.filterTabs(ACTION.ACTIVE, false, windowId)).to.eventually.become(mytabs);
+        var mytabs = tabs.slice(4,5);
+        await expect(App.selectTabs({
+          method: ACTION.ACTIVE,
+          includeActive: false,
+          windowId
+        })).to.eventually.become(mytabs);
       });
       it("should return left tabs", async () => {
-        var mytabs = [ tabs[0], tabs[1] ];
-        await expect(App.filterTabs(ACTION.LEFT, false, windowId)).to.eventually.become(mytabs);
+        var mytabs = tabs.slice(0,4);
+        await expect(App.selectTabs({
+          method: ACTION.LEFT,
+          includeActive: false,
+          windowId
+        })).to.eventually.become(mytabs);
       });
       it("should return left tabs + active", async () => {
-        var mytabs = [ tabs[0], tabs[1], tabs[4] ];
-        await expect(App.filterTabs(ACTION.LEFT, true, windowId)).to.eventually.become(mytabs);
+        var mytabs = tabs.slice(0,5);
+        await expect(App.selectTabs({
+          method: ACTION.LEFT,
+          includeActive: true,
+          windowId
+        })).to.eventually.become(mytabs);
       });
     });
-    describe("tab 5", () => {
+    describe("active tab 5", () => {
       before(() => {
         tabs = JSON.parse(JSON.stringify(ctabs));
       });
@@ -439,7 +528,11 @@ describe("background.js", () => {
       });
       it("should return no right tabs", async () => {
         var mytabs = [];
-        await expect(App.filterTabs(ACTION.RIGHT, false, windowId)).to.eventually.become(mytabs);
+        await expect(App.selectTabs({
+          method: ACTION.RIGHT,
+          includeActive: false,
+          windowId
+        })).to.eventually.become(mytabs);
       });
     });
   });

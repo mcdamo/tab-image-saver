@@ -71,14 +71,17 @@ const Global = {
     s = s.replace(r, (match, p, globalCode) => {
       // match #key with optional templateCode, repeating separated by pipe '|'
       const vars = p.match(/([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?(?:\|([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?)*/);
-      console.debug("template vars", vars);
+      console.debug("template vars", vars, obj);
       for (let i = 1; i < vars.length; i += 3) {
         const pad = vars[i];
         const key = vars[i + 1];
+        if (key === undefined) {
+          return "";
+        }
         const localCode = vars[i + 2];
         const lkey = key.toLowerCase();
-        if (Object.prototype.hasOwnProperty.call(obj, lkey) && obj[lkey] !== undefined) {
-          if (obj[lkey].length > 0) {
+        if (Object.prototype.hasOwnProperty.call(obj, lkey)) {
+          if (obj[lkey] !== undefined && obj[lkey].length > 0) {
             let ret = obj[lkey].padStart(pad.length, "0");
             if (localCode !== undefined) {
               ret = Global.templateCode(ret, localCode);
@@ -93,9 +96,10 @@ const Global = {
           return key;
         }
       }
-      // return empty string if vars are defined in obj but are empty
+      // return empty string if no vars are evaluated
       return "";
     });
+    // return original string if no template is defined
     return s;
   },
 

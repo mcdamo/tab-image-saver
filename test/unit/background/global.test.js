@@ -208,6 +208,10 @@ describe("global.js", () => {
     });
   });
   
+  describe("templateCode", () => {
+    // TODO
+  });
+
   describe("template", () => {
     it("should replace all variables", () => {
       expect(Global.template("<var1><var2>", {var1: "x", var2: "y"})).to.equal("xy");
@@ -220,6 +224,9 @@ describe("global.js", () => {
     });
     it("should zero-pad number", () => {
       expect(Global.template("<####var1>", {var1: "42"})).to.equal("0042");
+    });
+    it("should handle undefined variables", () => {
+      expect(Global.template("<var1|var2>", {var1: undefined, var2: undefined})).to.equal("");
     });
     it("should replace outer regex", () => {
       expect(Global.template('<var1|var2>"/replace/\\s*\\|.*//"', {var1: "", var2: "title | site"})).to.equal("title");
