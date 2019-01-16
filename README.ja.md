@@ -1,8 +1,8 @@
-# tab-image-saver
+# tab-image-saver [![Addon Version](https://img.shields.io/amo/v/tab-image-saver.svg)](https://addons.mozilla.org/firefox/addon/tab-image-saver/) [![Build Status](https://travis-ci.com/mcdamo/tab-image-saver.svg?branch=master)](https://travis-ci.com/mcdamo/tab-image-saver)
 
 Tab Image Saver is a Firefox addon that makes it easy to save images from browser tabs you have open.
 
-Download from [Firefox Addons](https://addons.mozilla.org/en-US/firefox/addon/tab-image-saver/).
+Download from [Firefox Addons](https://addons.mozilla.org/firefox/addon/tab-image-saver/).
 
 ## Features
 
