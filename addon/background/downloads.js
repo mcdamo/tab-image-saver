@@ -127,7 +127,6 @@ const Downloads = {
     try {
       const dlOpts = {
         saveAs: false, // required from FF58, min_ver FF52
-        headers: [{name: "cache", value: "force-cache"}],
         url: download.url,
         filename: download.path,
         conflictAction: download.conflictAction,

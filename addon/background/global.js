@@ -178,27 +178,31 @@ const Global = {
     Global.getFilePart(path).length > 0 && // filename part
     Global.getFileExt(path).length > 0, // file extension
 
-  // use XHR:HEAD to get headers
+  // use fetch:HEAD to get headers
   // keys is array of headers to return as Promise
-  getHeaders: (url, keys) => new Promise((resolve, reject) => {
-    let xhr = new XMLHttpRequest();
-    xhr.open("HEAD", url);
-    // catches events for: load, error, abort
-    xhr.onload = function() {
-      const headers = keys.reduce(
-        (acc, val) => Object.assign(acc, {[val]: this.getResponseHeader(val)}),
-        {}
-      );
-      return resolve(headers);
-    };
-    xhr.onerror = function() {
-      reject({
-        status: this.status,
-        statusText: xhr.statusText
+  getHeaders: async (url, keys) => {
+    try {
+      const response = await fetch(url, {
+        method: "HEAD",
+        mode: "cors",
+        credentials: "same-origin",
+        cache: "force-cache"
       });
-    };
-    xhr.send();
-  }),
+      console.debug("getHeaders response:", response);
+      if (response.ok) {
+        const headers = keys.reduce(
+          (acc, val) => Object.assign(acc, {[val]: response.headers.get(val)}),
+          {}
+        );
+        console.debug("getHeaders headers:", headers);
+        return headers;
+      }
+      console.error(`HTTP error, status = ${response.status}`, response);
+    } catch (err) {
+      console.error("getHeaders", err);
+    }
+    return false;
+  },
 
   // try to get filename from XHR request
   // returns {filename: filename} or {ext: ext}

@@ -88,6 +88,9 @@ describe("global.js", () => {
     it("should return filename extension", () => {
       expect(Global.getFileExt("/path/to/file.ext:large")).to.equal(".ext");
     });
+    it("should return empty string if no extension", () => {
+      expect(Global.getFileExt("/path/to/file:large")).to.equal("");
+    });
   });
 
   describe("getDirname", () => {
@@ -209,7 +212,16 @@ describe("global.js", () => {
   });
   
   describe("templateCode", () => {
-    // TODO
+    it("should return input if code undefined", () => {
+      expect(Global.templateCode("input")).to.equal("input");
+    });
+    it("should return input if code invalid", () => {
+      expect(Global.templateCode("input", '""'), "undefined code").to.equal("input");
+      expect(Global.templateCode("input", '"/invalid//"'), "invalid action").to.equal("input");
+    });
+    it("should replace with regexp", () => {
+      expect(Global.templateCode('the cat', '"/replace/([a-z]+)/_$1_/g"')).to.equal("_the_ _cat_");
+    });
   });
 
   describe("template", () => {
@@ -226,7 +238,8 @@ describe("global.js", () => {
       expect(Global.template("<####var1>", {var1: "42"})).to.equal("0042");
     });
     it("should handle undefined variables", () => {
-      expect(Global.template("<var1|var2>", {var1: undefined, var2: undefined})).to.equal("");
+      expect(Global.template("<var1>,<var2>", {var1:undefined, var2:undefined}), "var1,var2").to.equal(",");
+      expect(Global.template("<var1|var2>", {var1: undefined, var2: undefined}), "var1|var2").to.equal("");
     });
     it("should replace outer regex", () => {
       expect(Global.template('<var1|var2>"/replace/\\s*\\|.*//"', {var1: "", var2: "title | site"})).to.equal("title");
@@ -242,37 +255,88 @@ describe("global.js", () => {
     });
   });
 
-  describe("getHeaders & getHeaderFilename", () => {
+  describe("getHeaders + getHeaderFilename", () => {
     var headers, server, url;
     before(() => {
       headers = {
         "Content-Type": "image/jpeg",
         "Content-Disposition": "filename=file%20name.ext;",
       };
-      server = sinon.createFakeServer();
       url = "/test";
-      //server.respondWith("HEAD", url, [200, headers, "OK"]);
-      server.respondWith([200, headers, "OK"]);
-      server.autoRespond = true;
+      server = sinon.stub(window, "fetch");
     });
-
+    beforeEach(() => {
+      server.returns(Promise.resolve(new window.Response(
+        "", {
+          status: 200,
+          headers,
+      })));
+    });
     after(() => {
       server.restore();
     });
 
-    it("should return the requested headers", async () => {
-      var p = Global.getHeaders(url, Object.keys(headers));
-      //expect(requests.length).to.equal(1);
-      //requests[0].respond(200, headers, "");
-      await expect(p).to.eventually.become(headers);
-      //console.debug(p, headers);
+    describe("getHeaders", () => {
+      it("should return the requested headers", async () => {
+        var p = Global.getHeaders(url, Object.keys(headers));
+        await expect(p).to.eventually.become(headers);
+      });
+      it("should return false if server error", async () => {
+        server.returns(Promise.resolve(new window.Response(
+          "", {
+            status: 400,
+            headers,
+        })));
+        var p = Global.getHeaders(url, Object.keys(headers));
+        await expect(p).to.eventually.become(false);
+      });
+      it("should cleanly handle fetch exception", async () => {
+        server.returns(Promise.reject());
+        var p = Global.getHeaders(url, Object.keys(headers));
+        await expect(p).to.eventually.become(false);
+      });
     });
 
-    it("should return the headers in an object", async () => {
-      var p = Global.getHeaderFilename(url);
-      //expect(requests.length).to.equal(1);
-      //requests[0].respond(200, headers, "");
-      await expect(p).to.eventually.become({filename: "file name.ext", mimeExt: ".jpg"});
+    describe("getHeaderFilename", () => {
+      it("should return jpg headers", async () => {
+        var p = Global.getHeaderFilename(url);
+        //expect(requests.length).to.equal(1);
+        //requests[0].respond(200, headers, "");
+        await expect(p).to.eventually.become({filename: "file name.ext", mimeExt: ".jpg"});
+      });
+      it("should return gif headers", async () => {
+        server.returns(Promise.resolve(new window.Response(
+          "", {
+            status: 200,
+            headers: {"Content-Type": "image/gif"},
+        })));
+        var p = Global.getHeaderFilename(url);
+        //expect(requests.length).to.equal(1);
+        //requests[0].respond(200, headers, "");
+        await expect(p).to.eventually.become({mimeExt: ".gif"});
+      });
+      it("should return png headers", async () => {
+        server.returns(Promise.resolve(new window.Response(
+          "", {
+            status: 200,
+            headers: {"Content-Type": "image/png"},
+        })));
+        var p = Global.getHeaderFilename(url);
+        //expect(requests.length).to.equal(1);
+        //requests[0].respond(200, headers, "");
+        await expect(p).to.eventually.become({mimeExt: ".png"});
+      });
+      it("should return svg headers", async () => {
+        server.returns(Promise.resolve(new window.Response(
+          "", {
+            status: 200,
+            headers: {"Content-Type": "image/svg+xml"},
+        })));
+        var p = Global.getHeaderFilename(url);
+        //expect(requests.length).to.equal(1);
+        //requests[0].respond(200, headers, "");
+        await expect(p).to.eventually.become({mimeExt: ".svg"});
+      });
     });
 
   });

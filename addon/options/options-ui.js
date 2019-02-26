@@ -32,7 +32,7 @@ const OptionsUI = {
       const el = document.querySelector(sel);
       if (!el) {
         console.warn("Element not found", sel); /* RemoveLogging:skip */
-        return acc;// TODO
+        return acc;
       }
       const propMap = {
         [schema.types.BOOL]: "checked",
@@ -48,7 +48,7 @@ const OptionsUI = {
         val.values &&
         !val.values.includes(optionValue)
       ) {
-        console.log("Invalid radio option", optionValue, val.values);
+        console.warn("Invalid radio option", optionValue, val.values); /* RemoveLogging:skip */
         optionValue = val.default;
       }
       if (val.regex) {
@@ -64,7 +64,7 @@ const OptionsUI = {
         } catch (err) {
           console.debug("onSave rejected");
           optionValue = val.default;
-          // TODO error message
+          // TODO UI error message
         }
       }
 
@@ -74,11 +74,11 @@ const OptionsUI = {
 
     await browser.storage.local.set(toSave);
     // redraw ui incase some options where rejected
-    OptionsUI.restoreOptionsHandler(toSave, schema);
+    OptionsUI.restoreOptions(toSave, schema);
   },
 
   // Set UI elements' value/checked
-  restoreOptionsHandler: (result, schema) => {
+  restoreOptions: (result, schema) => {
     const schemaWithValues = schema.keys.map((o) =>
       Object.assign({}, o, {value: result[o.name]})
     );
@@ -102,11 +102,12 @@ const OptionsUI = {
     });
   },
 
-  restoreOptions: async () => {
+  // load options from local storage and populate the UI
+  restoreOptionsHandler: async () => {
     const schema = await OptionsUI.getOptionsSchema();
     const keys = schema.keys.map((o) => o.name);
     const loaded = await browser.storage.local.get(keys);
-    OptionsUI.restoreOptionsHandler(loaded, schema);
+    OptionsUI.restoreOptions(loaded, schema);
   },
 
   setupAutosave: (el) => {
@@ -114,22 +115,16 @@ const OptionsUI = {
       console.debug("autosaveCb", e);
       OptionsUI.saveOptions(e);
     };
-
-    let opt = "";
-    if (el.type === "radio") {
-      opt = `[value=${el.value}]`;
-    }
-    const sel = `[name=${el.name}]${opt}`;
     try {
-      document.querySelector(sel)
-        .addEventListener("change", autosaveCb);
+      el.addEventListener("change", autosaveCb);
     } catch (err) {
-      console.warn("Element not found", sel); /* RemoveLogging:skip */
+      // TODO show UI error
+      console.warn("Failed to add listener", el, err); /* RemoveLogging:skip */
     }
   }
 };
 
-document.addEventListener("DOMContentLoaded", OptionsUI.restoreOptions);
+document.addEventListener("DOMContentLoaded", OptionsUI.restoreOptionsHandler);
 
 ["textarea", "input", "select"].forEach((type) => {
   document.querySelectorAll(type).forEach(OptionsUI.setupAutosave);

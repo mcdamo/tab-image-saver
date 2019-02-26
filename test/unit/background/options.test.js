@@ -13,20 +13,20 @@ describe("options.js", () => {
       {name: "myradio", type: "RADIO", default: "radiodefault"},
       {name: "mycheckbox", type: "BOOL", default: false},
       {name: "mytext", type: "VALUE", default: "textdefault"},
-      {name: "shortcut", type: "VALUE", default: "x", onLoad: {function: onLoadStub}, onSave: {function: onSaveStub} },
+      {name: "myshortcut", type: "VALUE", default: "x", onLoad: {function: onLoadStub}, onSave: {function: onSaveStub} },
     ];
     Options.OPTIONS = {};
     cache = {
       myradio: "radiodefault",
       mycheckbox: false,
       mytext: "textdefault",
-      shortcut: "x",
+      myshortcut: "x",
     };
     storage = {
       myradio: "radio",
       mycheckbox: true,
       mytext: "text",
-      shortcut: "x",
+      myshortcut: "x",
     };
     keys = Object.keys(storage);
     Options.init();
@@ -40,10 +40,6 @@ describe("options.js", () => {
     before(() => {
       //onLoadStub.resetHistory();
       //onSaveStub.resetHistory();
-    });
-    after(() => {
-      onLoadStub.resetHistory();
-      onSaveStub.resetHistory();
     });
     it("should populate cache with option defaults and call onLoad", () => {
       //expect(Options.cache).to.have.property("action").that.equals("current");
@@ -72,22 +68,63 @@ describe("options.js", () => {
       delete Options.OPTIONS["testkey"]; // TODO use sandbox
     });
   });
-  describe("loadOptions", () => {
+  describe("loadOptions + getOptions", () => {
     before(async () => {
       //await browser.storage.local.clear(); // clear() is not faked
       await browser.storage.local.set(storage);
+    });
+    beforeEach(() => {
       onLoadStub.resetHistory();
       onSaveStub.resetHistory();
     });
     after(async () => {
       await browser.storage.local.remove(Object.keys(storage)); // TODO use sandbox
+    });
+    afterEach(() => {
       onLoadStub.resetHistory();
       onSaveStub.resetHistory();
     });
-    it("should load options from local storage", async () => {
-      await expect(Options.loadOptions()).to.eventually.become(storage);
-      expect(onLoadStub).to.be.calledOnce;
-      expect(onSaveStub).to.not.be.called;
+    describe("loadOptions", () => {
+      it("loadOptions should load options from local storage", async () => {
+        await expect(Options.loadOptions()).to.eventually.become(storage);
+        expect(onLoadStub).to.be.calledOnce;
+        expect(onSaveStub).to.not.be.called;
+      });
+    });
+    describe("getOptions", () => {
+      it("should trigger loadOptions if not loaded", async () => {
+        Options.loaded = false;
+        await expect(Options.getOptions()).to.eventually.become(storage);
+        expect(Options.loaded).to.equal(true);
+        expect(onLoadStub).to.be.calledOnce;
+        expect(onSaveStub).to.not.be.called;
+      });
+      it("should not trigger loadOptions if already loaded", async () => {
+        expect(Options.loaded).to.equal(true);
+        await expect(Options.getOptions()).to.eventually.become(storage);
+        expect(onLoadStub).to.not.be.called;
+        expect(onSaveStub).to.not.be.called;
+      });
+    });
+  });
+  describe("handleStorageChanged", () => {
+    beforeEach(() => {
+      Options.setOptions(storage);
+    });
+    it("should return options with changes from storage", () => {
+      expect(Options.handleStorageChanged({myshortcut:{newValue:"new"}}, "local")).to.deep.equal({
+        myradio: "radio", mycheckbox: true, mytext: "text", myshortcut: "new"
+      });
+    });
+    it("should ignore changes not from local storage", () => {
+      expect(Options.handleStorageChanged({myshortcut:{newValue:"remote"}}, "sync")).to.deep.equal({
+        myradio: "radio", mycheckbox: true, mytext: "text", myshortcut: "x"
+      });
+    });
+    it("should ignore changes from storage that are not option names", () => {
+      expect(Options.handleStorageChanged({notmyoption:{newValue:"invalid"}}, "local")).to.deep.equal({
+        myradio: "radio", mycheckbox: true, mytext: "text", myshortcut: "x"
+      });
     });
   });
   describe("onLoadRules", () => {

@@ -66,7 +66,7 @@ describe("commands.js", () => {
       stub = sinon.stub(Commands.COMMANDS, SHORTCUT_TYPES.BROWSER_ACTION);
     });
     after(() => {
-      stub.reset();
+      stub.restore();
     });
 
     //App.run = sinon.stub();

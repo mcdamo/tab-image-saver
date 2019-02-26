@@ -395,7 +395,7 @@ const App = {
     const maxDownloadNum = App.options.downloadNum;
     while (App.getActiveDownloadNum(windowId) >= maxDownloadNum) {
       console.debug(`Maximum downloads ${App.getActiveDownloadNum(windowId)} >= ${maxDownloadNum}`);
-      if (!await Global.sleepCallback(1000,
+      if (!await Global.sleepCallback(100,
         (ms, remain) => {
           App.setBadgeLoading(windowId);
           return App.isCancelled(windowId);
