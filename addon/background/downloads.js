@@ -99,10 +99,13 @@ const Downloads = {
 
   fetchDownload: async (download, context) => {
     try {
+      console.debug("fetchDownload referrer:", download.referrer);
       const response = await fetch(download.url, {
         mode: "cors",
         credentials: "same-origin",
         cache: "force-cache",
+        referrer: download.referrer,
+        referrerPolicy: "no-referrer-when-downgrade",
         signal: download.signal
       });
       console.debug("fetchDownload response:", response);

@@ -435,6 +435,7 @@ const App = {
             path,
             conflictAction: App.options.conflictAction,
             incognito: App.options.removeEnded, // min_ver FF57
+            referrer: tab.url,
             signal: App.getRuntime(windowId).abortControl.signal
           }, {
             tabId,
