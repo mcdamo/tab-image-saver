@@ -5,11 +5,11 @@
   },
   "extension_description": {
     "description": "Description of the extension.",
-    "message": "Save images from open tabs. Default action saves largest image in active tab."
+    "message": "Speichern Sie Bilder aus geöffneten Tabs. Die Standardaktion speichert das größte Bild im aktiven Tab."
   },
   "commands_execute_browser_action_description": {
     "description": "Description of the default Browser Action command",
-    "message": "Run Tab Image Saver with current settings."
+    "message": "Tab Image Saver ausführen mit den aktuellen Einstellungen."
   },
   "browser_action_tooltip": {
     "description": "Tooltip with extension name and currently selected ACTION",
@@ -35,7 +35,7 @@
   },
   "options_action_title": {
     "description": "Title for the action option, which tabs to run the extension in",
-    "message": "Tabs to include"
+    "message": "Tabs, die miteinbezogen werden sollten"
   },
   "options_action_label_active": {
     "description": "Option label for the action to run on the active tab",
@@ -87,11 +87,11 @@
   },
   "options_filter_label_direct_note": {
     "description": "Additional note for selecting tabs that are only images",
-    "message": "(ignore tabs with webpages)"
+    "message": "(ignoriere Tabs mit Websiten)"
   },
   "options_dimensions_title": {
     "description": "Title of the minimum image dimensions option",
-    "message": "Minimum dimensions (pixels)"
+    "message": "Minimale Größe (Pixel)"
   },
   "options_dimensions_width_label": {
     "description": "Option label for minimum image width",
@@ -107,19 +107,19 @@
   },
   "options_download_path_note": {
     "description": "Additional note for download folder option",
-    "message": "Images are saved in your browsers download folder, you may name a subfolder to save into."
+    "message": "Bilder werden im Downloads-Ordner Ihres Browsers gespeichert, Sie können einen Unterordner angeben, in dem Sie die Bilder speichern möchten."
   },
   "options_download_path_label": {
     "description": "Option label for downloads folder",
-    "message": "Subfolder:"
+    "message": "Unterordner:"
   },
   "options_path_rules_title": {
     "description": "Title for path rules option",
-    "message": "Path rules"
+    "message": "Pfadregeln"
   },
   "options_path_rules_note": {
     "description": "Additional note for path rules option",
-    "message": "Paths will be appended to your Download Subfolder. Leave empty to restore default"
+    "message": "Pfade werden in Ihrem Downloads-Unterordner angehängt. Leer lassen, um den Standardwert wiederherzustellen"
   },
   "options_path_rules_label": {
     "description": "Label for path rules option",
@@ -159,7 +159,7 @@
   },
   "options_download_private": {
     "description": "Option label to download in Private Browsing mode",
-    "message": "Download in Private Browsing mode"
+    "message": "Herunterladen im Privat-\/Inkognito-Modus"
   },
   "options_download_private_note": {
     "description": "Additional note for download in Private Browsing mode option",
