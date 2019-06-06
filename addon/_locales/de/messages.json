@@ -223,11 +223,11 @@
   },
   "notification_content_no_images": {
     "description": "Notification message when no images were found on tabs",
-    "message": "No images"
+    "message": "Keine Bilder"
   },
   "notification_content_images_saved": {
     "description": "Notification message when some images were saved",
-    "message": "Saved: $NUM$",
+    "message": "Gespeichert: $NUM$",
     "placeholders": {
       "num": {
         "content": "$1",
@@ -237,7 +237,7 @@
   },
   "notification_content_images_failed": {
     "description": "Notification message when some images were not saved",
-    "message": "Failed downloads: $NUM$",
+    "message": "Fehlgeschlagene Downloads: $NUM$",
     "placeholders": {
       "num": {
         "content": "$1",
