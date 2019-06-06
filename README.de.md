@@ -22,42 +22,42 @@ You may control how this functions by changing the addon preferences at in **Fir
 - Hide saved images from download history
 - Show notification when complete
 
-Addon icon: images by lastspark from the Noun Project.
+Addon-Symbol: Bilder von lastspark von dem Noun Project.
 
-## Path rules
+## Pfadregeln
 
-Path rules are a flexible method for choosing the download filenames.
+Pfadregeln sind eine flexible Methode zur Auswahl der Download-Dateinamen.
 
-Rules can contain any combination of text strings and **keywords**.
+Regeln können eine beliebige Kombination von Textzeichenketten enthalten und **Schlüsselwörtern**.
 
-Rules are processed top-down, if the rule does not evaluate to a valid path then it will proceed to the next rule in the list.
+Regeln werden von oben nach unten verarbeitet, wenn die Regel nicht zu einem gültigen Pfad auswertet, geht sie zur nächsten Regel in der Liste über.
 
 ### Schlüsselwörter
 
 - Schlüsselwörter werden von abgewinkelten Klammern umschlossen `< >`
-- They can use simple OR logic with the pipe symbol `|`
-- Keywords prepended with hashes `#` will be zero-padded
+- Sie können eine einfache ODER-Logik mit dem Rohrsymbol verwenden `|`
+- Schlüsselwörter, die mit Hashes `#` vorangestellt sind, werden mit Null gepolstert
 
-Example source: `<img src="http://example.com/path/to/filename.jpg" alt="Caption">`
+Beispiel source: `<img src="http://example.com/path/to/filename.jpg" alt="Caption">`
 
-| Schlüsselwort | Beschreibung                                             | Beispiel                       |
-| ------------- | -------------------------------------------------------- | ------------------------------ |
-| alt           | alt-Content des Bildes                                   | Bildbeschriftung               |
-| name          | url-Dateiname des Bildes ohne Erweiterung                | filename                       |
-| xName         | image's filename from Content-Disposition header         | filename                       |
-| ext           | image's url extension                                    | .jpg                           |
-| xExt          | image's extension from Content-Disposition header        | .jpg                           |
-| xMimeExt      | image's extension from Content-Type header               | .jpg                           |
-| host          | image's url hostname                                     | example.com                    |
-| path          | image's url path                                         | path/to                        |
-| index         | image number starting at '1', incremented for each image | 1                              |
-| tabTitle      | tab's page title                                         | (JPEG Image, 500 x 500 pixels) |
-| tabHost       | tab's url hostname                                       | example.com                    |
-| tabPath       | tab's url path                                           | path/to                        |
-| tabFile       | tab's url filename without extension                     | filename                       |
-| tabExt        | tab's url extension                                      | .jpg                           |
+| Schlüsselwort | Beschreibung                                             | Beispiel                     |
+| ------------- | -------------------------------------------------------- | ---------------------------- |
+| alt           | alt-Content des Bildes                                   | Bildbeschriftung             |
+| name          | url-Dateiname des Bildes ohne Erweiterung                | dateiname                    |
+| xName         | image's filename from Content-Disposition header         | dateiname                    |
+| ext           | bild-Url Erweiterung                                     | .jpg                         |
+| xExt          | image's extension from Content-Disposition header        | .jpg                         |
+| xMimeExt      | image's extension from Content-Type header               | .jpg                         |
+| host          | image's url hostname                                     | beispiel.com                 |
+| path          | image's url path                                         | pfad/zu                      |
+| index         | image number starting at '1', incremented for each image | 1                            |
+| tabTitle      | tab's page title                                         | (JPEG Bild, 500 x 500 Pixel) |
+| tabHost       | tab's url hostname                                       | beispiel.com                 |
+| tabPath       | tab's url path                                           | pfad/zu                      |
+| tabFile       | tab's url filename without extension                     | dateiname                    |
+| tabExt        | tab's url extension                                      | .jpg                         |
 
-Any tag not defined above will be treated as static text. For example `<undef>.jpg` will output `undef.jpg`
+Jeder nicht oben definierte Tag wird als statischer Text behandelt. Zum Beispiel `<undef>.jpg` wird `undef.jpg` ausgeben
 
 #### Beispiele
 
