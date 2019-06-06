@@ -1,12 +1,12 @@
 # tab-image-saver [![Addon Version](https://img.shields.io/amo/v/tab-image-saver.svg)](https://addons.mozilla.org/firefox/addon/tab-image-saver/) [![Build Status](https://travis-ci.com/mcdamo/tab-image-saver.svg?branch=master)](https://travis-ci.com/mcdamo/tab-image-saver)
 
-Tab Image Saver is a Firefox addon that makes it easy to save images from browser tabs you have open.
+Tab Image Saver ist ein Firefox-Addon, das es einfach macht, Bilder von Browser-Tabs zu speichern, die Sie geöffnet haben.
 
-Download from [Firefox Addons](https://addons.mozilla.org/firefox/addon/tab-image-saver/).
+Download von [Firefox Addons](https://addons.mozilla.org/firefox/addon/tab-image-saver/).
 
-## Features
+## Funktionen
 
-**By default this addon saves the largest image found on the active tab.**
+**Standardmäßig speichert dieses Addon das größte Bild, das in dem aktiven Tab gefunden wurde.**
 
 You may control how this functions by changing the addon preferences at in **Firefox > Add-ons > Extensions > Tab Image Saver > Preferences**
 
@@ -80,15 +80,15 @@ Expressions are surrounded by double quotes `"` and must immediately follow afte
 Syntax of an expression:
 
     <alt>"/replace/regexp/newSubstr/flags"
-          |   |       |       |       +- optional flags to RegExp
-          |   |       |       +- replacement string or pattern
-          |   |       +- search string or pattern
-          |   +- 'replace' expression name. other expressions may be supported in future.
+          | | | | +- optionale Flags zu RegExp
+          | | | +- ersetzt Zeichenketten oder Muster
+          | | +- suche Zeichenketten oder Muster
+          | +- 'replace' Ausdrucksname. other expressions may be supported in future.
           +- delimiter
     
 
 Any character may be selected as the delimiter as long as that character is not used anywhere within the expression patterns. The above example uses slash `/`, though if your expression patterns or strings contain slashes then you should select another symbol as the delimiter.
 
-#### Examples
+#### Beispiele
 
-If `alt` contains a pipe symbol `|` then strip it and any trailing characters: `<alt>"/replace/\s*\|.*/"`
+Wenn `alt` ein Rohrsymbol enthält `I` dann entfernen Sie es und alle nachfolgenden Zeichen: `<alt>"/replace/\s*\|.*/"`
