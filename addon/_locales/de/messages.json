@@ -23,11 +23,11 @@
   },
   "browser_action_menu_options": {
     "description": "Menu label to open extension options",
-    "message": "Preferences"
+    "message": "Einstellungen"
   },
   "browser_action_menu_downloads": {
     "description": "Menu label to open downloads folder",
-    "message": "Downloads Folder"
+    "message": "Downloads Ordner"
   },
   "options_title": {
     "description": "Page title for extension options with extension name",
@@ -51,11 +51,11 @@
   },
   "options_action_label_all": {
     "description": "Option label for the action to run on all tabs",
-    "message": "All tabs"
+    "message": "Alle Tabs"
   },
   "options_active_tab": {
     "description": "Option label for the action to include the active tab (when action is Left or Right of the active tab)",
-    "message": "Include active tab (with Left\/Right actions)"
+    "message": "Aktive Tabs einbeziehen (mit Links\/Rechts-Aktionen)"
   },
   "options_conflict_action_title": {
     "description": "Title for the filename conflict options",
@@ -95,15 +95,15 @@
   },
   "options_dimensions_width_label": {
     "description": "Option label for minimum image width",
-    "message": "Width:"
+    "message": "Breite:"
   },
   "options_dimensions_height_label": {
     "description": "Option label for minimum image height",
-    "message": "Height:"
+    "message": "Höhe:"
   },
   "options_download_path_title": {
     "description": "Title for download folder option",
-    "message": "Download folder"
+    "message": "Downloads Ordner"
   },
   "options_download_path_note": {
     "description": "Additional note for download folder option",
@@ -163,43 +163,43 @@
   },
   "options_download_private_note": {
     "description": "Additional note for download in Private Browsing mode option",
-    "message": "(will break downloads that require authentication or cookies)"
+    "message": "(unterbricht Downloads, die eine Authentifizierung oder Cookies erfordern)"
   },
   "options_ignore_discarded_tab": {
     "description": "Option label to ignore discarded tabs",
-    "message": "Skip discarded tabs"
+    "message": "Überspringen von verworfenen Tabs"
   },
   "options_shortcut_title": {
     "description": "Title for keyboard shortcut option",
-    "message": "Keyboard shortcuts"
+    "message": "Tastaturkürzel"
   },
   "options_shortcut_label": {
     "description": "Option label for keyboard shortcut",
-    "message": "Run shortcut:"
+    "message": "Tastaturkürzel ausführen:"
   },
   "options_shortcut_example": {
     "description": "Examples for keyboard shortcut",
-    "message": "Example: \"Alt+X\", \"Ctrl+Shift+U\"."
+    "message": "Beispiel: \"Alt+X\", \"Ctrl+Shift+U\"."
   },
   "options_learn_more": {
     "description": "Link text for additional information",
-    "message": "Learn more"
+    "message": "Weitere Informationen"
   },
   "notification_title_finished": {
     "description": "Notification title when finished",
-    "message": "Tab Image Saver finished"
+    "message": "Tab Image Saver beendet"
   },
   "notification_title_cancelled": {
     "description": "Notification title when cancelled by user",
-    "message": "Tab Image Saver cancelled"
+    "message": "Tab Image Saver abgebrochen"
   },
   "notification_content_permission_error_active": {
     "description": "Notification message when extension could run in active tab",
-    "message": "active tab does not have permission"
+    "message": "aktiver Tab hat keine Berechtigung"
   },
   "notification_content_permission_error_tabs": {
     "description": "Notification message when extension could not run in some tabs",
-    "message": "$NUM$ tabs do not have permission",
+    "message": "$NUM$ Tabs haben keine Berechtigung",
     "placeholders": {
       "num": {
         "content": "$1",
@@ -209,11 +209,11 @@
   },
   "notification_content_cancelled": {
     "description": "Notification message when cancelled by user",
-    "message": "User Cancelled"
+    "message": "Benutzer hat abgebrochen"
   },
   "notification_content_no_tabs": {
     "description": "Notification message when the extension did not find any tabs to run in, listing the current extension action",
-    "message": "No tabs processed: $ACTION$",
+    "message": "Keine Tabs verarbeitet: $ACTION$",
     "placeholders": {
       "action": {
         "content": "$1",
@@ -247,7 +247,7 @@
   },
   "notification_content_paths_failed": {
     "description": "Notification message when some images did not have filenames",
-    "message": "Path rules failed: $NUM$",
+    "message": "Fehlgeschlagene Pfadregeln: $NUM$",
     "placeholders": {
       "num": {
         "content": "$1",
