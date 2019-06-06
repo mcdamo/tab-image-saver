@@ -32,63 +32,63 @@ Rules can contain any combination of text strings and **keywords**.
 
 Rules are processed top-down, if the rule does not evaluate to a valid path then it will proceed to the next rule in the list.
 
-### Keywords
+### Schlüsselwörter
 
-- Keywords are enclosed by angled brackets `< >`
+- Schlüsselwörter werden von abgewinkelten Klammern umschlossen `< >`
 - They can use simple OR logic with the pipe symbol `|`
 - Keywords prepended with hashes `#` will be zero-padded
 
 Example source: `<img src="http://example.com/path/to/filename.jpg" alt="Caption">`
 
-| Keyword  | Description                                              | Example                        |
-| -------- | -------------------------------------------------------- | ------------------------------ |
-| alt      | image's alt content                                      | Caption                        |
-| name     | image's url filename without extension                   | filename                       |
-| xName    | image's filename from Content-Disposition header         | filename                       |
-| ext      | image's url extension                                    | .jpg                           |
-| xExt     | image's extension from Content-Disposition header        | .jpg                           |
-| xMimeExt | image's extension from Content-Type header               | .jpg                           |
-| host     | image's url hostname                                     | example.com                    |
-| path     | image's url path                                         | path/to                        |
-| index    | image number starting at '1', incremented for each image | 1                              |
-| tabTitle | tab's page title                                         | (JPEG Image, 500 x 500 pixels) |
-| tabHost  | tab's url hostname                                       | example.com                    |
-| tabPath  | tab's url path                                           | path/to                        |
-| tabFile  | tab's url filename without extension                     | filename                       |
-| tabExt   | tab's url extension                                      | .jpg                           |
+| Schlüsselwort | Beschreibung                                             | Beispiel                       |
+| ------------- | -------------------------------------------------------- | ------------------------------ |
+| alt           | alt-Content des Bildes                                   | Bildbeschriftung               |
+| name          | url-Dateiname des Bildes ohne Erweiterung                | filename                       |
+| xName         | image's filename from Content-Disposition header         | filename                       |
+| ext           | image's url extension                                    | .jpg                           |
+| xExt          | image's extension from Content-Disposition header        | .jpg                           |
+| xMimeExt      | image's extension from Content-Type header               | .jpg                           |
+| host          | image's url hostname                                     | example.com                    |
+| path          | image's url path                                         | path/to                        |
+| index         | image number starting at '1', incremented for each image | 1                              |
+| tabTitle      | tab's page title                                         | (JPEG Image, 500 x 500 pixels) |
+| tabHost       | tab's url hostname                                       | example.com                    |
+| tabPath       | tab's url path                                           | path/to                        |
+| tabFile       | tab's url filename without extension                     | filename                       |
+| tabExt        | tab's url extension                                      | .jpg                           |
 
 Any tag not defined above will be treated as static text. For example `<undef>.jpg` will output `undef.jpg`
 
-#### Examples
+#### Beispiele
 
 `<name><ext|xExt|xMimeExt|.jpg>`
 
-This will attempt to find the filename extension from the URL, Content-Disposition header, Content-Type header, and finally if all else fails will use `.jpg`
+Dies wird versuchen, die Dateinamenerweiterung aus der URL, den Content-Disposition-Header, den Content-Type-Header zu finden, und schließlich, wenn alles andere fehlschlägt, wird `.jpg` verwendet
 
 `img_<####index>.jpg`
 
 This will use the index of the image in the active download session. The index is incremented for each image saved and processed in tab order. The output will be zero padded, such as `img_0001.jpg`
 
-### Expressions (Experimental)
+### Ausdrücke (Experimentell)
 
-Expressions are an experimental extension to path rules to support string manipulation.
+Ausdrücke sind eine experimentelle Erweiterung von Pfadregeln zur Unterstützung der Zeichenkettenmanipulation.
 
-Currently implemented is [replace](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace) using [regular expresions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp).
+Zurzeit implementiert ist [replace](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace) mit [regulären Ausdrücken](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp).
 
-Expressions are surrounded by double quotes `"` and must immediately follow after a keyword or path rule.
+Ausdrücke sind von doppelten Anführungszeichen `"` umgeben und müssen unmittelbar nach einem Schlüsselwort oder einer Pfadregel folgen.
 
-Syntax of an expression:
+Syntax eines Ausdrucks:
 
     <alt>"/replace/regexp/newSubstr/flags"
           | | | | +- optionale Flags zu RegExp
           | | | +- ersetzt Zeichenketten oder Muster
           | | +- suche Zeichenketten oder Muster
-          | +- 'replace' Ausdrucksname. other expressions may be supported in future.
-          +- delimiter
+          | +- 'replace' Ausdrucksname. andere Ausdrücke können in Zukunft unterstützt werden.
+          +- abgrenzer
     
 
-Any character may be selected as the delimiter as long as that character is not used anywhere within the expression patterns. The above example uses slash `/`, though if your expression patterns or strings contain slashes then you should select another symbol as the delimiter.
+Jedes beliebige Zeichen kann als Trennzeichen ausgewählt werden, solange dieses Zeichen nicht irgendwo innerhalb der Ausdrucksmuster verwendet wird. Das obige Beispiel verwendet Schrägstrich `/`, obwohl, wenn Ihre Ausdrucksmuster oder Zeichenketten Schrägstriche enthalten, Sie ein anderes Symbol als Trennzeichen auswählen sollten.
 
 #### Beispiele
 
-Wenn `alt` ein Rohrsymbol enthält `I` dann entfernen Sie es und alle nachfolgenden Zeichen: `<alt>"/replace/\s*\|.*/"`
+Wenn `alt` ein Rohrsymbol enthält `|` dann entfernen Sie es und alle nachfolgenden Zeichen: `<alt>"/replace/\s*\|.*/"`
