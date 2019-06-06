@@ -31,7 +31,7 @@
   },
   "options_title": {
     "description": "Page title for extension options with extension name",
-    "message": "Tab Image Saver Preferences"
+    "message": "Tab Image Saver Einstellungen"
   },
   "options_action_title": {
     "description": "Title for the action option, which tabs to run the extension in",
@@ -39,14 +39,14 @@
   },
   "options_action_label_active": {
     "description": "Option label for the action to run on the active tab",
-    "message": "Active tab"
+    "message": "Aktiver Tab"
   },
   "options_action_label_left": {
     "description": "Option label for the action to run on tabs to the left of the active tab",
-    "message": "Left of active tab"
+    "message": "Links vom aktiven Tab"
   },
   "options_action_label_right": {
-    "message": "Right of active tab",
+    "message": "Rechts vom aktiven Tab",
     "description": "Option label for the action to run on tabs to the right of the active tab"
   },
   "options_action_label_all": {
@@ -59,31 +59,31 @@
   },
   "options_conflict_action_title": {
     "description": "Title for the filename conflict options",
-    "message": "Duplicate filename action"
+    "message": "Doppelter Dateiname-Aktion"
   },
   "options_conflict_action_label_uniquify": {
     "description": "Option label for filename conflict to rename",
-    "message": "Rename"
+    "message": "Umbenennen"
   },
   "options_conflict_action_label_overwrite": {
     "description": "Option label for filename conflict to overwrite",
-    "message": "Overwrite"
+    "message": "Überschreiben"
   },
   "options_filter_title": {
     "description": "Title of the image filtering options",
-    "message": "Image filter"
+    "message": "Bildfilter"
   },
   "options_filter_label_max": {
     "description": "Option label for selecting only the largest image",
-    "message": "Largest image"
+    "message": "Größtes Bild"
   },
   "options_filter_label_all": {
     "description": "Option label for selecting all images",
-    "message": "All images"
+    "message": "Alle Bilder"
   },
   "options_filter_label_direct": {
     "description": "Option label for selecting tabs that are only images",
-    "message": "Image tabs only"
+    "message": "Nur Bilder-Tabs"
   },
   "options_filter_label_direct_note": {
     "description": "Additional note for selecting tabs that are only images",
@@ -123,39 +123,39 @@
   },
   "options_path_rules_label": {
     "description": "Label for path rules option",
-    "message": "Rules:"
+    "message": "Regeln:"
   },
   "options_download_complete_title": {
     "description": "Title for after downloading options",
-    "message": "After downloading"
+    "message": "Nach dem herunterladen"
   },
   "options_close_tab": {
     "description": "Option label to close tabs after downloading",
-    "message": "Close tabs"
+    "message": "Tabs schließen"
   },
   "options_notify_ended": {
     "description": "Option label to show notification after downloading",
-    "message": "Show notification"
+    "message": "Benachrichtigung anzeigen"
   },
   "options_remove_ended": {
     "description": "Option label to remove downloads from history",
-    "message": "Clear download history"
+    "message": "Downloadverlauf löschen"
   },
   "options_advanced_title": {
     "description": "Title for additional options",
-    "message": "Advanced options"
+    "message": "Erweiterte Optionen"
   },
   "options_download_num": {
     "description": "Option label for maximum number of concurrent downloads",
-    "message": "Maximum concurrent downloads"
+    "message": "Maximale gleichzeitige Downloads"
   },
   "options_download_async": {
     "description": "Option label to download in asynchronous mode",
-    "message": "Asynchronous downloads"
+    "message": "Asynchrone Downloads"
   },
   "options_download_async_note": {
     "description": "Additional note for download in asynchronous mode",
-    "message": "(downloads using #index path rules may be numbered out of order)"
+    "message": "(Downloads mit #index Pfadregeln können durcheinander nummeriert sein)"
   },
   "options_download_private": {
     "description": "Option label to download in Private Browsing mode",
