@@ -10,17 +10,17 @@ Download von [Firefox Addons](https://addons.mozilla.org/firefox/addon/tab-image
 
 Sie können steuern, wie dies funktioniert, indem Sie die Addon-Einstellungen unter **Firefox > Add-ons > Erweiterungen > Tab Image Saver > Einstellungen** ändern
 
-- Multitasking Support - run addon concurrently in separate windows
-- Keyboard shortcut option
-- Run from active tab, tabs to the left/right of current tab, or all tabs.
-- Cancel running operation (click addon icon)
-- Set minimum image size in pixels
-- Option to only save tabs with images, ignoring tabs with webpages
-- Filenames renamed automatically
-- Display badge on icon with runtime information and count of downloads
-- Close tabs after saving
-- Hide saved images from download history
-- Show notification when complete
+- Multitasking Unterstützung - Das Addon gleichzeitig in separaten Fenstern ausführen
+- Tastaturkürzel Option
+- Ausführen von dem aktivem Tab, den Tabs links/rechts des aktuellen Tabs oder allen Tabs.
+- Laufenden Vorgang abbrechen (auf das Addon-Symbol klicken)
+- Minimale Bildgröße in Pixeln festlegen
+- Option, nur Tabs mit Bildern zu speichern, ignoriert Tabs mit Webseiten
+- Dateinamen werden automatisch umbenannt
+- Anzeige des Badge auf dem Symbol mit Laufzeitinformationen und Anzahl der Downloads
+- Tabs nach dem Speichern schließen
+- Gespeicherte Bilder aus dem Download-Verlauf ausblenden
+- Benachrichtigung anzeigen, wenn abgeschlossen
 
 Addon-Symbol: Bilder von lastspark von dem Noun Project.
 
@@ -43,19 +43,19 @@ Beispiel source: `<img src="http://example.com/path/to/filename.jpg" alt="Captio
 | Schlüsselwort | Beschreibung                                             | Beispiel                     |
 | ------------- | -------------------------------------------------------- | ---------------------------- |
 | alt           | alt-Content des Bildes                                   | Bildbeschriftung             |
-| name          | url-Dateiname des Bildes ohne Erweiterung                | dateiname                    |
-| xName         | image's filename from Content-Disposition header         | dateiname                    |
-| ext           | bild-Url Erweiterung                                     | .jpg                         |
-| xExt          | image's extension from Content-Disposition header        | .jpg                         |
-| xMimeExt      | image's extension from Content-Type header               | .jpg                         |
-| host          | image's url hostname                                     | beispiel.com                 |
-| path          | image's url path                                         | pfad/zu                      |
-| index         | image number starting at '1', incremented for each image | 1                            |
-| tabTitle      | tab's page title                                         | (JPEG Bild, 500 x 500 Pixel) |
-| tabHost       | tab's url hostname                                       | beispiel.com                 |
-| tabPath       | tab's url path                                           | pfad/zu                      |
-| tabFile       | tab's url filename without extension                     | dateiname                    |
-| tabExt        | tab's url extension                                      | .jpg                         |
+| name          | URL-Dateiname des Bildes ohne Erweiterung                | dateiname                    |
+| xName         | Dateiname des Bildes vom Content-Disposition-Header      | dateiname                    |
+| ext           | Bild-URL Erweiterung                                     | .jpg                         |
+| xExt          | Erweiterung des Bildes vom Content-Disposition-Header    | .jpg                         |
+| xMimeExt      | Erweiterung des Bildes vom Content-Type-Header           | .jpg                         |
+| host          | URL-Hostname des Bildes                                  | beispiel.com                 |
+| path          | URL-Pfad des Bildes                                      | pfad/zu                      |
+| index         | Bildnummer beginnend bei '1', wird für jedes Bild erhöht | 1                            |
+| tabTitle      | Titel des Tab's                                          | (JPEG Bild, 500 x 500 Pixel) |
+| tabHost       | URL-Hostname des Tab's                                   | beispiel.com                 |
+| tabPath       | URL-Pfad des Tab's                                       | pfad/zu                      |
+| tabFile       | URL-Dateiname des Tab's ohne Erweiterung                 | dateiname                    |
+| tabExt        | URL des Tab's ohne Erweiterung                           | .jpg                         |
 
 Jeder nicht oben definierte Tag wird als statischer Text behandelt. Zum Beispiel `<undef>.jpg` wird `undef.jpg` ausgeben
 
