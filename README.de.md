@@ -8,7 +8,7 @@ Download von [Firefox Addons](https://addons.mozilla.org/firefox/addon/tab-image
 
 **Standardmäßig speichert dieses Addon das größte Bild, das in dem aktiven Tab gefunden wurde.**
 
-You may control how this functions by changing the addon preferences at in **Firefox > Add-ons > Extensions > Tab Image Saver > Preferences**
+Sie können steuern, wie dies funktioniert, indem Sie die Addon-Einstellungen unter **Firefox > Add-ons > Erweiterungen > Tab Image Saver > Einstellungen** ändern
 
 - Multitasking Support - run addon concurrently in separate windows
 - Keyboard shortcut option
@@ -67,7 +67,7 @@ Dies wird versuchen, die Dateinamenerweiterung aus der URL, den Content-Disposit
 
 `img_<####index>.jpg`
 
-This will use the index of the image in the active download session. The index is incremented for each image saved and processed in tab order. The output will be zero padded, such as `img_0001.jpg`
+Dabei wird der Index des Bildes in der aktiven Download-Sitzung verwendet. Der Index wird für jedes gespeicherte und verarbeitete Bild in Tabulatorfolge erhöht. Die Ausgabe wird Null gepolstert, wie z.B `img_0001.jpg`
 
 ### Ausdrücke (Experimentell)
 
