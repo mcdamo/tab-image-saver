@@ -95,6 +95,67 @@ describe("background.js", () => {
     */
   });
 
+  describe("addDownload + getDownload + removeDownload", () => {
+    var dl = {id:42,context:"value"};
+    var tabId = 43;
+    var windowId = 44;
+    before(() => {
+      App.createRuntime(windowId);
+    });
+    after(() => {
+      App.deleteRuntime(windowId);
+    });
+    it("should add download to map", () => {
+      expect(App.getDownload(dl.id, tabId, windowId)).to.equal(undefined);
+      App.addDownload(dl.id, dl, tabId, windowId);
+      expect(App.getDownload(dl.id, tabId, windowId)).to.deep.equal(dl);
+      App.removeDownload(dl.id, tabId, windowId);
+      expect(App.getDownload(dl.id, tabId, windowId)).to.equal(undefined);
+    });
+  });
+
+  describe("hasTabDownloads", () => {
+    var dl;
+    var tabId = 43;
+    var windowId = 44;
+    before(() => {
+      App.createRuntime(windowId);
+      dl = {id:42,tabId:tabId};
+      App.addDownload(dl.id, dl, tabId, windowId);
+    });
+    after(() => {
+      App.removeDownload(dl.id, tabId, windowId);
+      App.deleteRuntime(windowId);
+    });
+    it("should return true for defined tabId", () => {
+      expect(App.hasTabDownloads(tabId, windowId)).to.equal(true);
+    });
+    it("should return false for other tabId", () => {
+      expect(App.hasTabDownloads(6, windowId)).to.equal(false);
+    });
+  });
+
+  describe("hasWindowDownloads", () => {
+    var dl;
+    var tabId = 43;
+    var windowId = 44;
+    before(() => {
+      App.createRuntime(windowId);
+      dl = {id:42,tabId: tabId};
+      App.addDownload(dl.id, dl, tabId, windowId);
+    });
+    after(() => {
+      App.removeDownload(dl.id, tabId, windowId);
+      App.deleteRuntime(windowId);
+    });
+    it("should return true for defined windowId", () => {
+      expect(App.hasWindowDownloads(windowId)).to.equal(true);
+    });
+    it("should return false for other windowId", () => {
+      expect(App.hasWindowDownloads(6)).to.equal(false);
+    });
+  });
+
   describe("setTitle", () => {
     // TODO
   });

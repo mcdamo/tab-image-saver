@@ -7,9 +7,12 @@ const Downloads = {
 
   getDownload: (dlid) => Downloads.dlMap.get(dlid),
 
-  removeDownload: (dlid) => {
+  removeDownload: (dlid, eraseHistory) => {
     Downloads.dlMap.delete(dlid);
-    browser.downloads.erase({id: dlid}); /* TODO: await? */
+    if (eraseHistory) {
+      console.debug("removeDownload::eraseHistory");
+      browser.downloads.erase({id: dlid}); /* TODO: await? */
+    }
   },
 
   downloadsHaveProp: (prop, val) => {
@@ -41,12 +44,12 @@ const Downloads = {
       download.fileSize > 0 && // totalBytes may be undefined
       download.mime !== "text/html"
     ) {
-      Downloads.removeDownload(dlid);
+      Downloads.removeDownload(dlid, context.eraseHistory);
       const fn = context.then || ((x) => x);
       fn();
       return;
     }
-    Downloads.removeDownload(dlid);
+    Downloads.removeDownload(dlid, context.eraseHistory);
     const fn = context.error || ((x) => x);
     fn();
     return;

@@ -54,6 +54,49 @@ const App = {
   // is valid if not duplicate
   isUniqueUrl: (url, windowId) => !App.getRuntime(windowId).urls.has(url),
 
+  // download queue for window
+  addDownload: (dlid, context, tabId, windowId) => {
+    if (!App.getRuntime(windowId).dlMap.has(tabId)) {
+      let m = new Map();
+      m.set(dlid, context);
+      App.getRuntime(windowId).dlMap.set(tabId, m);
+    } else {
+      App.getRuntime(windowId).dlMap.get(tabId).set(dlid, context);
+    }
+    console.debug("App.addDownload", dlid);
+  },
+
+  getDownload: (dlid, tabId, windowId) => {
+    if (App.getRuntime(windowId).dlMap.has(tabId)) {
+      return App.getRuntime(windowId).dlMap.get(tabId).get(dlid);
+    }
+    return undefined;
+  },
+
+  removeDownload: (dlid, tabId, windowId) => {
+    App.getRuntime(windowId).dlMap.get(tabId).delete(dlid);
+    if (App.getRuntime(windowId).dlMap.get(tabId).size === 0) {
+      App.getRuntime(windowId).dlMap.delete(tabId);
+    }
+    console.debug("App.removeDownload", dlid);
+  },
+
+  // is finished when all downloads for tabId have been removed
+  hasTabDownloads: (tabId, windowId) => ((App.getRuntime(windowId) && App.getRuntime(windowId).dlMap.has(tabId)) ||
+    Downloads.hasTabDownloads(tabId)),
+
+  // is finished when all downloads for windowId have been removed
+  hasWindowDownloads: (windowId) => {
+    try {
+      if (App.getRuntime(windowId).dlMap.size > 0) {
+        return true;
+      }
+    } catch (e) {
+      // silently catch errors if runtime is destroyed
+    }
+    return Downloads.hasWindowDownloads(windowId);
+  },
+
   setTitle: async () => {
     const title = browser.i18n.getMessage("browser_action_tooltip", browser.i18n.getMessage(`options_action_label_${App.options.action}`));
     await browser.browserAction.setTitle({title});
@@ -264,7 +307,7 @@ const App = {
 
     // cleanup orphans in Downloads
     Downloads.removeWindowDownloads(windowId);
-    App.runtime.delete(windowId); // cleanup
+    App.deleteRuntime(windowId); // cleanup
     if (App.isIdle()) {
       browser.downloads.onChanged.removeListener(Downloads.handleDownloadChanged); // remove download listener
       if (App.reload) {
@@ -276,7 +319,7 @@ const App = {
 
   tabsFinished: (windowId) => {
     if (!App.isFinished(windowId) && // test downloads have finished
-      Downloads.hasWindowDownloads(windowId) === false) {
+      App.hasWindowDownloads(windowId) === false) {
       console.log(`Window(${windowId}) has ended`, new Date() - App.getRuntime(windowId).startDate);
       if (!App.isCancelled(windowId)) {
         App.setFinished(windowId);
@@ -294,11 +337,14 @@ const App = {
   handleDownloadComplete: async (context) => {
     const windowId = context.windowId;
     const tabId = context.tabId;
+    const index = context.index;
+    console.debug("handleDownloadComplete", context);
+    App.removeDownload(index, tabId, windowId);
     App.getRuntime(windowId).imagesSaved++;
     App.getRuntime(windowId).imagesDownloading--;
     App.setBadgeSaving(windowId);
     if (App.options.closeTab) {
-      if (Downloads.hasTabDownloads(tabId) === false) {
+      if (App.hasTabDownloads(tabId, windowId) === false) {
         try {
           await browser.tabs.remove(tabId);
           console.log(`Closed Tab(${tabId})`);
@@ -312,6 +358,10 @@ const App = {
 
   handleDownloadFailed: (context) => {
     const windowId = context.windowId;
+    const tabId = context.tabId;
+    const index = context.index;
+    console.debug("handleDownloadFailed", context);
+    App.removeDownload(index, tabId, windowId);
     App.getRuntime(windowId).imagesFailed.set(context.url, context.path);
     App.getRuntime(windowId).imagesDownloading--;
     App.downloadFinished(windowId);
@@ -409,7 +459,7 @@ const App = {
   createDownloads: async (param) => {
     const tabResults = param.response;
     const windowId = param.windowId;
-    let promiseDownloads = [];
+    let downloads = [];
     for (const result of tabResults) {
       if (result === false) {
         continue;
@@ -418,31 +468,22 @@ const App = {
       const tabId = tab.id;
       const images = result.images;
       for (const image of images) {
-        if (App.isCancelled(windowId)) {
-          return promiseDownloads;
-        }
         try {
+          let index = App.getRuntime(windowId).imageIndex++;
           const path = await App.createPath({
             tab,
             image,
-            index: App.getRuntime(windowId).imageIndex++,
+            index,
             rules: App.options.pathRules
           });
-          await App.throttleDownloads(windowId);
-          App.getRuntime(windowId).imagesDownloading++;
-          promiseDownloads.push(Downloads.fetchDownload({
+          App.addDownload(index, {}, tabId, windowId);
+          downloads.push({
             url: image.src,
             path,
-            conflictAction: App.options.conflictAction,
-            incognito: App.options.removeEnded, // min_ver FF57
             referrer: tab.url,
-            signal: App.getRuntime(windowId).abortControl.signal
-          }, {
-            tabId,
-            windowId,
-            then: (v) => App.handleDownloadComplete({tabId, windowId}),
-            error: (v) => App.handleDownloadFailed({tabId, windowId, url: image.src, path})
-          }));
+            index,
+            tabId
+          });
         } catch (err) {
           if (err instanceof AppCancelled) {
             console.debug("createDownloads passed cancelled");
@@ -451,6 +492,43 @@ const App = {
           // unable to generate filename from rules
           console.error(err, image); /* RemoveLogging:skip */
           App.getRuntime(windowId).pathsFailed.set(image.src, undefined);
+        }
+      }
+    }
+    return downloads;
+  },
+
+  fetchDownloads: async (param) => {
+    const windowId = param.windowId;
+    const downloads = param.downloads;
+    let promiseDownloads = [];
+    for (const download of downloads) {
+      if (App.isCancelled(windowId)) {
+        return promiseDownloads;
+      }
+      try {
+        let index = download.index;
+        let tabId = download.tabId;
+        await App.throttleDownloads(windowId);
+        App.getRuntime(windowId).imagesDownloading++;
+        promiseDownloads.push(Downloads.fetchDownload({
+          url: download.url,
+          path: download.path,
+          conflictAction: App.options.conflictAction,
+          incognito: App.options.downloadPrivate, // min_ver FF57
+          referrer: download.referrer,
+          signal: App.getRuntime(windowId).abortControl.signal
+        }, {
+          tabId,
+          windowId,
+          then: (v) => App.handleDownloadComplete({tabId, windowId, index}),
+          error: (v) => App.handleDownloadFailed({tabId, windowId, index, url: download.url, path: download.path}),
+          eraseHistory: App.options.removeEnded
+        }));
+      } catch (err) {
+        if (err instanceof AppCancelled) {
+          console.debug("fetchDownloads passed cancelled");
+          throw err;
         }
       }
     }
@@ -474,7 +552,8 @@ const App = {
       // async downloads pass single results at a time
       results = [param.response];
     }
-    const promiseDownloads = await App.createDownloads({response: results, windowId});
+    const downloads = await App.createDownloads({response: results, windowId});
+    const promiseDownloads = await App.fetchDownloads({windowId, downloads});
     return await Global.allPromises(
       promiseDownloads,
       (downloads) => {
@@ -861,25 +940,7 @@ const App = {
     }
   },
 
-  // return (for testing)
-  //   -1: run blocked
-  //    1: normal completion
-  run: async (windowId) => {
-    if (App.isRunning(windowId)) {
-      console.debug("run blocked");
-      return -1; // -1 for testing
-    }
-    App.blocking.set(windowId);
-    const mytab = await App.getActiveTab(windowId);
-    const tabId = mytab.id;
-    console.debug("running", {windowId, tabId});
-    // workaround for private browsing mode does not trigger onStartup callback
-    if (!browser.storage.onChanged.hasListener(App.handleStorageChanged)) {
-      console.debug("storage listener not detected - forcing init()");
-      await App.init();
-    }
-    App.setupBadge(); // run before clearing runtime
-    browser.downloads.onChanged.addListener(Downloads.handleDownloadChanged);
+  createRuntime: (windowId, tabId) => {
     App.runtime.set(windowId, {
       tabId, // required for setting badge
       startDate: new Date(),
@@ -899,8 +960,35 @@ const App = {
       badgeLoadingDate: 0,
       urls: new Set(), // unique urls for this window's tabs only
       abortControl: new AbortController(), // for cancelling fetch()
-      cancel: false
+      cancel: false,
+      dlMap: new Map() // downloads queued for this window but not yet started
     });
+  },
+
+  deleteRuntime: (windowId) => {
+    App.runtime.delete(windowId); // cleanup
+  },
+
+  // return (for testing)
+  //   -1: run blocked
+  //    1: normal completion
+  run: async (windowId) => {
+    if (App.isRunning(windowId)) {
+      console.debug("run blocked");
+      return -1; // -1 for testing
+    }
+    App.blocking.set(windowId);
+    const mytab = await App.getActiveTab(windowId);
+    const tabId = mytab.id;
+    console.debug("running", {windowId, tabId});
+    // workaround for private browsing mode does not trigger onStartup callback
+    if (!browser.storage.onChanged.hasListener(App.handleStorageChanged)) {
+      console.debug("storage listener not detected - forcing init()");
+      await App.init();
+    }
+    App.setupBadge(); // run before clearing runtime
+    browser.downloads.onChanged.addListener(Downloads.handleDownloadChanged);
+    App.createRuntime(windowId, tabId);
     App.setBadgeStart(windowId);
     App.setBadgeLoading(windowId);
     try {
