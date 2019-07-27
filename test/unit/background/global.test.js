@@ -228,8 +228,16 @@ describe("global.js", () => {
     it("should replace all variables", () => {
       expect(Global.template("<var1><var2>", {var1: "x", var2: "y"})).to.equal("xy");
     });
+    it("should replace variables using lower-case naming", () => {
+      expect(Global.template("<VarA>", {vara: "x", VarA: "y"})).to.equal("x");
+    });
     it("should replace conditional variable", () => {
       expect(Global.template("<var1|var2>", {var1: "", var2: "y"})).to.equal("y");
+    });
+    it("should replace conditional variables in order", () => {
+      expect(Global.template("<var1|var2|var3>", {var1: "x", var2: "y", var3: "z"})).to.equal("x");
+      expect(Global.template("<var1|var2|var3>", {var1: "", var2: "y", var3: "z"})).to.equal("y");
+      expect(Global.template("<var1|var2|var3>", {var1: "", var2: "", var3: "z"})).to.equal("z");
     });
     it("should replace conditional constant", () => {
       expect(Global.template("<var1|.ext>", {var1: ""})).to.equal(".ext");

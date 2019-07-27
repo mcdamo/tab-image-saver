@@ -70,17 +70,21 @@ const Global = {
     const r = /<([^>]+)>("[^"\\]*(?:\\.[^"\\]*)*")?/g;
     s = s.replace(r, (match, p, globalCode) => {
       // match #key with optional templateCode, repeating separated by pipe '|'
-      const vars = p.match(/([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?(?:\|([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?)*/);
-      console.debug("template vars", vars, obj);
-      for (let i = 1; i < vars.length; i += 3) {
-        const pad = vars[i];
-        const key = vars[i + 1];
-        if (key === undefined) {
-          return "";
-        }
-        const localCode = vars[i + 2];
-        const lkey = key.toLowerCase();
-        if (Object.prototype.hasOwnProperty.call(obj, lkey)) {
+      const varsArray = [...p.matchAll(/([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?(?:\|([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?)?/g)];
+      for (let h = 0; h < varsArray.length; h++) {
+        let vars = varsArray[h];
+        for (let i = 1; i < vars.length; i += 3) {
+          const pad = vars[i];
+          const key = vars[i + 1];
+          if (key === undefined) {
+            return "";
+          }
+          const localCode = vars[i + 2];
+          const lkey = key.toLowerCase();
+          if (!Object.prototype.hasOwnProperty.call(obj, lkey)) {
+            // treat as a string
+            return key;
+          }
           if (obj[lkey] !== undefined && obj[lkey].length > 0) {
             let ret = obj[lkey].padStart(pad.length, "0");
             if (localCode !== undefined) {
@@ -91,9 +95,6 @@ const Global = {
             }
             return ret;
           }
-        } else {
-          // treat as string
-          return key;
         }
       }
       // return empty string if no vars are evaluated
