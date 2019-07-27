@@ -1,3 +1,28 @@
+v2.5.5
+======
+ - Fixed content-disposition for UTF-8 filename #43
+ - Fixed path rules bug: when many OR conditions only the first and last was tested #43
+
+v2.5.4
+======
+ - Fixed private download option, setting had no effect.
+ - Fixed clear history option, setting affected private downloading.
+ - Fixed issue where tab may be closed before images where downloaded, when downloading multiple images in tab.
+
+v2.5.3
+======
+ - Fixed download reliability with referrer header
+
+v2.5.2
+======
+ - Performance improvements
+ - Increased testing coverage
+
+v2.5.1
+======
+ - Fixed regression in Path Rules
+ - Fixed using browser cache to save images #37
+
 v2.5.0
 ======
  - Fixed input validation for numeric options
