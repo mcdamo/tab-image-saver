@@ -151,7 +151,7 @@ const Global = {
   },
 
   getDirname: (path) => path.replace(/\/[^/]*$/g, "") // strip everything after last slash
-    .replace(/^\/*/, ""), // strip leading slashes
+    .replace(/^\/+/, ""), // strip leading slashes
 
   // replace all invalid characters and slashes
   sanitizeFilename: (filename, str = "_") => filename.replace(/[*"/\\:<>|?]/g, str),
@@ -227,10 +227,22 @@ const Global = {
     }
     const disposition = headers["Content-Disposition"];
     if (disposition && disposition.indexOf("filename") !== -1) {
-      const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-      let matches = filenameRegex.exec(disposition);
-      if (matches !== null && matches[1]) {
-        obj.filename = decodeURI(matches[1].replace(/['"]/g, ""));
+      const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/g;
+      // get all matches to include subsequent filename*=UTF-8''...
+      let matchArray = [...disposition.matchAll(filenameRegex)];
+      for (let i = matchArray.length - 1; i >= 0; i--) {
+        console.debug("getHeaderFilename", i, matchArray[i]);
+        if (matchArray[i][1]) {
+          let filename = matchArray[i][1];
+          if (/^UTF/.test(filename)) {
+            filename = decodeURI(filename.replace(/^UTF-8''/, ""));
+          } else {
+            filename = decodeURI(filename.replace(/['"]/g, ""));
+          }
+          console.debug("getHeaderFilename", filename);
+          obj.filename = filename;
+          break;
+        }
       }
     }
     return obj;

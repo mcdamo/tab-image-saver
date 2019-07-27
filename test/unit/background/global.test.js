@@ -345,6 +345,30 @@ describe("global.js", () => {
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({mimeExt: ".svg"});
       });
+      it("should handle quotes in filename", async () => {
+        server.returns(Promise.resolve(new window.Response(
+          "", {
+            status: 200,
+            headers: {"Content-Disposition": "filename=\"new%20file.jpg\"; filename*="},
+        })));
+        var p = Global.getHeaderFilename(url);
+        //expect(requests.length).to.equal(1);
+        //requests[0].respond(200, headers, "");
+        await expect(p).to.eventually.become({filename: "new file.jpg"});
+      });
+      it("should handle RFC 5987 filename", async () => {
+        server.returns(Promise.resolve(new window.Response(
+          "", {
+            status: 200,
+            headers: {"Content-Disposition": "filename=\"new%20file.jpg\"; filename*=UTF-8''%E3%82%8B%E3%82%8A.jpg"},
+        })));
+        var p = Global.getHeaderFilename(url);
+        //expect(requests.length).to.equal(1);
+        //requests[0].respond(200, headers, "");
+        await expect(p).to.eventually.become({filename: "るり.jpg"});
+      });
+
+
     });
 
   });
