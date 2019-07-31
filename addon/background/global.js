@@ -70,7 +70,13 @@ const Global = {
     const r = /<([^>]+)>("[^"\\]*(?:\\.[^"\\]*)*")?/g;
     s = s.replace(r, (match, p, globalCode) => {
       // match #key with optional templateCode, repeating separated by pipe '|'
-      const varsArray = [...p.matchAll(/([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?(?:\|([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?)?/g)];
+      const rPipe = /([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?(?:\|([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?)?/g;
+      // const varsArray = [...p.matchAll(rPipe)]; // target Firefox-67
+      let varsArray = [];
+      let matches = null;
+      while ((matches = rPipe.exec(p)) !== null) {
+        varsArray.push(matches);
+      }
       for (let h = 0; h < varsArray.length; h++) {
         let vars = varsArray[h];
         for (let i = 1; i < vars.length; i += 3) {
@@ -229,7 +235,12 @@ const Global = {
     if (disposition && disposition.indexOf("filename") !== -1) {
       const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/g;
       // get all matches to include subsequent filename*=UTF-8''...
-      let matchArray = [...disposition.matchAll(filenameRegex)];
+      // let matchArray = [...disposition.matchAll(filenameRegex)]; // target Firefox-67
+      let matchArray = [];
+      let matches = null;
+      while ((matches = filenameRegex.exec(disposition)) !== null) {
+        matchArray.push(matches);
+      }
       for (let i = matchArray.length - 1; i >= 0; i--) {
         console.debug("getHeaderFilename", i, matchArray[i]);
         if (matchArray[i][1]) {
