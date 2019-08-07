@@ -1,6 +1,7 @@
-.*.swp
 build
+dev
 dist
+extension
 node_modules
 npm-debug.log
 release

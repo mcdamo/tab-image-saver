@@ -1,20 +1,33 @@
 "use strict";
-//import {ACTION} from 'background/constants';
-import {T, Options} from 'background/options';
+/* globals expect */
+import Options, { T } from "background/options";
 
-describe("options.js", () => {
-  var onLoadStub, onSaveStub, cache, keys, storage, origOpts, origOptKeys;
-  before(() => {
-    onLoadStub = sinon.stub().returnsArg(0);
-    onSaveStub = sinon.stub().returnsArg(0);
-    origOptKeys = Options.OPTION_KEYS;
+describe("options.js", function () {
+  let {
+    cache,
+    keys,
+    onloadStub,
+    onsaveStub,
+    origOptSchema,
+    origOpts,
+    storage,
+  } = {};
+  before(async function () {
+    onloadStub = sinon.stub().returnsArg(0);
+    onsaveStub = sinon.stub().returnsArg(0);
+    origOptSchema = Options.OPTION_SCHEMA;
     origOpts = Options.OPTIONS;
-    Options.OPTION_KEYS = [
-      {name: "myradio", type: "RADIO", default: "radiodefault"},
-      {name: "mycheckbox", type: "BOOL", default: false},
-      {name: "mytext", type: "VALUE", default: "textdefault"},
-      {name: "myshortcut", type: "VALUE", default: "x", onLoad: {function: onLoadStub}, onSave: {function: onSaveStub} },
-    ];
+    Options.OPTION_SCHEMA = {
+      myradio: { type: "RADIO", default: "radiodefault" },
+      mycheckbox: { type: "BOOL", default: false },
+      mytext: { type: "VALUE", default: "textdefault" },
+      myshortcut: {
+        type: "VALUE",
+        default: "x",
+        onload: { function: onloadStub },
+        onsave: { function: onsaveStub },
+      },
+    };
     Options.OPTIONS = {};
     cache = {
       myradio: "radiodefault",
@@ -29,128 +42,146 @@ describe("options.js", () => {
       myshortcut: "x",
     };
     keys = Object.keys(storage);
-    Options.init();
+    await Options.init();
   });
-  after(() => {
-    Options.OPTION_KEYS = origOptKeys; // TODO use sandbox
+  after(function () {
+    Options.OPTION_SCHEMA = origOptSchema; // TODO use sandbox
     Options.OPTIONS = origOpts; // TODO use sandbox
   });
 
-  describe("init", () => {
-    before(() => {
+  describe("init", function () {
+    before(function () {
       //onLoadStub.resetHistory();
       //onSaveStub.resetHistory();
     });
-    it("should populate cache with option defaults and call onLoad", () => {
+    it("should populate option defaults", function () {
       //expect(Options.cache).to.have.property("action").that.equals("current");
       expect(Options.OPTIONS).to.deep.equal(cache);
-      expect(onLoadStub).to.be.calledOnce;
-      expect(onSaveStub).to.not.be.called;
+      expect(onloadStub).to.be.calledOnce;
+      expect(onsaveStub).to.not.be.called;
     });
   });
-  describe("getKeys", () => {
-    it("should return array of option names", () => {
+  describe("getKeys", function () {
+    it("should return array of option names", function () {
       expect(Options.getKeys()).to.be.an("array").that.deep.equal(keys);
     });
   });
-  describe("getOptionMeta", () => {
-    it("should return object for default option", () => {
-      expect(Options.getOptionMeta("myradio")).to.deep.equal({name: "myradio", type: T.RADIO, default: "radiodefault"});
+  describe("getOptionMeta", function () {
+    it("should return object for default option", function () {
+      expect(Options.getOptionMeta("myradio")).to.deep.equal({
+        type: T.RADIO,
+        default: "radiodefault",
+      });
     });
   });
-  describe("setOption", () => {
-    it("should update the cached options", () => {
+  describe("setOption", function () {
+    it("should update the cached options", function () {
       //expect(() => { Options.setOption("action", "test")}).to.change(Options.cache);
       //expect(Options.setOption.bind("action", "test")).to.change(Options.cache);
-      Options.OPTIONS["testkey"] = "testval";
+      Options.OPTIONS.testkey = "testval";
       Options.setOption("testkey", "newval");
-      expect(Options.OPTIONS["testkey"]).to.equal("newval");
-      delete Options.OPTIONS["testkey"]; // TODO use sandbox
+      expect(Options.OPTIONS.testkey).to.equal("newval");
+      delete Options.OPTIONS.testkey; // TODO use sandbox
     });
   });
-  describe("loadOptions + getOptions", () => {
-    before(async () => {
+  describe("loadOptions", function () {
+    before(async function () {
       //await browser.storage.local.clear(); // clear() is not faked
       await browser.storage.local.set(storage);
     });
-    beforeEach(() => {
-      onLoadStub.resetHistory();
-      onSaveStub.resetHistory();
+    beforeEach(function () {
+      onloadStub.resetHistory();
+      onsaveStub.resetHistory();
     });
-    after(async () => {
+    after(async function () {
       await browser.storage.local.remove(Object.keys(storage)); // TODO use sandbox
     });
-    afterEach(() => {
-      onLoadStub.resetHistory();
-      onSaveStub.resetHistory();
+    afterEach(function () {
+      onloadStub.resetHistory();
+      onsaveStub.resetHistory();
     });
-    describe("loadOptions", () => {
-      it("loadOptions should load options from local storage", async () => {
+    describe("loadOptions", function () {
+      it("should load options from local storage", async function () {
         await expect(Options.loadOptions()).to.eventually.become(storage);
-        expect(onLoadStub).to.be.calledOnce;
-        expect(onSaveStub).to.not.be.called;
-      });
-    });
-    describe("getOptions", () => {
-      it("should trigger loadOptions if not loaded", async () => {
-        Options.loaded = false;
-        await expect(Options.getOptions()).to.eventually.become(storage);
-        expect(Options.loaded).to.equal(true);
-        expect(onLoadStub).to.be.calledOnce;
-        expect(onSaveStub).to.not.be.called;
-      });
-      it("should not trigger loadOptions if already loaded", async () => {
-        expect(Options.loaded).to.equal(true);
-        await expect(Options.getOptions()).to.eventually.become(storage);
-        expect(onLoadStub).to.not.be.called;
-        expect(onSaveStub).to.not.be.called;
+        expect(onloadStub).to.be.calledOnce;
+        expect(onsaveStub).to.not.be.called;
       });
     });
   });
-  describe("handleStorageChanged", () => {
-    beforeEach(() => {
-      Options.setOptions(storage);
-    });
-    it("should return options with changes from storage", () => {
-      expect(Options.handleStorageChanged({myshortcut:{newValue:"new"}}, "local")).to.deep.equal({
-        myradio: "radio", mycheckbox: true, mytext: "text", myshortcut: "new"
-      });
-    });
-    it("should ignore changes not from local storage", () => {
-      expect(Options.handleStorageChanged({myshortcut:{newValue:"remote"}}, "sync")).to.deep.equal({
-        myradio: "radio", mycheckbox: true, mytext: "text", myshortcut: "x"
-      });
-    });
-    it("should ignore changes from storage that are not option names", () => {
-      expect(Options.handleStorageChanged({notmyoption:{newValue:"invalid"}}, "local")).to.deep.equal({
-        myradio: "radio", mycheckbox: true, mytext: "text", myshortcut: "x"
-      });
-    });
-  });
-  describe("onLoadRules", () => {
-    it("should trim and omit empty lines", () => {
-      expect(Options.onLoadRules(` line1 \n\n line2 \n `))
-        .to.deep.equal(["line1", "line2"]);
-    });
-
-    it("should throw for empty rules", () => {
-      expect(() => Options.onLoadRules("")).to.throw(Error);
+  describe("onLoadRules", function () {
+    it("should throw for empty rules", function () {
+      expect(() => Options.onLoadRules([])).to.throw(Error);
       expect(() => Options.onLoadRules(`  \n\n`)).to.throw(Error);
     });
   });
 
-  describe("onSaveRules", () => {
-    it("should trim and omit empty lines", () => {
-      expect(Options.onSaveRules(` line1 \n\n line2 \n `))
-        .to.equal("line1\nline2");
+  describe("onSaveRules", function () {
+    it("should trim strings in array", function () {
+      expect(Options.onSaveRules([` line1 \n`, `\n line2 \n `])).to.deep.equal([
+        "line1",
+        "line2",
+      ]);
     });
 
-    it("should throw for empty rules", () => {
+    it("should throw for empty rules", function () {
       expect(() => Options.onSaveRules("")).to.throw(Error);
       expect(() => Options.onSaveRules(`  \n\n`)).to.throw(Error);
     });
   });
 
+  describe("domainRuleMatch", function () {
+    const location = new URL("https://sub.example.com/page.html");
+    it("should match simple domains", function () {
+      expect(
+        Options.domainRuleMatch(location, "example.com/"),
+        "example.com/"
+      ).to.equal(true);
+      expect(
+        Options.domainRuleMatch(location, "example.co"),
+        "example.co"
+      ).to.equal(true);
+      expect(
+        Options.domainRuleMatch(location, "example.co/"),
+        "example.co/"
+      ).to.equal(false);
+      expect(
+        Options.domainRuleMatch(location, "ample.com/"),
+        "ample.com/"
+      ).to.equal(true);
+      expect(
+        Options.domainRuleMatch(location, "e*e.com/"),
+        "e*e.com/"
+      ).to.equal(true);
+      expect(
+        Options.domainRuleMatch(location, "/page.html"),
+        "/page.html"
+      ).to.equal(true);
+    });
+    it("should match wildcard domains", function () {
+      expect(
+        Options.domainRuleMatch(location, "*.example.com"),
+        "*.example.com"
+      ).to.equal(true);
+      expect(
+        Options.domainRuleMatch(location, "example.co*/"),
+        "example.co*/"
+      ).to.equal(true);
+    });
+    it("should match regex domains", function () {
+      expect(
+        Options.domainRuleMatch(location, "#://[a-z]+\\.example\\.com/#"),
+        "1"
+      ).to.equal(true);
+      expect(
+        Options.domainRuleMatch(location, "#//[a-z]+\\.example\\.[^/]{3}/#"),
+        "2"
+      ).to.equal(true);
+      expect(
+        Options.domainRuleMatch(location, "#://example\\.com/$#"),
+        "3"
+      ).to.equal(false);
+    });
+  });
 
-
+  // TODO: getTabOptions()
 });

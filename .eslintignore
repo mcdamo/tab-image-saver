@@ -1,4 +1,8 @@
 !.eslintrc.js
-build
-dist
-node_modules
+!.*
+/build
+/config
+/dev
+/dist
+/node_modules
+/src/lib

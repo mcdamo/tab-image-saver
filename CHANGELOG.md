@@ -1,3 +1,14 @@
+v3.0.0
+======
+ - Added Rulesets for targeting options to specific sites
+ - New preferences page
+ - `<ext>` pathRule no longer includes the period `.`, pathRules changed to `.<ext>`
+ - Added new keyboard shortcuts options
+
+v2.5.6
+======
+ - Removed code requiring min version FF67
+
 v2.5.5
 ======
  - Fixed content-disposition for UTF-8 filename #43

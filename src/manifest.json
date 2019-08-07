@@ -1,0 +1,83 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_extension_name__",
+  "default_locale": "en",
+  "applications": {
+    "gecko": {
+      "strict_min_version": "60.0",
+      "id": "tab-image-saver@mcdamo.addons.mozilla.org"
+    }
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "notifications",
+    "downloads",
+    "menus",
+    "<all_urls>"
+  ],
+  "icons": {
+    "24": "img/icons/tab-image-saver-v2@24.png",
+    "48": "img/icons/tab-image-saver-v2@48.png"
+  },
+  "browser_action": {
+    "default_icon": {
+      "24": "img/icons/tab-image-saver-v2@24.png",
+      "48": "img/icons/tab-image-saver-v2@48.png"
+    },
+    "theme_icons": [
+      {
+        "light": "img/icons/tab-image-saver-v2-light@24.png",
+        "dark": "img/icons/tab-image-saver-v2@24.png",
+        "size": 24
+      },
+      {
+        "light": "img/icons/tab-image-saver-v2-light@48.png",
+        "dark": "img/icons/tab-image-saver-v2@48.png",
+        "size": 48
+      }
+    ],
+    "default_title": "__MSG_extension_name__",
+    "browser_style": true
+  },
+  "options_ui": {
+    "page": "options.html",
+    "browser_style": true,
+    "open_in_tab": true
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "sidebar_action": {
+    "default_title": "Tab Image Saver",
+    "default_panel": "sidebar.html",
+    "default_icon": "img/icons/tab-image-saver-v2@48.png"
+  },
+  "commands": {
+    "default": {
+      "suggested_key": {},
+      "description": "__MSG_commands_default_action_label__"
+    },
+    "active": {
+      "suggested_key": {},
+      "description": "__MSG_commands_active_action_label__"
+    },
+    "left": {
+      "suggested_key": {},
+      "description": "__MSG_commands_left_action_label__"
+    },
+    "right": {
+      "suggested_key": {},
+      "description": "__MSG_commands_right_action_label__"
+    },
+    "all": {
+      "suggested_key": {},
+      "description": "__MSG_commands_all_action_label__"
+    }
+  },
+  "version": "3.0.0",
+  "description": "__MSG_extension_description__",
+  "homepage_url": "https://github.com/mcdamo/tab-image-saver"
+}
