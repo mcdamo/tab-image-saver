@@ -55,7 +55,7 @@
   },
   "options_active_tab": {
     "description": "Option label for the action to include the active tab (when action is Left or Right of the active tab)",
-    "message": "Aktive Tabs einbeziehen (mit Links\/Rechts-Aktionen)"
+    "message": "Aktive Tabs einbeziehen (mit Links/Rechts-Aktionen)"
   },
   "options_conflict_action_title": {
     "description": "Title for the filename conflict options",
@@ -159,7 +159,7 @@
   },
   "options_download_private": {
     "description": "Option label to download in Private Browsing mode",
-    "message": "Herunterladen im Privat-\/Inkognito-Modus"
+    "message": "Herunterladen im Privat-/Inkognito-Modus"
   },
   "options_download_private_note": {
     "description": "Additional note for download in Private Browsing mode option",
