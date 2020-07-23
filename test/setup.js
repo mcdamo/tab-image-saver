@@ -1,9 +1,9 @@
 // setup sinon and chai
-var chai = require("chai");
-var sinon = require("sinon");
-var chaiAsPromised = require("chai-as-promised");
+let chai = require("chai");
+let sinon = require("sinon");
+let chaiAsPromised = require("chai-as-promised");
 global.sinon = sinon;
-var sinonChai = require("sinon-chai");
+let sinonChai = require("sinon-chai");
 chai.use(sinonChai);
 chai.use(chaiAsPromised); // install as last plugin
 global.expect = chai.expect;
@@ -12,7 +12,7 @@ global.expect = chai.expect;
 
 // create mock browser
 // let browser = require('sinon-chrome/webextensions');
-const browserFake = require('webextensions-api-fake');
+const browserFake = require("webextensions-api-fake");
 const browser = browserFake();
 
 /*

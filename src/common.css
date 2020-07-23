@@ -1,0 +1,140 @@
+:root {
+  --color-title-bg: #8b67b3;
+  --color-title-fg: #fff;
+  --color-bg: #fff;
+  --color-disable: #999;
+  --color-delete: #cb5793;
+  --color-delete-hover: #994972;
+  --color-border: #999;
+  --color-error: #f00;
+  --color-button: #ddd;
+  --color-button-fg: #000;
+  --color-button-hover: #bbb;
+  --color-button-selected: #1d76eb;
+  --color-button-selected-fg: #fff;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	font-family:Verdana,sans-serif;
+	font-size:0.9rem;
+	line-height:1.5;
+}
+
+h1, h2 {
+	margin: 0;
+	padding: 0;
+}
+
+fieldset {
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 100%;
+	margin-bottom: 0.5rem;
+}
+
+.column {
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 0;
+	max-width: 750px;
+	margin-right: 0.5rem;
+	padding-left: 0.25rem;
+	padding-right: 0.25rem;
+}
+
+.hidden {
+	display: none;
+}
+
+.error {
+	color: var(--color-error);
+	font-style: oblique;
+}
+
+.center {
+    text-align: center;
+}
+
+.button {
+	/*border-radius: 0.3rem;*/
+	text-align: center;
+	cursor: pointer;
+	padding: 0.4rem 0.5rem;
+	color: var(--color-button-fg);
+	background-color: var(--color-button);
+}
+
+.button:hover {
+	background-color: var(--color-button-hover);
+}
+
+.icon {
+	background-size: contain;
+	height: 100%;
+	padding-left: 2rem;
+	background-position: left;
+	background-repeat: no-repeat;
+}
+
+.default-icon {
+	height: 24px;
+	background-image: url(img/icons/tab-image-saver-v2@24.png);
+}
+
+.error-icon {
+	background-image: url(img/exclamation-triangle-solid.svg);
+}
+
+.options-icon {
+	background-image: url(img/cog-solid.svg);
+}
+
+.downloads-icon {
+	background-image: url(img/folder-open-solid.svg);
+}
+
+.left-action-icon {
+	background-image: url(img/angle-double-left-solid.svg);
+}
+
+.right-action-icon {
+	background-image: url(img/angle-double-right-solid.svg);
+}
+
+.active-action-icon {
+	padding-left: 1.5rem;
+	background-image: url(img/angle-down-solid.svg);
+}
+
+.all-action-icon {
+	padding-left: 1.5rem;
+	background-image: url(img/angle-double-down-solid.svg);
+}
+
+.cancel-action-icon {
+	background-image: url(img/ban-solid.svg);
+}
+
+.test-action-icon {
+	background-image: url(img/question-circle-solid.svg);
+}
+
+.errors-action-icon {
+	background-image: url(img/exclamation-triangle-solid.svg);
+}
+
+.sidebar-icon {
+	background-image: url(img/columns-solid.svg);
+}
+

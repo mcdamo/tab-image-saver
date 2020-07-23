@@ -1,6 +1,6 @@
 {
   "name": "tabimagesaver",
-  "version": "2.5.6",
+  "version": "3.0.0",
   "id": "tab-image-saver@mcdamo.addons.mozilla.org",
   "description": "__MSG_extension_description__",
   "homepage": "https://github.com/mcdamo/tab-image-saver",
@@ -40,23 +40,23 @@
       "<all_urls>"
     ],
     "icons": {
-      "24": "icons/tab-image-saver-v2@24.png",
-      "48": "icons/tab-image-saver-v2@48.png"
+      "24": "img/icons/tab-image-saver-v2@24.png",
+      "48": "img/icons/tab-image-saver-v2@48.png"
     },
     "browser_action": {
       "default_icon": {
-        "24": "icons/tab-image-saver-v2@24.png",
-        "48": "icons/tab-image-saver-v2@48.png"
+        "24": "img/icons/tab-image-saver-v2@24.png",
+        "48": "img/icons/tab-image-saver-v2@48.png"
       },
       "theme_icons": [
         {
-          "light": "icons/tab-image-saver-v2-light@24.png",
-          "dark": "icons/tab-image-saver-v2@24.png",
+          "light": "img/icons/tab-image-saver-v2-light@24.png",
+          "dark": "img/icons/tab-image-saver-v2@24.png",
           "size": 24
         },
         {
-          "light": "icons/tab-image-saver-v2-light@48.png",
-          "dark": "icons/tab-image-saver-v2@48.png",
+          "light": "img/icons/tab-image-saver-v2-light@48.png",
+          "dark": "img/icons/tab-image-saver-v2@48.png",
           "size": 48
         }
       ],
@@ -64,92 +64,163 @@
       "browser_style": true
     },
     "options_ui": {
-      "page": "options/options.html",
+      "page": "options.html",
       "browser_style": true,
       "open_in_tab": true
     },
     "background": {
       "scripts": [
-        "background/global.js",
-        "background/constants.js",
-        "background/version.js",
-        "background/commands.js",
-        "background/options.js",
-        "background/messaging.js",
-        "background/downloads.js",
-        "background/background.js",
-        "background/menus.js"
+        "background.js"
       ]
     },
+    "sidebar_action": {
+      "default_title": "Tab Image Saver",
+      "default_panel": "sidebar.html",
+      "default_icon": "img/icons/tab-image-saver-v2@48.png"
+    },
     "commands": {
-      "_execute_browser_action": {
+      "default": {
         "suggested_key": {},
-        "description": "__MSG_commands_execute_browser_action_description__"
+        "description": "__MSG_commands_default_action_label__"
+      },
+      "active": {
+        "suggested_key": {},
+        "description": "__MSG_commands_active_action_label__"
+      },
+      "left": {
+        "suggested_key": {},
+        "description": "__MSG_commands_left_action_label__"
+      },
+      "right": {
+        "suggested_key": {},
+        "description": "__MSG_commands_right_action_label__"
+      },
+      "all": {
+        "suggested_key": {},
+        "description": "__MSG_commands_all_action_label__"
       }
     }
   },
   "scripts": {
     "build": "npm-run-all build:*",
     "build:clean": "rm -rf build",
-    "build:copy": "mkdir build && cp -r addon/* build",
+    "build:copy": "mkdir build && cp -r src/* build",
     "build:striplogging": "grunt",
+    "build:webpack": "node scripts/build.js",
     "bundle": "npm-run-all bundle:*",
     "#bundle:copy": "cp -r addon/icons bundle && cp addon/manifest.json bundle",
-    "bundle:manifest": "node ./bin/generate-manifest",
+    "bundle:manifest": "node scripts/generate-manifest",
     "#bundle:webpack": "webpack",
-    "download": "node scripts/get_ff.js",
+    "dev": "node scripts/dev.js",
     "lint": "npm-run-all lint:*",
-    "lint:eslint": "eslint --ext=.js,.json addon",
-    "lint:webext": "web-ext -s addon lint",
-    "lint-fix": "eslint --ext=.js,.json addon --fix",
-    "release": "npm-run-all bundle:* build:* && web-ext -s build -a release build --overwrite-dest",
+    "lint:eslint": "eslint --ext=.js,.json src",
+    "lint:webext": "web-ext -s src lint",
+    "lint-fix": "eslint --ext=.js,.json src --fix",
+    "release": "npm-run-all bundle:* build:* && web-ext -s extension -a release build --overwrite-dest",
     "test": "npm-run-all test:*",
     "#test:bundle": "npm run-all bundle:*",
     "test:lint": "npm run lint",
     "#test:lint": "npm run bundle:webpack && npm run lint",
     "#test:func": "export FIREFOX_BINARY=${FIREFOX_BINARY:-beta} && npm run bundle && XPI_NAME=dist/tab-image-saver-1.0.0.zip mocha test/functional/",
     "test:karma": "karma start",
-    "version": "npm run bundle:manifest && git add addon/manifest.json",
+    "version": "npm run bundle:manifest && git add src/manifest.json",
     "virtualenv-postinstall": "virtualenv-postinstall",
-    "watch:lint": "esw -w --ext=.js,.json addon",
+    "watch:lint": "esw -w --ext=.js,.json src",
     "watch:karma": "karma start --auto-watch --no-single-run",
-    "web-ext": "web-ext -s ./addon run"
+    "web-ext": "web-ext -s ./dev run",
+    "firefox-launch": "node scripts/dev.js --browser=firefox"
   },
-  "dependencies": {},
+  "dependencies": {
+    "react-sortablejs": "^2.0.11"
+  },
   "devDependencies": {
+    "@babel/core": "^7.10.2",
+    "@babel/preset-env": "^7.10.2",
+    "@babel/preset-react": "^7.10.1",
+    "@webcomponents/webcomponentsjs": "^2.2.6",
+    "babel-core": "7.0.0-bridge.0",
+    "babel-eslint": "^10.0.1",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-named-asset-import": "^0.3.0",
+    "babel-preset-react-app": "^7.0.0",
+    "case-sensitive-paths-webpack-plugin": "2.1.2",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "chalk": "2.4.1",
+    "colors": "^1.3.3",
+    "copy-webpack-plugin": "^4.6.0",
+    "css-loader": "^1.0.0",
+    "dotenv": "6.0.0",
+    "dotenv-expand": "4.2.0",
     "eslint": "^4.19.1",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-config-react-app": "^3.0.6",
     "eslint-loader": "^2.1.2",
+    "eslint-plugin-flowtype": "2.50.1",
+    "eslint-plugin-import": "2.14.0",
     "eslint-plugin-json": "^1.4.0",
+    "eslint-plugin-jsx-a11y": "6.1.2",
     "eslint-plugin-mocha": "^4.12.1",
+    "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-promise": "^3.8.0",
+    "eslint-plugin-react": "^7.20.0",
     "eslint-watch": "^4.0.2",
-    "fx-runner": "^1.0.10",
-    "geckodriver": "^1.16.2",
-    "grunt": "^1.0.4",
+    "execa": "^1.0.0",
+    "file-loader": "2.0.0",
+    "friendly-errors-webpack-plugin": "^1.7.0",
+    "fs-extra": "7.0.0",
+    "fx-runner": "^1.0.12",
+    "geckodriver": "^1.19.1",
+    "grunt": "^1.1.0",
     "grunt-remove-logging": "^0.2.0",
+    "html-loader": "^0.5.5",
+    "html-webpack-include-assets-plugin": "^1.0.7",
+    "html-webpack-plugin": "4.0.0-alpha.2",
     "istanbul-instrumenter-loader": "^3.0.1",
-    "karma": "^1.7.1",
+    "karma": "^4.4.1",
     "karma-coverage": "^1.1.2",
-    "karma-coverage-istanbul-reporter": "^2.0.5",
-    "karma-coveralls": "^1.2.1",
-    "karma-firefox-launcher": "^1.1.0",
+    "karma-coverage-istanbul-reporter": "^2.1.1",
+    "karma-coveralls": "^2.1.0",
+    "karma-firefox-launcher": "^1.3.0",
     "karma-mocha": "^1.3.0",
     "karma-mocha-reporter": "^2.2.5",
     "karma-webpack": "^3.0.5",
-    "mocha": "^3.5.3",
+    "mini-css-extract-plugin": "0.4.3",
+    "mocha": "^7.2.0",
     "mz": "^2.7.0",
     "npm-run-all": "^4.1.5",
-    "npm-version": "^1.1.0",
+    "optimize-css-assets-webpack-plugin": "5.0.1",
+    "ora": "^3.0.0",
+    "pnp-webpack-plugin": "1.1.0",
+    "postcss-flexbugs-fixes": "^4.2.1",
+    "postcss-loader": "3.0.0",
+    "postcss-preset-env": "^6.7.0",
+    "postcss-safe-parser": "4.0.1",
+    "prettier": "^2.0.5",
+    "react": "^16.7.0",
+    "react-app-polyfill": "^0.2.0",
+    "react-dev-utils": "^7.0.1",
+    "react-dom": "^16.7.0",
+    "resolve": "1.8.1",
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.3.5",
-    "sinon-chai": "^3.3.0",
+    "sinon-chai": "^3.5.0",
     "sinon-chrome": "^2.3.2",
-    "virtualenv": "^0.3.1",
-    "web-ext": "^2.9.3",
+    "style-loader": "^0.23.1",
+    "url-loader": "1.1.1",
+    "web-ext": "^4.2.0",
+    "webextension-polyfill": "^0.3.1",
     "webextensions-api-fake": "^0.5.1",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.3.0"
-  }
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "3.1.14",
+    "webpack-manifest-plugin": "2.0.4",
+    "yargs": "^12.0.5"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

@@ -1,0 +1,475 @@
+{
+  "extension_name": {
+    "description": "Name of the extension.",
+    "message": "Tab Image Saver"
+  },
+  "extension_description": {
+    "description": "Description of the extension.",
+    "message": "Save images from open tabs. Default action saves the largest image from the current tab."
+  },
+  "commands_default_action_label": {
+    "description": "Description of the default Browser Action command",
+    "message": "Download default"
+  },
+  "commands_placeholder_action_label": {
+    "description": "Description of the default Browser Action command",
+    "message": "Download $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example": "right tabs"
+      }
+    }
+  },
+  "commands_active_action_label": {
+    "description": "Description of executing current tab",
+    "message": "Download current tab"
+  },
+  "commands_left_action_label": {
+    "description": "Description of executing left tabs",
+    "message": "Download left tabs"
+  },
+  "commands_right_action_label": {
+    "description": "Description of executing right tabs",
+    "message": "Download right tabs"
+  },
+  "commands_all_action_label": {
+    "description": "Description of executing all tabs",
+    "message": "Download all tabs"
+  },
+  "button_default_action_label": {
+    "description": "Description of executing default action",
+    "message": "Download"
+  },
+  "button_active_action_label": {
+    "description": "Description of executing current tab",
+    "message": "Current tab"
+  },
+  "button_left_action_label": {
+    "description": "Description of executing left tabs",
+    "message": "Left tabs"
+  },
+  "button_right_action_label": {
+    "description": "Description of executing right tabs",
+    "message": "Right tabs"
+  },
+  "button_all_action_label": {
+    "description": "Description of executing all tabs",
+    "message": "All tabs"
+  },
+  "button_cancel_action_label": {
+    "description": "Description of cancelling execution",
+    "message": "Cancel"
+  },
+  "button_test_action_label": {
+    "description": "Description of executing test on current tab",
+    "message": "Test current tab"
+  },
+  "button_errors_action_label": {
+    "description": "Description of showing download errors",
+    "message": "Show errors"
+  },
+  "browser_action_tooltip": {
+    "description": "Tooltip with extension name and currently selected ACTION",
+    "message": "Tab Image Saver: $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example": "Right of current tab"
+      }
+    }
+  },
+  "browser_action_menu_options": {
+    "description": "Menu label to open extension options",
+    "message": "Preferences"
+  },
+  "browser_action_menu_downloads": {
+    "description": "Menu label to open downloads folder",
+    "message": "Downloads"
+  },
+  "browser_action_menu_errors": {
+    "description": "Menu label to open errors popup",
+    "message": "Show Errors"
+  },
+  "browser_action_menu_sidebar": {
+    "description": "Menu label to toggle sidebar",
+    "message": "Toggle Sidebar"
+  },
+  "no_history_title": {
+    "description": "Title when there is no download history",
+    "message": "No History"
+  },
+  "no_errors_title": {
+    "description": "Title when there are no download errors",
+    "message": "No Errors"
+  },
+  "paths_failed_title": {
+    "description": "Title when there are errors with pathRules",
+    "message": "Failed to generate paths"
+  },
+  "downloads_failed_title": {
+    "description": "Title when there are errors with downloads",
+    "message": "Failed to download"
+  },
+  "test_downloads_title": {
+    "description": "Title for test action downloads",
+    "message": "Test downloads"
+  },
+  "options_title": {
+    "description": "Page title for extension options with extension name",
+    "message": "Tab Image Saver Preferences"
+  },
+  "options_action_title": {
+    "description": "Title for the action option, which tabs to run the extension in",
+    "message": "Default action"
+  },
+  "options_action_label_active": {
+    "description": "Option label for the action to run on the current tab",
+    "message": "Current tab"
+  },
+  "options_action_label_left": {
+    "description": "Option label for the action to run on tabs to the left of the current tab",
+    "message": "Left of current tab"
+  },
+  "options_action_label_right": {
+    "description": "Option label for the action to run on tabs to the right of the current tab",
+    "message": "Right of current tab"
+  },
+  "options_action_label_all": {
+    "description": "Option label for the action to run on all tabs",
+    "message": "All tabs"
+  },
+  "options_action_label_test": {
+    "description": "Option label for the test action to run on current tab",
+    "message": "Testing current tab"
+  },
+  "options_active_tab": {
+    "description": "Option label for the action to include the current tab (when action is Left or Right of the current tab)",
+    "message": "Include current tab (with Left/Right actions)"
+  },
+  "options_browser_action_title": {
+    "description": "Option title for the default browser action",
+    "message": "Browser action"
+  },
+  "options_browser_action_label_download": {
+    "description": "Option label for the default action",
+    "message": "Default action"
+  },
+  "options_browser_action_label_popup": {
+    "description": "Option label for the popup action",
+    "message": "Popup"
+  },
+  "options_conflict_action_title": {
+    "description": "Title for the filename conflict options",
+    "message": "Duplicate filename action"
+  },
+  "options_conflict_action_label_uniquify": {
+    "description": "Option label for filename conflict to rename",
+    "message": "Rename"
+  },
+  "options_conflict_action_label_overwrite": {
+    "description": "Option label for filename conflict to overwrite",
+    "message": "Overwrite"
+  },
+  "options_filter_title": {
+    "description": "Title of the image filtering options",
+    "message": "Image filter"
+  },
+  "options_filter_label_max": {
+    "description": "Option label for selecting only the largest image",
+    "message": "Largest image"
+  },
+  "options_filter_label_all": {
+    "description": "Option label for selecting all images",
+    "message": "All images"
+  },
+  "options_filter_label_direct": {
+    "description": "Option label for selecting tabs that are only images",
+    "message": "Image tabs only"
+  },
+  "options_filter_label_direct_note": {
+    "description": "Additional note for selecting tabs that are only images",
+    "message": "(ignore tabs with webpages)"
+  },
+  "options_dimensions_title": {
+    "description": "Title of the minimum image dimensions option",
+    "message": "Minimum dimensions (pixels)"
+  },
+  "options_dimensions_width_label": {
+    "description": "Option label for minimum image width",
+    "message": "Width:"
+  },
+  "options_dimensions_height_label": {
+    "description": "Option label for minimum image height",
+    "message": "Height:"
+  },
+  "options_download_path_title": {
+    "description": "Title for download folder option",
+    "message": "Download folder"
+  },
+  "options_download_path_note": {
+    "description": "Additional note for download folder option",
+    "message": "Images are saved in your browsers download folder, you may name a subfolder to save into."
+  },
+  "options_download_path_label": {
+    "description": "Option label for downloads folder",
+    "message": "Subfolder:"
+  },
+  "options_download_path_placeholder": {
+    "description": "Option input placeholder for downloads folder",
+    "message": "folder-name"
+  },
+  "options_drag_tooltip": {
+    "description": "Tooltip for widget to reorder items",
+    "message": "Drag to reorder"
+  },
+  "options_path_rules_title": {
+    "description": "Title for path rules option",
+    "message": "Path rules"
+  },
+  "options_path_rules_note": {
+    "description": "Additional note for path rules option",
+    "message": "Paths will be appended to your Download Subfolder."
+  },
+  "options_path_rules_label": {
+    "description": "Label for path rules option",
+    "message": "Rules:"
+  },
+  "options_rules_data_toggle": {
+    "description": "Option to toggle between rules interface to textarea allowing copy and paste",
+    "message": "Display rules as text"
+  },
+  "options_rules_empty_error": {
+    "description": "Error message when rules are empty",
+    "message": "Rules cannot be empty"
+  },
+  "options_path_rules_append_default_label": {
+    "description": "Label to append default path rules",
+    "message": "Append defaults"
+  },
+  "options_path_rule_add_placeholder": {
+    "description": "Option input placeholder for path rule add",
+    "message": "Add rule"
+  },
+  "options_path_rule_delete_tooltip": {
+    "description": "Tooltip for path rule delete button",
+    "message": "Delete rule"
+  },
+  "options_path_rule_test_label": {
+    "description": "Label for path rule test",
+    "message": "Enter an image URL to test path rules"
+  },
+  "options_path_rule_test_note": {
+    "description": "Note for path rule test",
+    "message": "Note: this cannot test TAB or ALT rules"
+  },
+  "options_rule_test_button_label": {
+    "description": "Label for path rule test button",
+    "message": "Test"
+  },
+  "options_rule_test_url_error": {
+    "description": "Error message when test URL is empty or invalid",
+    "message": "Enter an image URL"
+  },
+  "options_rule_test_null_result": {
+    "description": "Error message rule test gives no filename",
+    "message": "No filename"
+  },
+
+  "options_download_complete_title": {
+    "description": "Title for after downloading options",
+    "message": "After downloading"
+  },
+  "options_close_tab": {
+    "description": "Option label to close tabs after downloading",
+    "message": "Close tabs"
+  },
+  "options_notify_ended": {
+    "description": "Option label to show notification after downloading",
+    "message": "Show notification"
+  },
+  "options_remove_ended": {
+    "description": "Option label to remove downloads from history",
+    "message": "Clear download history"
+  },
+  "options_advanced_title": {
+    "description": "Title for additional options",
+    "message": "Advanced options"
+  },
+  "options_download_num": {
+    "description": "Option label for maximum number of concurrent downloads",
+    "message": "Maximum concurrent downloads"
+  },
+  "options_download_async": {
+    "description": "Option label to download in asynchronous mode",
+    "message": "Asynchronous downloads"
+  },
+  "options_download_async_note": {
+    "description": "Additional note for download in asynchronous mode",
+    "message": "(downloads using #index path rules may be numbered out of order)"
+  },
+  "options_download_private": {
+    "description": "Option label to download in Private Browsing mode",
+    "message": "Download in Private Browsing mode"
+  },
+  "options_download_private_note": {
+    "description": "Additional note for download in Private Browsing mode option",
+    "message": "(will break downloads that require authentication or cookies)"
+  },
+  "options_ignore_discarded_tab": {
+    "description": "Option label to ignore discarded tabs",
+    "message": "Skip discarded tabs"
+  },
+  "options_shortcut_title": {
+    "description": "Title for keyboard shortcut option",
+    "message": "Keyboard shortcuts"
+  },
+  "options_shortcut_label": {
+    "description": "Option label for keyboard shortcut",
+    "message": "Run shortcut:"
+  },
+  "options_shortcut_placeholder": {
+    "description": "Option input placeholder for keyboard shortcut",
+    "message": "Type a shortcut"
+  },
+  "options_shortcut_example": {
+    "description": "Examples for keyboard shortcut",
+    "message": "Example: \"Alt+X\", \"Ctrl+Shift+U\"."
+  },
+  "options_learn_more": {
+    "description": "Link text for additional information",
+    "message": "Learn more"
+  },
+  "options_rulesets_add_label": {
+    "description": "Option label for ruleset creation button",
+    "message": "Add Ruleset"
+  },
+  "options_rulesets_delete_label": {
+    "description": "Option label for ruleset delete button",
+    "message": "Delete Ruleset"
+  },
+  "options_rulesets_global_title": {
+    "description": "Title for global ruleset",
+    "message": "Global options"
+  },
+  "options_rulesets_global_note": {
+    "description": "Note for global ruleset",
+    "message": "Rules can be customised for specific Domains by creating Rulesets. The Global Ruleset applies when no other Rulesets are matched."
+  },
+  "options_rulesets_ruleset_name_default": {
+    "description": "Default name for new rulesets",
+    "message": "New Ruleset $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "options_rulesets_ruleset_title": {
+    "description": "Title for ruleset options",
+    "message": "Ruleset options"
+  },
+  "options_rulesets_ruleset_name_label": {
+    "description": "Label for ruleset name",
+    "message": "Ruleset name"
+  },
+  "options_rulesets_inherit_label": {
+    "description": "Option label for using Global options instead of Ruleset options",
+    "message": "Use Global options"
+  },
+  "options_domain_rules_label": {
+    "description": "Title for domain rule ptions",
+    "message": "Domain rules"
+  },
+  "options_domain_rule_add_placeholder": {
+    "description": "Option input placeholder for domain rule add",
+    "message": "Add rule"
+  },
+  "options_domain_rule_delete_tooltip": {
+    "description": "Tooltip for domain rule delete button",
+    "message": "Delete rule"
+  },
+  "options_domain_rule_test_label": {
+    "description": "Label for domain rule test",
+    "message": "Enter an image URL to test domain rules"
+  },
+  "options_domain_rule_test_result_match": {
+    "description": "Result for url matches domain rule",
+    "message": "Match"
+  },
+  "options_domain_rule_test_result_mismatch": {
+    "description": "Result for url does not match domain rule",
+    "message": "No match"
+  },
+  "notification_title_finished": {
+    "description": "Notification title when finished",
+    "message": "Tab Image Saver finished"
+  },
+  "notification_title_cancelled": {
+    "description": "Notification title when cancelled by user",
+    "message": "Tab Image Saver cancelled"
+  },
+  "notification_content_permission_error_active": {
+    "description": "Notification message when extension could run in current tab",
+    "message": "Current tab does not have permission"
+  },
+  "notification_content_permission_error_tabs": {
+    "description": "Notification message when extension could not run in some tabs",
+    "message": "$NUM$ tabs do not have permission",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "notification_content_cancelled": {
+    "description": "Notification message when cancelled by user",
+    "message": "User Cancelled"
+  },
+  "notification_content_no_tabs": {
+    "description": "Notification message when the extension did not find any tabs to run in, listing the current extension action",
+    "message": "No tabs processed: $ACTION$",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example": "Right of current tab"
+      }
+    }
+  },
+  "notification_content_no_images": {
+    "description": "Notification message when no images were found on tabs",
+    "message": "No images"
+  },
+  "notification_content_images_saved": {
+    "description": "Notification message when some images were saved",
+    "message": "Saved: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "notification_content_images_failed": {
+    "description": "Notification message when some images were not saved",
+    "message": "Failed downloads: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "notification_content_paths_failed": {
+    "description": "Notification message when some images did not have filenames",
+    "message": "Path rules failed: $NUM$",
+    "placeholders": {
+      "num": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  }
+}

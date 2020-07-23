@@ -1,0 +1,26 @@
+
+#popup-content {
+	margin: 0.5rem;
+}
+
+#popup-content #actions > * {
+    margin-bottom: 0.5rem;
+}
+
+#header {
+	font-size:1.2em;
+	padding-left: 30px;
+	background: url("/img/icons/tab-image-saver-v2@24.png") no-repeat;
+}
+
+#actions .row {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+.button {
+	min-height: 2.2rem;
+	margin: 1px;
+}
+
