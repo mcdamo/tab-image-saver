@@ -55,7 +55,7 @@
   },
   "options_active_tab": {
     "description": "Option label for the action to include the active tab (when action is Left or Right of the active tab)",
-    "message": "Include active tab (with Left\/Right actions)"
+    "message": "Include active tab (with Left/Right actions)"
   },
   "options_conflict_action_title": {
     "description": "Title for the filename conflict options",
