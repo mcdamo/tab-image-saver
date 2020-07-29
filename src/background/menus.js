@@ -55,7 +55,7 @@ const Menus = {
   },
 
   // init with App object for action callbacks
-  init: (App) => {
+  init: async (App) => {
     console.log("Menus.init");
     for (const [id, menu] of Object.entries(Menus.menus)) {
       if (menu.type && menu.type === "separator") {
@@ -74,9 +74,10 @@ const Menus = {
         });
       }
     }
-    browser.menus.onClicked.addListener((info) => {
+    const callback = (info) => {
       Menus.menus[info.menuItemId].action(App);
-    });
+    };
+    browser.menus.onClicked.addListener(callback);
   },
 };
 

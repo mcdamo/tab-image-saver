@@ -35,9 +35,11 @@ describe("background.js", function () {
       expect(browser.commands.onCommand.addListener).to.be.calledOnce;
     });
     */
+    /*
     it("should register a listener for runtime.onStartup", function () {
       expect(browser.runtime.onStartup.addListener).to.be.calledOnce;
     });
+    */
     /*
     // TODO
     it("should register a listener for runtime.onInstalled ", () => {
@@ -725,11 +727,11 @@ describe("background.js", function () {
       stubMf.reset();
       spyVer.resetHistory();
     });
-    it("should call update and init", async function () {
+    it("should call update", async function () {
       await App.handleInstalled();
       expect(App.loadManifest).to.be.calledOnce;
       expect(Version.update).to.be.calledOnceWith("1.x", undefined);
-      expect(App.init).to.be.calledOnce;
+      //expect(App.init).to.be.calledOnce;
     });
   });
 

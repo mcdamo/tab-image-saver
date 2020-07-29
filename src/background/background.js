@@ -1064,9 +1064,11 @@ const App = {
 
   // load options to trigger onLoad and set commands
   handleInstalled: async (props = {}) => {
-    console.log("handleInstalled");
     const { previousVersion, reason, temporary } = props;
-    const mf = await App.loadManifest();
+    console.log(
+      `handleInstalled prev:${previousVersion} reason:${reason} temporary:${temporary}`
+    );
+    const mf = await App.loadManifest(true);
     await Version.update(mf.version, previousVersion);
     await App.init();
     if (
@@ -1085,7 +1087,7 @@ const App = {
     console.debug("Background.init");
     await App.loadManifest(); // will skip if already loaded
     await App.loadOptions();
-    Menus.init(App);
+    await Menus.init(App);
   },
 
   // load manifest.json and apply some fields to constants
@@ -1277,9 +1279,13 @@ const App = {
 };
 
 browser.browserAction.onClicked.addListener(App.handleBrowserAction);
+
 browser.runtime.onInstalled.addListener(App.handleInstalled);
+
 browser.runtime.onUpdateAvailable.addListener(App.handleUpdateAvailable);
-browser.runtime.onStartup.addListener(App.init);
+
+//browser.runtime.onStartup.addListener(App.init);
+App.init();
 
 // attach to window object to make available from getBackgroundPage
 window.getWindowId = getWindowId;
