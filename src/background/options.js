@@ -68,6 +68,10 @@ const Options = {
       default: Constants.FILTER.MAX,
       values: Object.values(Constants.FILTER),
     },
+    ignoreDiscardedTab: {
+      type: T.BOOL,
+      default: false,
+    },
     minHeight: {
       type: T.VALUE,
       default: "100",

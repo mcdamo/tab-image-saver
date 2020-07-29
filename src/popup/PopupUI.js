@@ -1,7 +1,15 @@
+import React, { Component } from "react";
 import Constants from "../background/constants";
+
 import "../common.css";
 import "./popup.css";
-import React, { Component } from "react";
+
+const MESSAGE_TYPE = { ...Constants.MESSAGE_TYPE };
+
+async function getWindowId() {
+  const mywindow = await browser.windows.getCurrent();
+  return mywindow.id;
+}
 
 class PopupUI extends Component {
   constructor(props) {
@@ -10,6 +18,8 @@ class PopupUI extends Component {
       loaded: false,
       backgroundApp: null,
       windowId: null,
+      action: "default",
+      error: null, // TODO: exception from sendMessage
     };
 
     this.actionDefault = this.actionDefault.bind(this);
@@ -26,19 +36,38 @@ class PopupUI extends Component {
   async componentDidMount() {
     try {
       const page = await browser.runtime.getBackgroundPage();
-      const windowId = await page.getWindowId();
+      const action = page ? page.backgroundApp.getAction() : this.state.action;
+      const windowId = await getWindowId();
       this.setState({
         loaded: true,
-        backgroundApp: page.backgroundApp,
+        backgroundApp: page && page.backgroundApp,
         windowId,
+        action,
       });
     } catch (err) {
       console.error(err);
     }
   }
 
+  // privateWindows
+  async sendMessage(props) {
+    const res = await browser.runtime.sendMessage(props);
+    if (res.type === MESSAGE_TYPE.ERROR) {
+      console.log("sendMessage error", props, res); /* RemoveLogging:skip */
+      this.setState({ error: res.body.error });
+    }
+    return res.body;
+  }
+
   async runAction(action) {
-    await this.state.backgroundApp.run(this.state.windowId, action);
+    if (this.state.backgroundApp) {
+      return await this.state.backgroundApp.run(this.state.windowId, action);
+    }
+    // privateWindow
+    return await this.sendMessage({
+      type: MESSAGE_TYPE.RUN_ACTION,
+      body: { windowId: this.state.windowId, action },
+    });
   }
 
   async actionDefault() {
@@ -66,21 +95,26 @@ class PopupUI extends Component {
   }
 
   showOptions() {
-    this.state.backgroundApp.handleCommandOptions();
+    this.state.backgroundApp
+      ? this.state.backgroundApp.handleCommandOptions()
+      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_OPTIONS });
   }
 
   showDownloads() {
-    this.state.backgroundApp.handleCommandDownloads();
+    this.state.backgroundApp
+      ? this.state.backgroundApp.handleCommandDownloads()
+      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_DOWNLOADS });
   }
 
   showSidebar() {
-    this.state.backgroundApp.handleCommandSidebar();
+    this.state.backgroundApp
+      ? this.state.backgroundApp.handleCommandSidebar()
+      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_SIDEBAR });
   }
 
   render() {
-    const { backgroundApp } = this.state;
     // dynamic action label
-    const action = backgroundApp ? backgroundApp.getAction() : "default";
+    const { action } = this.state;
     return (
       <div id="popup-content" className="center">
         <h1 id="header">__MSG_extension_name__</h1>

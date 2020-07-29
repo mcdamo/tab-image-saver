@@ -35,13 +35,41 @@ const App = {
     throw new Error(`runtime:${windowId} not found`);
   },
 
+  // used by sidebar
   getRuntimeLast: (windowId) => {
     const props = App.runtimeLast.get(windowId);
     if (props) {
-      return props;
+      return App.flattenRuntime(props);
     }
     //throw new Error(`runtimeLast:${windowId} not found`);
     return null;
+  },
+
+  // convert Maps to arrays of objects
+  // - cannot pass Maps via messaging
+  // - object keys cannot be URLs
+  flattenRuntime: (props) => {
+    const imagesFailed = Array.from(props.imagesFailed.entries()).reduce(
+      (acc, [key, value]) => {
+        acc.push({ url: key, ...value });
+        return acc;
+      },
+      []
+    );
+
+    const pathsFailed = Array.from(props.pathsFailed.entries()).reduce(
+      (acc, [key, value]) => {
+        acc.push({ url: key, ...value });
+        return acc;
+      },
+      []
+    );
+
+    return {
+      ...props,
+      imagesFailed,
+      pathsFailed,
+    };
   },
 
   // window is idle, all downloads ended
@@ -373,7 +401,7 @@ const App = {
     App.notifyFinished(windowId);
     const finishedCallback = runtime.finishedCallback;
     if (finishedCallback) {
-      finishedCallback(runtime);
+      finishedCallback(App.flattenRuntime(runtime));
     }
     // cleanup orphans in Downloads
     await Downloads.removeWindowDownloads(windowId);

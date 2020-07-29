@@ -794,6 +794,7 @@ class OptionsUI extends Component {
       testPathRules,
       testRulesetPathRules,
       testDomainRules,
+      optionsApp,
     } = this.state;
     const ruleset = rulesetKey !== -1 ? rulesets[`ruleset_${rulesetKey}`] : {};
     console.log("render ruleset", ruleset);
@@ -1105,6 +1106,8 @@ class OptionsUI extends Component {
                           </span>
                           {this.renderCheckbox({
                             name: "downloadPrivate",
+                            disabled:
+                              !optionsApp || !optionsApp.ALLOW_DOWNLOAD_PRIVATE,
                             label: "__MSG_options_download_private__",
                             checked: options.downloadPrivate,
                           })}

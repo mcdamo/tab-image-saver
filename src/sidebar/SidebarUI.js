@@ -1,7 +1,15 @@
+import React, { Component, Fragment } from "react";
 import Constants from "../background/constants";
+
 import "../common.css";
 import "./sidebar.css";
-import React, { Component, Fragment } from "react";
+
+const MESSAGE_TYPE = { ...Constants.MESSAGE_TYPE };
+
+async function getWindowId() {
+  const mywindow = await browser.windows.getCurrent();
+  return mywindow.id;
+}
 
 class SidebarUI extends Component {
   constructor(props) {
@@ -31,34 +39,57 @@ class SidebarUI extends Component {
     const page = await browser.runtime.getBackgroundPage();
     this.setState({
       loaded: true,
-      backgroundApp: page.backgroundApp,
+      backgroundApp: page && page.backgroundApp,
     });
   }
 
-  async getWindowId() {
-    const window = await browser.windows.getCurrent();
-    return window.id;
+  // privateWindows
+  async sendMessage(props) {
+    const res = await browser.runtime.sendMessage(props);
+    if (res.type === MESSAGE_TYPE.ERROR) {
+      console.log("sendMessage error", props, res); /* RemoveLogging:skip */
+      this.setState({ error: res.body.error });
+    }
+    return res.body;
   }
 
   async runAction(action) {
-    const windowId = await this.getWindowId();
-    const finishedCallback = (runtime) => {
-      console.log("actionTest finishedCallback");
-      this.showErrors(runtime);
-    };
-    // reset state before calling action
-    this.setState(
+    const windowId = await getWindowId();
+    if (this.state.backgroundApp) {
+      // reset state before calling action
+      const finishedCallback = (runtime) => {
+        console.log("actionTest finishedCallback");
+        this.showErrors(runtime);
+      };
+      return this.setState(
+        {
+          windowId,
+          showErrors: false,
+          runtime: null,
+        },
+        async () =>
+          await this.state.backgroundApp.run(
+            this.state.windowId,
+            action,
+            finishedCallback
+          )
+      );
+    }
+    // privateWindow
+    return this.setState(
       {
         windowId,
         showErrors: false,
         runtime: null,
       },
-      async () =>
-        await this.state.backgroundApp.run(
-          this.state.windowId,
-          action,
-          finishedCallback
-        )
+      async () => {
+        await this.sendMessage({
+          type: MESSAGE_TYPE.RUN_ACTION,
+          body: { windowId, action },
+        });
+        // FIXME finishedCallback();
+        await this.showErrors();
+      }
     );
   }
 
@@ -91,44 +122,35 @@ class SidebarUI extends Component {
   }
 
   async showOptions() {
-    this.state.backgroundApp.handleCommandOptions();
+    this.state.backgroundApp
+      ? this.state.backgroundApp.handleCommandOptions()
+      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_OPTIONS });
   }
 
   async showDownloads() {
-    this.state.backgroundApp.handleCommandDownloads();
+    this.state.backgroundApp
+      ? this.state.backgroundApp.handleCommandDownloads()
+      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_DOWNLOADS });
+  }
+
+  async getRuntimeLast() {
+    const windowId = await getWindowId();
+    if (this.state.backgroundApp) {
+      return this.state.backgroundApp.getRuntimeLast(await getWindowId());
+    }
+    // privateWindow
+    return await this.sendMessage({
+      type: MESSAGE_TYPE.RUNTIME_LAST,
+      body: { windowId },
+    });
   }
 
   async showErrors(loaded) {
-    const runtime = loaded
-      ? loaded
-      : this.state.backgroundApp.getRuntimeLast(await this.getWindowId());
-    if (runtime === null) {
-      return this.setState({
-        showErrors: true,
-        runtime: null,
-      });
-    }
-    // convert Maps to arrays of objects
-    // - cannot pass Maps via messaging
-    // - object keys cannot be URLs
+    const runtime = loaded ? loaded : await this.getRuntimeLast();
     console.log("runtime", runtime);
-    const imagesFailed = Array.from(runtime.imagesFailed.entries()).reduce(
-      (acc, [key, value]) => {
-        acc.push({ url: key, ...value });
-        return acc;
-      },
-      []
-    );
-    const pathsFailed = Array.from(runtime.pathsFailed.entries()).reduce(
-      (acc, [key, value]) => {
-        acc.push({ url: key, ...value });
-        return acc;
-      },
-      []
-    );
     return this.setState({
       showErrors: true,
-      runtime: { ...runtime, imagesFailed, pathsFailed },
+      runtime,
     });
   }
 

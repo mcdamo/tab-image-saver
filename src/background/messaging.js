@@ -14,9 +14,31 @@ const Messaging = {
     return options;
   },
 
-  [MESSAGE_TYPE.CANCEL]: (request, sender) => {
-    const windowId = sender.tab.windowId;
-    return { cancel: App.isCancelled(windowId) };
+  [MESSAGE_TYPE.CANCEL]: (request, sender) => ({
+    cancel: App.isCancelled(sender.tab.windowId),
+  }),
+
+  //[MESSAGE_TYPE.OPTIONS_ACTION]: (request, sender) => App.getAction(),
+
+  [MESSAGE_TYPE.RUN_ACTION]: async (request, sender) => {
+    // Popup does not set sender.tab
+    //const windowId = sender.tab.windowId;
+    await App.run(request.body.windowId, request.body.action);
+  },
+
+  [MESSAGE_TYPE.RUNTIME_LAST]: (request, sender) =>
+    App.getRuntimeLast(request.body.windowId),
+
+  [MESSAGE_TYPE.COMMAND_OPTIONS]: (request, sender) => {
+    App.handleCommandOptions();
+  },
+
+  [MESSAGE_TYPE.COMMAND_DOWNLOADS]: (request, sender) => {
+    App.handleCommandDownloads();
+  },
+
+  [MESSAGE_TYPE.COMMAND_SIDEBAR]: (request, sender) => {
+    App.handleCommandSidebar();
   },
 
   handleMessage: async (request, sender, sendResponse) => {
