@@ -1175,7 +1175,11 @@ const App = {
     const mytab = await App.getActiveTab(windowId);
     const tabId = mytab.id;
     App.setupBadge(); // run before clearing runtime
-    browser.downloads.onChanged.addListener(Downloads.handleDownloadChanged);
+    if (
+      !browser.downloads.onChanged.hasListener(Downloads.handleDownloadChanged)
+    ) {
+      browser.downloads.onChanged.addListener(Downloads.handleDownloadChanged);
+    }
     const action = !browserAction ? App.options.action : browserAction;
     console.debug("running", { windowId, tabId, action });
     App.createRuntime({ windowId, tabId, action, finishedCallback });
@@ -1278,11 +1282,17 @@ const App = {
   },
 };
 
-browser.browserAction.onClicked.addListener(App.handleBrowserAction);
+if (!browser.browserAction.onClicked.hasListener(App.handleBrowserAction)) {
+  browser.browserAction.onClicked.addListener(App.handleBrowserAction);
+}
 
-browser.runtime.onInstalled.addListener(App.handleInstalled);
+if (!browser.runtime.onInstalled.hasListener(App.handleInstalled)) {
+  browser.runtime.onInstalled.addListener(App.handleInstalled);
+}
 
-browser.runtime.onUpdateAvailable.addListener(App.handleUpdateAvailable);
+if (!browser.runtime.onUpdateAvailable.hasListener(App.handleUpdateAvailable)) {
+  browser.runtime.onUpdateAvailable.addListener(App.handleUpdateAvailable);
+}
 
 //browser.runtime.onStartup.addListener(App.init);
 App.init();

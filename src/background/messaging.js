@@ -61,8 +61,10 @@ const Messaging = {
     return JSON.parse(JSON.stringify(msg));
   },
 
-  init: async () => {
-    await browser.runtime.onMessage.addListener(Messaging.handleMessage);
+  init: () => {
+    if (!browser.runtime.onMessage.hasListener(Messaging.handleMessage)) {
+      browser.runtime.onMessage.addListener(Messaging.handleMessage);
+    }
   },
 };
 

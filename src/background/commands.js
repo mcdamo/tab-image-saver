@@ -53,10 +53,15 @@ const Commands = {
     throw new Error(`Undefined command: ${command}`);
   },
 
+  callback: (command) => {
+    Commands.handleCommand(command, Commands.App);
+  },
+
   init: (App) => {
-    browser.commands.onCommand.addListener((command) =>
-      Commands.handleCommand(command, App)
-    );
+    Commands.App = App;
+    if (!browser.commands.onCommand.hasListener(Commands.callback)) {
+      browser.commands.onCommand.addListener(Commands.callback);
+    }
   },
 };
 
