@@ -30,10 +30,6 @@ const copyPatterns = [
     'from': 'node_modules/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js',
     'to': 'lib/js/'
   }, */
-  {
-    from: 'src/fonts/*/*',
-    to: 'fonts/googlefonts/[name].[ext]',
-  },
   /* {
     from:
       'node_modules/material-design-icons/iconfont/*.{eot,ttf,woff,woff2,css}',

@@ -316,6 +316,10 @@
     "description": "Additional note for download in Private Browsing mode option",
     "message": "(will break downloads that require authentication or cookies)"
   },
+  "options_allow_download_private_error": {
+    "description": "Option label to if permission for Private Browsing mode is required",
+    "message": "Addon permission required"
+  },
   "options_ignore_discarded_tab": {
     "description": "Option label to ignore discarded tabs",
     "message": "Skip discarded tabs"

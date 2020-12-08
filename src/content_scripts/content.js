@@ -156,7 +156,10 @@
     sendMessage: async (type, body = null) => {
       try {
         console.log(body);
-        const message = await browser.runtime.sendMessage({ type, body });
+        const message = await browser.runtime.sendMessage({
+          type,
+          body,
+        });
         console.log("Message received:", message);
         if (message.type === type) {
           return message.body;
@@ -172,9 +175,7 @@
     // and find matching ruleset
     loadOptions: async () => {
       const obj = await App.sendMessage(Constants.MESSAGE_TYPES.TAB_OPTIONS, {
-        location: {
-          href: window.location.href,
-        },
+        url: window.location.href,
       });
       if (!obj) {
         return false;

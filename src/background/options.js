@@ -6,10 +6,12 @@ const T = {
   BOOL: "BOOL",
   RADIO: "RADIO",
   VALUE: "VALUE",
+  ARRAY: "ARRAY",
 };
 
 const Options = {
   loaded: false,
+  ALLOW_DOWNLOAD_PRIVATE: false,
   OPTIONS: {}, // options with defaults loaded at runtime
   OPTIONS_RULESETS: {}, // rulesets with defaults + with inherit applied - used by Background
   RULESETS: {}, // rulesets with defaults loaded at runtime - used by Options.
@@ -87,7 +89,7 @@ const Options = {
       default: true,
     },
     pathRules: {
-      type: T.VALUE,
+      type: T.ARRAY,
       onsave: { function: (v) => Options.onSaveRules(v) }, // UI
       default: [
         "<name>.<ext>",
@@ -100,7 +102,7 @@ const Options = {
       default: false,
     },
     rulesetIndex: {
-      type: T.VALUE,
+      type: T.ARRAY,
       default: [],
     },
     shortcut: {
@@ -190,7 +192,7 @@ const Options = {
       values: Object.values(Constants.CONFLICT_ACTION),
     },
     domainRules: {
-      type: T.VALUE,
+      type: T.ARRAY,
       onsave: { function: (v) => Options.onSaveDomainRules(v) }, // UI
       default: [],
     },
@@ -251,7 +253,7 @@ const Options = {
       default: true,
     },
     pathRules: {
-      type: T.VALUE,
+      type: T.ARRAY,
       onsave: { function: (v) => Options.onSaveRules(v) }, // UI
       default: [
         "<name>.<ext>",
@@ -307,16 +309,16 @@ const Options = {
     `ruleset_${Options.OPTIONS.rulesetIndex[index].key}`,
 
   // test rule against url
-  // location object:
-  // {
-  //    href: window.location.href
-  // }
-  // use '*' as simple wildcard
-  // or wrap rule in #...# to treat as regexp
-  domainRuleMatch: (location, rule) => {
+  //
+  // rule:
+  //   use '*' as simple wildcard
+  //   wrap rule in #...# to treat as regexp
+  domainRuleMatch: (url, rule) => {
+    console.debug({ url, rule });
     if (!rule || rule.length === 0) {
       return false;
     }
+    const location = new URL(url);
     const host = location.host;
     const loc = location.href;
     // test for regex in format: #...#
@@ -343,24 +345,22 @@ const Options = {
   },
 
   // get options in content script
-  // location object, such as from window.location
+  // url from location.href
   // inherit options are evaluated
   // other rulesets are not returned
-  getTabOptions: async (location = null) => {
-    console.log("getTabOptions", location);
+  getTabOptions: async (url = null) => {
+    console.log("getTabOptions", url);
     if (!Options.loaded) {
       await Options.loadOptions();
     }
-    if (location) {
+    if (url) {
       // check for matching ruleset
       console.debug("rulesets", Options.OPTIONS_RULESETS);
       const ruleset = Object.values(Options.OPTIONS_RULESETS).find((r) => {
         if (!("domainRules" in r)) {
           return false;
         }
-        if (
-          r.domainRules.find((val) => Options.domainRuleMatch(location, val))
-        ) {
+        if (r.domainRules.find((val) => Options.domainRuleMatch(url, val))) {
           return true;
         }
         return false;

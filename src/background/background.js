@@ -1113,7 +1113,7 @@ const App = {
 
   getBrowserAction: () => Options.OPTIONS.browserAction,
 
-  cancel: async (windowId) => {
+  cancel: async (windowId, finishedCallback = null) => {
     console.info("Cancelling windowId:", windowId);
     if (!App.isFinished(windowId)) {
       App.getRuntime(windowId).cancel = true;
@@ -1123,6 +1123,9 @@ const App = {
         console.debug("cancelWindowDownloads completed");
         await App.setFinished(windowId);
       }
+    }
+    if (finishedCallback !== null) {
+      finishedCallback();
     }
   },
 
@@ -1166,6 +1169,10 @@ const App = {
   //   -1: run blocked
   //    1: normal completion
   run: async (windowId, browserAction = null, finishedCallback = null) => {
+    console.info("run", windowId, browserAction);
+    if (browserAction === Constants.ACTION.CANCEL) {
+      return await App.cancel(windowId, finishedCallback);
+    }
     if (App.isRunning(windowId)) {
       console.debug("run blocked");
       return -1; // -1 for testing
@@ -1300,7 +1307,6 @@ App.init();
 // attach to window object to make available from getBackgroundPage
 window.getWindowId = getWindowId;
 window.backgroundApp = App;
-window.optionsApp = Options;
 
 export default App;
 export { getWindowId };

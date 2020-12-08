@@ -132,7 +132,7 @@ const getPlugins = (isEnvProduction = false, shouldUseSourceMap = false) => {
   });
 
   const moduleScopePlugin = new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]);
-  const copyPlugin = new CopyPlugin(staticFiles.copyPatterns);
+  const copyPlugin = new CopyPlugin({ patterns: staticFiles.copyPatterns});
   const friendlyErrorsWebpackPlugin = new FriendlyErrorsWebpackPlugin();
 
   return {

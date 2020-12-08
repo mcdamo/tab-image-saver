@@ -50,10 +50,14 @@ class PopupUI extends Component {
   }
 
   // privateWindows
-  async sendMessage(props) {
-    const res = await browser.runtime.sendMessage(props);
+  async sendMessage(type, body = null) {
+    const res = await browser.runtime.sendMessage({ type, body });
     if (res.type === MESSAGE_TYPE.ERROR) {
-      console.log("sendMessage error", props, res); /* RemoveLogging:skip */
+      console.log(
+        "sendMessage error",
+        { type, body },
+        res
+      ); /* RemoveLogging:skip */
       this.setState({ error: res.body.error });
     }
     return res.body;
@@ -64,9 +68,9 @@ class PopupUI extends Component {
       return await this.state.backgroundApp.run(this.state.windowId, action);
     }
     // privateWindow
-    return await this.sendMessage({
-      type: MESSAGE_TYPE.RUN_ACTION,
-      body: { windowId: this.state.windowId, action },
+    return await this.sendMessage(MESSAGE_TYPE.RUN_ACTION, {
+      windowId: this.state.windowId,
+      action,
     });
   }
 
@@ -97,19 +101,19 @@ class PopupUI extends Component {
   showOptions() {
     this.state.backgroundApp
       ? this.state.backgroundApp.handleCommandOptions()
-      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_OPTIONS });
+      : this.sendMessage(MESSAGE_TYPE.COMMAND_OPTIONS);
   }
 
   showDownloads() {
     this.state.backgroundApp
       ? this.state.backgroundApp.handleCommandDownloads()
-      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_DOWNLOADS });
+      : this.sendMessage(MESSAGE_TYPE.COMMAND_DOWNLOADS);
   }
 
   showSidebar() {
     this.state.backgroundApp
       ? this.state.backgroundApp.handleCommandSidebar()
-      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_SIDEBAR });
+      : this.sendMessage(MESSAGE_TYPE.COMMAND_SIDEBAR);
   }
 
   render() {

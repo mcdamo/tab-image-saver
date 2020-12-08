@@ -5,39 +5,84 @@ import App from "./background";
 const MESSAGE_TYPE = { ...Constants.MESSAGE_TYPE };
 
 const Messaging = {
-  [MESSAGE_TYPE.TAB_OPTIONS]: async (request, sender) => {
-    const { location } = request.body;
-    const options = await Options.getTabOptions(location);
+  [MESSAGE_TYPE.TAB_OPTIONS]: async ({ url }, sender) => {
+    const options = await Options.getTabOptions(url);
     // 'action' can be overridden by runtime
     const windowId = sender.tab.windowId;
     options.action = App.getRuntime(windowId).action;
     return options;
   },
 
-  [MESSAGE_TYPE.CANCEL]: (request, sender) => ({
+  [MESSAGE_TYPE.CANCEL]: (body, sender) => ({
     cancel: App.isCancelled(sender.tab.windowId),
   }),
 
   //[MESSAGE_TYPE.OPTIONS_ACTION]: (request, sender) => App.getAction(),
 
-  [MESSAGE_TYPE.RUN_ACTION]: async (request, sender) => {
-    // Popup does not set sender.tab
-    //const windowId = sender.tab.windowId;
-    await App.run(request.body.windowId, request.body.action);
+  [MESSAGE_TYPE.OPTIONS_OPTION_SAVE]: async ({ name, value }, sender) =>
+    await Options.saveOption(name, value),
+
+  [MESSAGE_TYPE.OPTIONS_RULESET_OPTION_SAVE]: async (
+    { name, value, rulesetKey },
+    sender
+  ) => await Options.saveRulesetOption(name, value, rulesetKey),
+
+  [MESSAGE_TYPE.OPTIONS_RULESET_CREATE]: async (body, sender) =>
+    await Options.createRuleset(),
+
+  [MESSAGE_TYPE.OPTIONS_RULESET_DELETE]: async ({ rulesetKey }, sender) => {
+    const rulesetIndex = await Options.deleteRuleset(rulesetKey);
+    return {
+      rulesetIndex,
+      options: Options.OPTIONS,
+      rulesets: Options.RULESETS,
+    };
   },
 
-  [MESSAGE_TYPE.RUNTIME_LAST]: (request, sender) =>
-    App.getRuntimeLast(request.body.windowId),
+  [MESSAGE_TYPE.OPTIONS_SCHEMAS]: (body, sender) => ({
+    options: Options.OPTIONS,
+    rulesets: Options.RULESETS,
+    schemas: {
+      options: Options.getOptionSchema(),
+      ruleset: Options.getOptionRulesetSchema(),
+      types: Options.OPTION_TYPES,
+    },
+  }),
 
-  [MESSAGE_TYPE.COMMAND_OPTIONS]: (request, sender) => {
+  [MESSAGE_TYPE.OPTIONS_ONSAVERULES]: ({ rules }, sender) =>
+    Options.onSaveRules(rules),
+
+  [MESSAGE_TYPE.OPTIONS_DOMAIN_ONSAVERULES]: ({ rules }, sender) =>
+    Options.onSaveDomainRules(rules),
+
+  [MESSAGE_TYPE.OPTIONS_DOMAIN_RULEMATCH]: ({ url, rule }, sender) => {
+    const ret = {};
+    try {
+      ret.result = Options.domainRuleMatch(url, rule);
+    } catch (err) {
+      ret.error = err.message;
+    }
+    return ret;
+  },
+
+  [MESSAGE_TYPE.RUN_ACTION]: async ({ windowId, action }, sender) => {
+    // Popup does not set sender.tab
+    //const windowId = sender.tab.windowId;
+    await App.run(windowId, action);
+  },
+
+  [MESSAGE_TYPE.RUNTIME_LAST]: ({ windowId }, sender) =>
+    App.getRuntimeLast(windowId),
+
+  [MESSAGE_TYPE.COMMAND_OPTIONS]: (body, sender) => {
     App.handleCommandOptions();
   },
 
-  [MESSAGE_TYPE.COMMAND_DOWNLOADS]: (request, sender) => {
+  [MESSAGE_TYPE.COMMAND_DOWNLOADS]: (body, sender) => {
     App.handleCommandDownloads();
   },
 
-  [MESSAGE_TYPE.COMMAND_SIDEBAR]: (request, sender) => {
+  [MESSAGE_TYPE.COMMAND_SIDEBAR]: (body, sender) => {
     App.handleCommandSidebar();
   },
 
@@ -46,7 +91,7 @@ const Messaging = {
     try {
       msg = {
         type: request.type,
-        body: await Messaging[request.type](request, sender),
+        body: await Messaging[request.type](request.body, sender),
       };
     } catch (err) {
       if (!(request.type in Messaging)) {

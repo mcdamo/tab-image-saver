@@ -4,6 +4,8 @@ import "./options.css";
 import React, { Component, Fragment } from "react";
 import { ReactSortable } from "react-sortablejs";
 
+const MESSAGE_TYPE = { ...Constants.MESSAGE_TYPE };
+
 class OptionsUI extends Component {
   constructor(props) {
     super(props);
@@ -11,7 +13,7 @@ class OptionsUI extends Component {
       error: null,
       loaded: false,
       backgroundApp: null,
-      optionsApp: null,
+      allowDownloadPrivate: false,
       schemas: {},
       options: {},
       rulesets: {},
@@ -29,6 +31,8 @@ class OptionsUI extends Component {
       testPathRules: {},
       testRulesetPathRules: {},
       testDomainRules: {},
+      pathRulesNewValue: "",
+      domainRulesNewValue: "",
     };
 
     this.getRulesetKeyFromIndex = this.getRulesetKeyFromIndex.bind(this);
@@ -52,22 +56,36 @@ class OptionsUI extends Component {
 
   async componentDidMount() {
     // load options
+    const { options, rulesets, schemas } = await this.sendMessage(
+      MESSAGE_TYPE.OPTIONS_SCHEMAS
+    );
     const page = await browser.runtime.getBackgroundPage();
-    const options = page.optionsApp.OPTIONS;
-    const rulesets = page.optionsApp.RULESETS;
-    const schemas = {
-      options: page.optionsApp.getOptionSchema(),
-      ruleset: page.optionsApp.getOptionRulesetSchema(),
-      types: page.optionsApp.OPTION_TYPES,
-    };
+    const allowDownloadPrivate = await browser.extension.isAllowedIncognitoAccess();
+
     this.setState({
       loaded: true,
+      allowDownloadPrivate,
       options,
       rulesets,
       schemas,
       backgroundApp: page.backgroundApp,
-      optionsApp: page.optionsApp,
     });
+  }
+
+  async sendMessage(type, body = null) {
+    const res = await browser.runtime.sendMessage({
+      type,
+      body,
+    });
+    if (res.type === MESSAGE_TYPE.ERROR) {
+      console.log(
+        "sendMessage error",
+        { type, body },
+        res
+      ); /* RemoveLogging:skip */
+      this.setState({ error: res.body.error });
+    }
+    return res.body;
   }
 
   getRulesetKeyFromIndex(index, rulesetIndex) {
@@ -95,15 +113,21 @@ class OptionsUI extends Component {
     console.log("setOption", rulesetSelected, option, extra);
     if (rulesetSelected === -1) {
       const name = option.name;
-      const value = await this.state.optionsApp.saveOption(name, option.value);
+      const value = await this.sendMessage(MESSAGE_TYPE.OPTIONS_OPTION_SAVE, {
+        name,
+        value: option.value,
+      });
       options[option.name] = value;
       this.setState({ options, ...extra });
     } else {
       const name = option.name;
-      const value = await this.state.optionsApp.saveRulesetOption(
-        name,
-        option.value,
-        rulesetKey
+      const value = await this.sendMessage(
+        MESSAGE_TYPE.OPTIONS_RULESET_OPTION_SAVE,
+        {
+          name,
+          value: option.value,
+          rulesetKey,
+        }
       );
       rulesets[`ruleset_${rulesetKey}`][name] = value;
       this.setState({ rulesets, ...extra });
@@ -149,10 +173,9 @@ class OptionsUI extends Component {
   async handleRulesetAdd(ev) {
     ev && ev.preventDefault();
     const options = this.state.options;
-    const {
-      rulesetIndex,
-      rulesets,
-    } = await this.state.optionsApp.createRuleset();
+    const { rulesetIndex, rulesets } = await this.sendMessage(
+      MESSAGE_TYPE.OPTIONS_RULESET_CREATE
+    );
     const rulesetSelected = rulesetIndex.length - 1;
     options.rulesetIndex = rulesetIndex;
     const rulesetKey = this.getRulesetKeyFromIndex(
@@ -179,14 +202,19 @@ class OptionsUI extends Component {
   async handleRulesetDelete(ev) {
     ev && ev.preventDefault();
     const { rulesetKey, rulesetSelected } = this.state;
-    const rulesetIndex = await this.state.optionsApp.deleteRuleset(rulesetKey);
+    const { rulesetIndex, options, rulesets } = await this.sendMessage(
+      MESSAGE_TYPE.OPTIONS_RULESET_DELETE,
+      {
+        rulesetKey,
+      }
+    );
     const newSelected = this.getNewSelected(rulesetIndex, rulesetSelected);
     const newKey = this.getRulesetKeyFromIndex(newSelected, rulesetIndex);
     this.setState({
       rulesetKey: newKey,
       rulesetSelected: newSelected,
-      options: this.state.optionsApp.OPTIONS,
-      rulesets: this.state.optionsApp.RULESETS,
+      options,
+      rulesets,
     });
   }
 
@@ -298,34 +326,41 @@ class OptionsUI extends Component {
   }
 
   handleRuleChange(ev, { rules, rulesName }) {
-    console.log("handleRuleChange", rules, rulesName);
     ev && ev.preventDefault();
+    console.log("handleRuleChange", rules, rulesName);
     const { name, value } = ev.target;
-    const index = parseInt(name, 10);
-    let focusInput = {};
+    const focusInput = {};
     if (name === "rulesText") {
       this.setOption(
         { name: rulesName, value: value.split("\n") },
         { focusInput }
       );
     } else {
-      const scope = this.getScopeName();
-      if (index === -1) {
-        rules.push(value);
-        // set focus to newly created index
-        focusInput = {
-          name: `${scope}.${rulesName}`,
-          index: rules.length - 1,
-        };
-      } else {
-        rules[index] = value;
-      }
-      console.log(
-        "handleRuleChange def",
-        this.state.optionsApp.RULESET_DEFAULTS
-      );
+      const index = parseInt(name, 10);
+      rules[index] = value;
       this.setOption({ name: rulesName, value: rules }, { focusInput });
     }
+  }
+
+  handleRuleChangeNew(ev, { rules, rulesName }) {
+    ev && ev.preventDefault();
+    console.log("handleRuleChangeNew", rules, rulesName);
+    const { value } = ev.target;
+    if (!value || value.length === 0) {
+      return;
+    }
+    const scope = this.getScopeName();
+    rules.push(value);
+    // set focus to newly created index
+    const focusInput = {
+      name: `${scope}.${rulesName}`,
+      index: -1,
+    };
+
+    this.setOption(
+      { name: rulesName, value: rules },
+      { focusInput, [`${rulesName}NewValue`]: "" }
+    );
   }
 
   // append default rules
@@ -338,8 +373,8 @@ class OptionsUI extends Component {
   }
 
   handleRuleTyping(ev, { rulesName }) {
-    console.log("handleRuleTyping", rulesName);
     ev && ev.preventDefault();
+    console.log("handleRuleTyping", rulesName);
     const { options, rulesets, rulesetKey } = this.state;
     const scope = this.getScopeName();
     let value;
@@ -363,6 +398,12 @@ class OptionsUI extends Component {
         this.setState({ rulesets });
       }
     }
+  }
+
+  handleRuleTypingNew(ev, { rulesName }) {
+    ev && ev.preventDefault();
+    console.log("handleRuleTypingNew", rulesName);
+    this.setState({ [`${rulesName}NewValue`]: ev.target.value });
   }
 
   handleRuleDelete({ index, rules, rulesName }) {
@@ -393,10 +434,10 @@ class OptionsUI extends Component {
     if (this.getScopeName() !== "options") {
       rulesetSelected = list.findIndex((o) => o.id === rulesetSelected);
     }
-    rulesetIndex = await this.state.optionsApp.saveOption(
-      "rulesetIndex",
-      rulesetIndex
-    );
+    rulesetIndex = await this.sendMessage(MESSAGE_TYPE.OPTIONS_OPTION_SAVE, {
+      name: "rulesetIndex",
+      value: rulesetIndex,
+    });
     options.rulesetIndex = rulesetIndex;
     //const callback = () => this.saveRulesets(rulesets, rulesetSelected);
     // setState then use callback to save list
@@ -407,8 +448,9 @@ class OptionsUI extends Component {
   async testPathRules(url, _rules) {
     // URL() throws error if url is invalid
     // eslint-disable-next-line
-    new URL(url); // ignore return value
-    const rules = this.state.optionsApp.onSaveRules(_rules);
+    const rules = await this.sendMessage(MESSAGE_TYPE.OPTIONS_ONSAVERULES, {
+      rules: _rules,
+    });
     const results = [];
     for (const rule of rules) {
       const result = { rule };
@@ -429,22 +471,25 @@ class OptionsUI extends Component {
   }
 
   async testDomainRules(url, _rules) {
-    let rules;
-    // URL() throws error if url is invalid
-    const location = new URL(url);
-    rules = this.state.optionsApp.onSaveDomainRules(_rules);
+    const rules = await this.sendMessage(
+      MESSAGE_TYPE.OPTIONS_DOMAIN_ONSAVERULES,
+      {
+        rules: _rules,
+      }
+    );
     const results = [];
     for (const rule of rules) {
+      const ret = await this.sendMessage(
+        MESSAGE_TYPE.OPTIONS_DOMAIN_RULEMATCH,
+        { url, rule }
+      );
       const result = { rule };
-      try {
-        const res = await this.state.optionsApp.domainRuleMatch(location, rule);
-        console.log(res);
-        result.result = res
+      if (ret.result !== undefined) {
+        result.result = ret.result
           ? browser.i18n.getMessage("options_domain_rule_test_result_match")
           : browser.i18n.getMessage("options_domain_rule_test_result_mismatch");
-      } catch (err) {
-        console.log(err.message);
-        result.error = err.message;
+      } else if (ret.error !== undefined) {
+        result.error = ret.error;
       }
       results.push(result);
     }
@@ -457,13 +502,20 @@ class OptionsUI extends Component {
       this.setState({ [name]: { empty: true } });
       return;
     }
-    let result;
-    if (name === "testDomainRules") {
-      result = await this.testDomainRules(url, rules);
-    } else {
-      result = await this.testPathRules(url, rules);
+    try {
+      // test if valid url, discard resulting variable.
+      const location = new URL(url); // URL() throws error if url is invalid
+      let result;
+      if (name === "testDomainRules") {
+        result = await this.testDomainRules(url, rules);
+      } else {
+        result = await this.testPathRules(url, rules);
+      }
+      this.setState({ [name]: result });
+    } catch (err) {
+      this.setState({ [name]: { error: err.message } });
+      return;
     }
-    this.setState({ [name]: result });
   }
 
   renderText({
@@ -597,6 +649,7 @@ class OptionsUI extends Component {
 
   renderRules({
     rules,
+    ruleNewValue,
     scopeName,
     rulesName,
     focusInput,
@@ -609,12 +662,14 @@ class OptionsUI extends Component {
     testNote,
     test,
   }) {
-    //console.log('rules', rules);
     const scope = `${scopeName}.${rulesName}`;
     const showTextChecked = showText[scope];
     const onToggle = (name) => this.handleShowTextToggle(name);
     const onTyping = (ev) => this.handleRuleTyping(ev, { rulesName });
+    const onTypingNew = (ev) => this.handleRuleTypingNew(ev, { rulesName });
     const onChange = (ev) => this.handleRuleChange(ev, { rules, rulesName });
+    const onChangeNew = (ev) =>
+      this.handleRuleChangeNew(ev, { rules, rulesName });
     const onDelete = (index) =>
       this.handleRuleDelete({ index, rules, rulesName });
     const onSort = (ev) =>
@@ -709,12 +764,6 @@ class OptionsUI extends Component {
                           placeholder={placeholder}
                           name={index}
                           value={_}
-                          ref={(input) =>
-                            focusInput &&
-                            focusInput.index === index &&
-                            input &&
-                            input.focus()
-                          }
                           onChange={onTyping}
                           onBlur={onChange}
                         />
@@ -745,9 +794,15 @@ class OptionsUI extends Component {
                   <input
                     className="rule grow"
                     placeholder={placeholder}
-                    name="-1"
-                    value={""}
-                    onChange={onChange}
+                    ref={(input) =>
+                      focusInput &&
+                      focusInput.index === -1 &&
+                      input &&
+                      input.focus()
+                    }
+                    value={ruleNewValue}
+                    onChange={onTypingNew}
+                    onBlur={onChangeNew}
                   />
                 </div>
               </div>
@@ -774,6 +829,9 @@ class OptionsUI extends Component {
               {browser.i18n.getMessage("options_rule_test_url_error")}
             </span>
           )}
+          {test && test.error && (
+            <span className="error rulesTestUrlError">{test.error}</span>
+          )}
         </fieldset>
       </Fragment>
     );
@@ -794,14 +852,16 @@ class OptionsUI extends Component {
       testPathRules,
       testRulesetPathRules,
       testDomainRules,
-      optionsApp,
+      allowDownloadPrivate,
+      pathRulesNewValue,
+      domainRulesNewValue,
     } = this.state;
+
     const ruleset = rulesetKey !== -1 ? rulesets[`ruleset_${rulesetKey}`] : {};
-    console.log("render ruleset", ruleset);
+
     const optionsError =
       !("pathRules" in options) || options.pathRules.length === 0;
 
-    console.log("Render state:", this.state);
     return (
       <div id="container">
         {error && (
@@ -1106,14 +1166,19 @@ class OptionsUI extends Component {
                           </span>
                           {this.renderCheckbox({
                             name: "downloadPrivate",
-                            disabled:
-                              !optionsApp || !optionsApp.ALLOW_DOWNLOAD_PRIVATE,
+                            disabled: !allowDownloadPrivate,
                             label: "__MSG_options_download_private__",
                             checked: options.downloadPrivate,
                           })}
                           <span className="note">
                             __MSG_options_download_private_note__
                           </span>
+                          {!allowDownloadPrivate && (
+                            <span className="note error">
+                              <br />
+                              __MSG_options_allow_download_private_error__
+                            </span>
+                          )}
                           {this.renderCheckbox({
                             name: "ignoreDiscardedTab",
                             label: "__MSG_options_ignore_discarded_tab__",
@@ -1212,6 +1277,7 @@ class OptionsUI extends Component {
                           </label>
                           {this.renderRules({
                             rules: options.pathRules,
+                            ruleNewValue: pathRulesNewValue,
                             scopeName: "options",
                             rulesName: "pathRules",
                             showText,
@@ -1290,6 +1356,7 @@ class OptionsUI extends Component {
                           <div id="rulesetDomainRulesToggle">
                             {this.renderRules({
                               rules: ruleset.domainRules,
+                              ruleNewValue: domainRulesNewValue,
                               rulesName: "domainRules",
                               scopeName: "ruleset",
                               showText,
@@ -1500,6 +1567,7 @@ class OptionsUI extends Component {
                             </label>
                             {this.renderRules({
                               rules: ruleset.pathRules,
+                              ruleNewValue: pathRulesNewValue,
                               rulesName: "pathRules",
                               scopeName: "ruleset",
                               showText,

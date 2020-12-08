@@ -12,7 +12,7 @@ const Menus = {
     */
     commands_active_action_label: {
       icons: {
-        "16": "img/angle-down-solid.svg",
+        16: "img/angle-down-solid.svg",
       },
       action: (App) =>
         App.handleCommandAction(Constants.SHORTCUT_TYPE.ACTIVE_ACTION),
@@ -20,7 +20,7 @@ const Menus = {
     },
     commands_left_action_label: {
       icons: {
-        "16": "img/angle-double-left-solid.svg",
+        16: "img/angle-double-left-solid.svg",
       },
       action: (App) =>
         App.handleCommandAction(Constants.SHORTCUT_TYPE.LEFT_ACTION),
@@ -28,7 +28,7 @@ const Menus = {
     },
     commands_right_action_label: {
       icons: {
-        "16": "img/angle-double-right-solid.svg",
+        16: "img/angle-double-right-solid.svg",
       },
       action: (App) =>
         App.handleCommandAction(Constants.SHORTCUT_TYPE.RIGHT_ACTION),
@@ -36,19 +36,19 @@ const Menus = {
     },
     commands_all_action_label: {
       icons: {
-        "16": "img/angle-double-down-solid.svg",
+        16: "img/angle-double-down-solid.svg",
       },
       action: (App) =>
         App.handleCommandAction(Constants.SHORTCUT_TYPE.ALL_ACTION),
       contexts: ["browser_action"],
     },
     browser_action_menu_options: {
-      icons: { "16": "img/cog-solid.svg" },
+      icons: { 16: "img/cog-solid.svg" },
       action: (App) => App.handleCommandOptions(),
       contexts: ["browser_action"],
     },
     browser_action_menu_sidebar: {
-      icons: { "16": "img/columns-solid.svg" },
+      icons: { 16: "img/columns-solid.svg" },
       action: (App) => App.handleCommandSidebar(),
       contexts: ["browser_action"],
     },

@@ -44,10 +44,17 @@ class SidebarUI extends Component {
   }
 
   // privateWindows
-  async sendMessage(props) {
-    const res = await browser.runtime.sendMessage(props);
+  async sendMessage(type, body = null) {
+    const res = await browser.runtime.sendMessage({
+      type,
+      body,
+    });
     if (res.type === MESSAGE_TYPE.ERROR) {
-      console.log("sendMessage error", props, res); /* RemoveLogging:skip */
+      console.log(
+        "sendMessage error",
+        { type, body },
+        res
+      ); /* RemoveLogging:skip */
       this.setState({ error: res.body.error });
     }
     return res.body;
@@ -83,10 +90,7 @@ class SidebarUI extends Component {
         runtime: null,
       },
       async () => {
-        await this.sendMessage({
-          type: MESSAGE_TYPE.RUN_ACTION,
-          body: { windowId, action },
-        });
+        await this.sendMessage(MESSAGE_TYPE.RUN_ACTION, { windowId, action });
         // FIXME finishedCallback();
         await this.showErrors();
       }
@@ -124,13 +128,13 @@ class SidebarUI extends Component {
   async showOptions() {
     this.state.backgroundApp
       ? this.state.backgroundApp.handleCommandOptions()
-      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_OPTIONS });
+      : this.sendMessage(MESSAGE_TYPE.COMMAND_OPTIONS);
   }
 
   async showDownloads() {
     this.state.backgroundApp
       ? this.state.backgroundApp.handleCommandDownloads()
-      : this.sendMessage({ type: MESSAGE_TYPE.COMMAND_DOWNLOADS });
+      : this.sendMessage(MESSAGE_TYPE.COMMAND_DOWNLOADS);
   }
 
   async getRuntimeLast() {
@@ -139,10 +143,7 @@ class SidebarUI extends Component {
       return this.state.backgroundApp.getRuntimeLast(await getWindowId());
     }
     // privateWindow
-    return await this.sendMessage({
-      type: MESSAGE_TYPE.RUNTIME_LAST,
-      body: { windowId },
-    });
+    return await this.sendMessage(MESSAGE_TYPE.RUNTIME_LAST, { windowId });
   }
 
   async showErrors(loaded) {
