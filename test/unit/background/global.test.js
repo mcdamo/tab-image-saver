@@ -49,10 +49,10 @@ describe("global.js", function () {
     it("should return true after sleep", async function () {
       let start = new Date();
       await expect(
-        Global.sleepCallback(1500, () => false)
+        Global.sleepCallback(1000, () => false)
       ).to.eventually.become(true);
       let dur = new Date() - start;
-      expect(dur).to.be.at.least(1500);
+      expect(dur).to.be.at.least(1000);
     });
   });
 

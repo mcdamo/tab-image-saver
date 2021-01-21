@@ -2,14 +2,17 @@ import Options from "./options";
 
 const Version = {
   update: async (ver, prev) => {
-    if (prev !== ver) {
-      console.log(`Update ${prev} => ${ver}`);
+    if (prev === undefined) {
+      await browser.storage.local.set({ version: ver });
+      console.log(`Installed ${ver}`); /* RemoveLogging:skip */
+    } else if (prev !== ver) {
+      console.log(`Update ${prev} => ${ver}`); /* RemoveLogging:skip */
       // do updates from oldest to most recent
-      if (ver >= "2.2.0" && (prev === undefined || prev <= "2.1.1")) {
+      if (ver >= "2.2.0" && prev < "2.2.0") {
         // workaround: manually set a version number
         // so following rules can be triggered
         // prev = "2.1.1";
-        console.debug(`Update part ${prev} => 2.2.0`);
+        console.debug(`Update part ${prev} => 2.2.0`); /* RemoveLogging:skip */
         const keys = ["action", "altIsFilename", "altIsFilenameExt"];
         const oldOpts = await browser.storage.local.get(keys);
         if (oldOpts.altIsFilename) {
@@ -31,10 +34,10 @@ const Version = {
           "altIsFilenameExt",
         ]);
       }
-      if (ver >= "2.4.1" && (prev === undefined || prev <= "2.4.1")) {
+      if (ver >= "2.4.1" && prev < "2.4.1") {
         // removeEnded option is renamed to downloadPrivate to align with option label
         // and removeEnded option is reused for its original purpose as a new option
-        console.debug(`Update part ${prev} => 2.4.1`);
+        console.debug(`Update part ${prev} => 2.4.1`); /* RemoveLogging:skip */
         const keys = ["removeEnded"];
         const oldOpts = await browser.storage.local.get(keys);
         if (oldOpts.removeEnded) {
@@ -44,11 +47,11 @@ const Version = {
           });
         }
       }
-      if (ver >= "3.0.0" && (prev === undefined || prev <= "2.5.6")) {
+      if (ver >= "3.0.0" && prev < "3.0.0") {
         // convert pathRules to array
         // "ext" rules no longer include period:
         // update rules place a period before the extension
-        console.debug(`Update part ${prev} => 2.5.6`);
+        console.debug(`Update part ${prev} => 3.0.0`); /* RemoveLogging:skip */
         const keys = ["pathRules"];
         const oldOpts = await browser.storage.local.get(keys);
         if (oldOpts.pathRules && !Array.isArray(oldOpts.pathRules)) {
@@ -71,7 +74,7 @@ const Version = {
         }
       }
       await browser.storage.local.set({ version: ver });
-      console.log(`Updated to ${ver}`);
+      console.log(`Updated to ${ver}`); /* RemoveLogging:skip */
     }
   },
 };

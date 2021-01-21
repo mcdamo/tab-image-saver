@@ -16,22 +16,24 @@ const Global = {
       .catch(allError);
   },
 
+  // minimum timeout may be throttled by browser to 1000ms or more
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 
   // callback will be called after each chunk of sleep
   // sleep will return early if callback returns true
   sleepCallback: async (ms, callback = undefined) => {
     let chunk = 500;
-    if (ms < chunk) {
-      chunk = ms;
-    }
-    for (let remain = ms; remain > 0; remain -= chunk) {
+    let remain = ms;
+    while (remain > 0) {
+      let start = new Date();
       await Global.sleep(chunk);
+      let dur = new Date() - start;
       if (callback !== undefined) {
         if (callback(ms, remain)) {
           return false;
         }
       }
+      remain -= dur;
     }
     return true;
   },

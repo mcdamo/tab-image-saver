@@ -41,22 +41,21 @@ describe("version.js", function () {
     });
     it("should upgrade from 2.1.1, altIsFilename to pathRules and action=current to action=active", async function () {
       let storage = {
-        //version: undefined,
+        version: "2.1.0",
         action: "current",
         altIsFilename: true,
         altIsFilenameExt: ".jpg",
+        pathRules: "<name>.<ext>",
       };
       let newVer = "2.2.0";
       await browser.storage.local.set(storage);
-      Version.VERSION = undefined;
-      await Version.update(newVer);
+      await Version.update(newVer, storage.version);
       const def = Options.getOptionMeta("pathRules").default;
       const opts = {
         version: newVer,
         action: "active",
         pathRules: `<alt>.jpg\n${def}`,
       };
-
       await expect(browser.storage.local.get()).to.eventually.become(opts);
       //.and.to.have.property("version").to.equal(newVer);
       // TODO cleanup
@@ -71,7 +70,6 @@ describe("version.js", function () {
       };
       let newVer = "3.0.0";
       await browser.storage.local.set(storage);
-      Version.VERSION = undefined;
       await Version.update(newVer, storage.version);
       const opts = {
         version: newVer,

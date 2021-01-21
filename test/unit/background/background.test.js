@@ -795,10 +795,12 @@ describe("background.js", function () {
 
   describe("handleBrowserAction", function () {
     let { sleep, stub, stub2, waitFn } = {};
+    // workaround new config default: dom.min_background_timeout_value_without_budget_throttling=1000
+    this.timeout(5000); // sleep timeout may be throttled to 1000ms each call
     before(function () {
       sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       waitFn = async () => {
-        await sleep(500);
+        await sleep(2000);
         return false;
       };
       stub = sinon.stub(App, "executeTabs").callsFake(waitFn);
