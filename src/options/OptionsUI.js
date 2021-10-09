@@ -342,7 +342,7 @@ class OptionsUI extends Component {
     }
   }
 
-  handleRuleChangeNew(ev, { rules, rulesName }) {
+  handleRuleChangeNew(ev, { rules, rulesName, focus = false }) {
     ev && ev.preventDefault();
     console.log("handleRuleChangeNew", rules, rulesName);
     const { value } = ev.target;
@@ -351,10 +351,12 @@ class OptionsUI extends Component {
     }
     const scope = this.getScopeName();
     rules.push(value);
-    // set focus to newly created index
+    // conditionally set focusInput to newly created index when 'focus = true'
     const focusInput = {
-      name: `${scope}.${rulesName}`,
-      index: -1,
+      ...(focus && {
+        name: `${scope}.${rulesName}`,
+        index: -1,
+      }),
     };
 
     this.setOption(
@@ -403,7 +405,8 @@ class OptionsUI extends Component {
   handleRuleTypingNew(ev, { rulesName }) {
     ev && ev.preventDefault();
     console.log("handleRuleTypingNew", rulesName);
-    this.setState({ [`${rulesName}NewValue`]: ev.target.value });
+    const focusInput = {};
+    this.setState({ [`${rulesName}NewValue`]: ev.target.value, focusInput });
   }
 
   handleRuleDelete({ index, rules, rulesName }) {
@@ -670,6 +673,8 @@ class OptionsUI extends Component {
     const onChange = (ev) => this.handleRuleChange(ev, { rules, rulesName });
     const onChangeNew = (ev) =>
       this.handleRuleChangeNew(ev, { rules, rulesName });
+    const onChangeNewFocus = (ev) =>
+      this.handleRuleChangeNew(ev, { rules, rulesName, focus: true });
     const onDelete = (index) =>
       this.handleRuleDelete({ index, rules, rulesName });
     const onSort = (ev) =>
@@ -803,6 +808,18 @@ class OptionsUI extends Component {
                     value={ruleNewValue}
                     onChange={onTypingNew}
                     onBlur={onChangeNew}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Tab" &&
+                        !e.altKey &&
+                        !e.ctrlKey &&
+                        !e.shiftKey &&
+                        !e.metaKey
+                      ) {
+                        // place focus on 'new' field when Tab pressed
+                        onChangeNewFocus(e);
+                      }
+                    }}
                   />
                 </div>
               </div>
