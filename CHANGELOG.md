@@ -1,3 +1,31 @@
+v3.0.6
+======
+ - Fix Options focus adding new rules
+
+v3.0.5
+======
+ - Refactor version updater
+
+v3.0.4
+======
+ - Bump Min Firefox version to FF73
+ - Fix bug causing options page to be blank
+ - Fix Cancel button operation
+
+v3.0.3
+======
+ - Fix event listeners
+
+v3.0.2
+======
+ - Fix addon fails to reload when disable is toggled in Extensions manager
+
+v3.0.1
+======
+ - Fix Download in Private Browsing Mode option could be selected when not enabled by the browser settings
+ - Fix Skip Discarded Tabs option could not be selected
+ - Fix Sidebar and Popup broken in Private Windows
+
 v3.0.0
 ======
  - Added Rulesets for targeting options to specific sites
