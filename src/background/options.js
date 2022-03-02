@@ -1,6 +1,7 @@
 import Constants from "./constants";
 import Global from "./global";
 import Commands from "./commands";
+import Common from "./common";
 
 const T = {
   BOOL: "BOOL",
@@ -50,8 +51,10 @@ const Options = {
     },
     downloadNum: {
       type: T.VALUE,
-      default: "6",
+      default: 6,
       regex: "^[1-9][0-9]*$", // integer >= 1
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
     },
     downloadPath: {
       type: T.VALUE,
@@ -74,15 +77,38 @@ const Options = {
       type: T.BOOL,
       default: false,
     },
+    indexIncrement: {
+      type: T.VALUE,
+      default: 1,
+      regex: "^-?[1-9][0-9]*$", // integer
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
+    },
+    indexMethod: {
+      type: T.RADIO,
+      default: Constants.INDEX_METHOD.RUNTIME,
+      values: Object.values(Constants.INDEX_METHOD),
+    },
+    indexStart: {
+      type: T.VALUE,
+      default: 1,
+      regex: "^[0-9][0-9]*$", // integer >= 0
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
+    },
     minHeight: {
       type: T.VALUE,
-      default: "100",
+      default: 100,
       regex: "^[1-9][0-9]*$", // integer >= 1
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
     },
     minWidth: {
       type: T.VALUE,
-      default: "100",
+      default: 100,
       regex: "^[1-9][0-9]*$", // integer >= 1
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
     },
     notifyEnded: {
       type: T.BOOL,
@@ -92,9 +118,9 @@ const Options = {
       type: T.ARRAY,
       onsave: { function: (v) => Options.onSaveRules(v) }, // UI
       default: [
-        "<name>.<ext>",
-        "<xName>.<xExt|xMimeExt>",
-        "<host>/img_<###index>.<ext|xExt|xMimeExt|jpg>",
+        "${name}.${ext}",
+        "${xName}.${xExt||xMimeExt}",
+        "${host}/img_${index.padStart(3,0)}.${ext||xExt||xMimeExt||'jpg'}",
       ],
     },
     removeEnded: {
@@ -175,6 +201,10 @@ const Options = {
       }, // UI
       default: "",
     },
+    _legacy_template: {
+      type: T.BOOL,
+      default: false,
+    },
   },
   OPTION_RULESET_SCHEMA: {
     closeTab: {
@@ -233,15 +263,43 @@ const Options = {
       type: T.BOOL,
       default: true,
     },
+    indexingInherit: {
+      inherit: ["indexIncrement", "indexMethod", "indexStart"],
+      type: T.BOOL,
+      default: true,
+    },
+    indexIncrement: {
+      type: T.VALUE,
+      default: 1,
+      regex: "^-?[1-9][0-9]*$", // integer
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
+    },
+    indexMethod: {
+      type: T.RADIO,
+      default: Constants.INDEX_METHOD.RUNTIME,
+      values: Object.values(Constants.INDEX_METHOD),
+    },
+    indexStart: {
+      type: T.VALUE,
+      default: 1,
+      regex: "^[0-9][0-9]*$", // integer >= 0
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
+    },
     minHeight: {
       type: T.VALUE,
-      default: "100",
+      default: 100,
       regex: "^[1-9][0-9]*$", // integer >= 1
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
     },
     minWidth: {
       type: T.VALUE,
-      default: "100",
+      default: 100,
       regex: "^[1-9][0-9]*$", // integer >= 1
+      onload: { function: (v) => parseInt(v, 10) },
+      onsave: { function: (v) => parseInt(v, 10) },
     },
     rulesetName: {
       type: T.VALUE,
@@ -256,12 +314,16 @@ const Options = {
       type: T.ARRAY,
       onsave: { function: (v) => Options.onSaveRules(v) }, // UI
       default: [
-        "<name>.<ext>",
-        "<xName>.<xExt|xMimeExt>",
-        "<host>/img_<###index>.<ext|xExt|xMimeExt|jpg>",
+        "${name}.${ext}",
+        "${xName}.${xExt||xMimeExt}",
+        "${host}/img_${index.padStart(3,0)}.${ext||xExt||xMimeExt||'jpg'}",
       ],
     },
     removeEnded: {
+      type: T.BOOL,
+      default: false,
+    },
+    _legacy_template: {
       type: T.BOOL,
       default: false,
     },
@@ -305,8 +367,10 @@ const Options = {
     Options.OPTIONS[name] = value;
   },
 
+  getRulesetKeyFromId: (id) => Common.getRulesetKeyFromId(id),
+
   getRulesetKeyFromIndex: (index) =>
-    `ruleset_${Options.OPTIONS.rulesetIndex[index].key}`,
+    Options.getRulesetKeyFromId(Options.OPTIONS.rulesetIndex[index].id),
 
   // test rule against url
   //
@@ -356,22 +420,28 @@ const Options = {
     if (url) {
       // check for matching ruleset
       console.debug("rulesets", Options.OPTIONS_RULESETS);
-      const ruleset = Object.values(Options.OPTIONS_RULESETS).find((r) => {
-        if (!("domainRules" in r)) {
+      const match = Object.entries(Options.OPTIONS_RULESETS).find(
+        ([key, r]) => {
+          if (!("domainRules" in r)) {
+            return false;
+          }
+          if (r.domainRules.find((val) => Options.domainRuleMatch(url, val))) {
+            return true;
+          }
           return false;
         }
-        if (r.domainRules.find((val) => Options.domainRuleMatch(url, val))) {
-          return true;
-        }
-        return false;
-      });
-      if (ruleset) {
-        console.info("matched ruleset", ruleset);
+      );
+      if (match) {
+        const [key, ruleset] = match;
+        console.info(`matched ruleset ${key}`, ruleset);
         return ruleset;
       }
     }
     return Options.OPTIONS;
   },
+
+  getRulesetKeyOption: ({ rulesetKey, name }) =>
+    Options.OPTIONS_RULESETS[rulesetKey][name],
 
   setOptions: async (loadedOptions) => {
     console.debug("setOptions", loadedOptions);
@@ -453,24 +523,25 @@ const Options = {
         console.warn("Failed loading option:", k);
         continue;
       }
-      if (
-        optionType.inherit &&
-        //optionType.name in loaded &&
-        !loaded[k]
-      ) {
-        console.log("overriding inherit for", k);
-        for (const childName of optionType.inherit) {
-          // use ruleset-default if option has not been saved
-          optionsInherit[childName] =
-            childName in loaded
-              ? loaded[childName]
-              : Options.RULESET_DEFAULTS[childName];
+      if (optionType.inherit) {
+        // include 'inherit*' key in options
+        optionsInherit[k] = loaded[k];
+        if (!loaded[k]) {
+          console.log("overriding inherit for", k);
+          for (const childName of optionType.inherit) {
+            // use ruleset-default if option has not been saved
+            optionsInherit[childName] =
+              childName in loaded
+                ? loaded[childName]
+                : Options.RULESET_DEFAULTS[childName];
+          }
         }
       }
     }
     // manually copy some settings to the inherit options
     optionsInherit.domainRules = loaded.domainRules || []; // options.domainRules;
     optionsInherit.rulesetName = loaded.rulesetName;
+    optionsInherit.rulesetKey = rulesetKey;
     console.log("setRuleset inherit", optionsInherit);
     Options.OPTIONS_RULESETS[rulesetKey] = optionsInherit;
   },
@@ -489,11 +560,11 @@ const Options = {
     }
   },
 
-  // use key instead of index to prevent accidents.
-  deleteRuleset: async (key) => {
+  // use id instead of index to prevent accidents.
+  deleteRuleset: async (id) => {
     let rulesetIndex = Options.OPTIONS.rulesetIndex;
-    let index = rulesetIndex.findIndex((_) => _.key === key);
-    const rulesetKey = `ruleset_${key}`;
+    let index = rulesetIndex.findIndex((_) => _.id === id);
+    const rulesetKey = Options.getRulesetKeyFromId(id);
     rulesetIndex.splice(index, 1);
     rulesetIndex = await Options.saveOption("rulesetIndex", rulesetIndex);
     await browser.storage.local.remove([rulesetKey]);
@@ -503,10 +574,27 @@ const Options = {
     return rulesetIndex;
   },
 
-  // use key instead of index to prevent accidents.
-  saveRulesetOption: async (name, value, key) => {
+  /**
+   *
+   * @param {string} name
+   * @param {string} value
+   * @param {integer} id numerical ruleset id
+   * @returns {string} value
+   */
+  saveRulesetOption: async (name, value, id) => {
     console.log("saveRulesetOption", Options.RULESET_DEFAULTS);
-    const rulesetKey = `ruleset_${key}`;
+    const rulesetKey = Options.getRulesetKeyFromId(id);
+    return await Options.saveRulesetKeyOption({ name, value, rulesetKey });
+  },
+
+  /**
+   *
+   * @param {string} name
+   * @param {string} value
+   * @param {string} rulesetKey eg. 'ruleset_0'
+   * @returns {string} value
+   */
+  saveRulesetKeyOption: async ({ name, value, rulesetKey }) => {
     // get sparse ruleset from storage
     const ruleset = (await browser.storage.local.get(rulesetKey))[rulesetKey];
     console.log("saveRulesetOption:load", ruleset, name);
@@ -520,7 +608,7 @@ const Options = {
     // update OPTIONS_RULESETS with inherit rules
     // TODO set only the changed option, not the entire ruleset.
     await Options.setRuleset(rulesetKey, ruleset);
-    return value;
+    return newValue;
   },
 
   saveOption: async (name, value) => {
@@ -532,7 +620,7 @@ const Options = {
     await Options.setOptions(options); // this runs onload functions
     // update inherited ruleset cache when any Global option is changed
     Options.setRulesetsInherited();
-    return value;
+    return newValue;
   },
 
   loadShortcut: async (name, key) => await Commands.setCommand(name, key),
@@ -578,15 +666,15 @@ const Options = {
   createRuleset: async () => {
     const rulesetIndex = Options.OPTIONS.rulesetIndex;
     // find next unused key
-    const keys = rulesetIndex.map((o) => o.key);
-    const key = Global.findNextSequence(keys);
-    const rulesetKey = `ruleset_${key}`;
+    const ids = rulesetIndex.map((o) => o.id);
+    const id = Global.findNextSequence(ids);
+    const rulesetKey = Options.getRulesetKeyFromId(id);
     // generate name
     const rulesetName = browser.i18n.getMessage(
       "options_rulesets_ruleset_name_default",
-      key + 1
+      id + 1
     );
-    rulesetIndex.push({ key });
+    rulesetIndex.push({ id });
     let ruleset = { rulesetName };
     console.log("createRuleset", ruleset);
     await browser.storage.local.set({
@@ -623,7 +711,8 @@ const Options = {
       acc[optionName] = JSON.parse(JSON.stringify(option.default)); // deep clone
       return acc;
     }, {});
-    Options.ALLOW_DOWNLOAD_PRIVATE = await browser.extension.isAllowedIncognitoAccess();
+    Options.ALLOW_DOWNLOAD_PRIVATE =
+      await browser.extension.isAllowedIncognitoAccess();
   },
 };
 

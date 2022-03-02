@@ -1,3 +1,9 @@
+v4.0.0
+======
+ - New Path rules syntax based on template strings
+ - New Import/export of addon settings
+ - New download indexing options for per-tab and continuing
+
 v3.0.6
 ======
  - Fix Options focus adding new rules

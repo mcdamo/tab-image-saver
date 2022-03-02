@@ -10,9 +10,9 @@ Download from [Firefox Addons](https://addons.mozilla.org/firefox/addon/tab-imag
 You may control how this functions by changing the addon preferences at in **Firefox > Add-ons > Extensions > Tab Image Saver > Preferences** or right-click the toolbar icon.
 
    - Multitasking Support - run addon concurrently in separate windows
-   - Keyboard shortcut option
-   - Run from active tab, tabs to the left/right of current tab, or all tabs.
-   - Cancel running operation (click addon icon)
+   - Keyboard shortcut options
+   - Select from active tab, tabs to the left/right of current tab, or all tabs.
+   - Cancel running operations
    - Set minimum image size in pixels
    - Option to only save tabs with images, ignoring tabs with webpages
    - Filenames renamed automatically
@@ -22,20 +22,17 @@ You may control how this functions by changing the addon preferences at in **Fir
    - Show notification when complete
     
 ## Path rules
-Path rules are a flexible method for choosing the download filenames.
+Path rules are a flexible method for setting the image filenames when downloading.
 
-Rules can contain any combination of text strings and **keywords**.
+The Path rules syntax is based off [template strings](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals), this will be familiar to anyone who has coded Javascript.
 
-Rules are processed top-down, if the rule does not evaluate to a valid path then it will proceed to the next rule in the list.
+Path rules are processed top-down: if the first rule does not evaluate to a valid path then it will proceed to the next rule in the list and so on.
 
-### Keywords
-  - Keywords are enclosed by angled brackets `< >`
-  - They can use simple OR logic with the pipe symbol `|`
-  - Keywords prepended with hashes `#` will be zero-padded
+### Variables
 
-Example source: `<img src="http://example.com/path/to/filename.jpg" alt="Caption">`
+The following variables are available for use in Path rules
 
-| Keyword | Description | Example |
+| Variable | Description | Example* |
 |-----|-------------|---------|
 | alt | image's alt content | Caption |
 | name | image's url filename without extension | filename |
@@ -52,40 +49,50 @@ Example source: `<img src="http://example.com/path/to/filename.jpg" alt="Caption
 | tabFile | tab's url filename without extension | filename |
 | tabExt  | tab's url extension | jpg |
 
-Any tag not defined above will be treated as static text.
-For example `<undef>.jpg` will output `undef.jpg`
+*Example source:
+```
+<img src="http://example.com/path/to/filename.jpg" alt="Caption">
+```
 
-#### Examples
-`<name>.<ext|xExt|xMimeExt|jpg>`
+#### Boolean logic
+
+Empty variables can be skipped with boolean logic using double-pipe: `||`
+
+##### Example
+
+```
+${name}.${ext||xExt||xMimeExt||'jpg'}
+```
 
 This will attempt to find the filename extension from the URL, Content-Disposition header, Content-Type header, and finally if all else fails will use `jpg`
 
-`img_<####index>.jpg`
+### Methods
+
+String methods can be chained to variables or strings in the Path rule.
+
+#### Zero padding
+
+The [padStart](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart) method can be used to string pad the `index` variable.
+
+##### Example
+
+```
+img_${index.padStart(4, 0)}.jpg
+```
 
 This will use the index of the image in the active download session. The index is incremented for each image saved and processed in tab order. The output will be zero padded, such as `img_0001.jpg`
 
-### Expressions
-Expressions are an experimental extension to path rules to support string manipulation.
+#### String replacement and regular expressions
 
-Currently implemented is [replace](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace) using [regular expresions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp).
+The [replace](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace) method can use [regular expresions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp) on variables.
 
-Expressions are surrounded by double quotes `"` and must immediately follow after a keyword or path rule.
+##### Example
 
-Syntax of an expression:
+Using `replace()`, if `alt` variable contains a pipe symbol `|` then it and any trailing characters are removed:
 
 ```
-<alt>"/replace/regexp/newSubstr/flags"
-      |   |       |       |       +- optional flags to RegExp
-      |   |       |       +- replacement string or pattern
-      |   |       +- search string or pattern
-      |   +- 'replace' expression name. other expressions may be supported in future.
-      +- delimiter
+${alt.replace(/\s*\|.*/, '')}
 ```
-Any character may be selected as the delimiter as long as that character is not used anywhere within the expression patterns. The above example uses slash `/`, though if your expression patterns or strings contain slashes then you should select another symbol as the delimiter.
-
-#### Examples
-If `alt` contains a pipe symbol `|` then strip it and any trailing characters:
-`<alt>"/replace/\s*\|.*/"`
 
 ## Rulesets
 Rulesets can apply rules and options to a specific _domain_ or _url_ of the **tab** page.
@@ -96,7 +103,7 @@ The standard form of domain rule allows for simple wildcard matching (**\***).
 
 Domain rules can also be interpreted as a [regular expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) by wrapping in hash characters (**#**).
 
-### Examples
+### Matching domains
 The following examples are for `https://example.com/page.html`
 
 | Domain rule | Match |
@@ -116,19 +123,26 @@ Libraries:
 - [l10n](http://github.com/piroor/webextensions-lib-l10n)
 - [react-sortablejs](https://github.com/SortableJS/react-sortablejs)
 - [Sortable](https://github.com/SortableJS/Sortable)
+- [jse-eval](https://github.com/6utt3rfly/jse-eval)
 - React toolchain based on [react-extension-boilerplate](https://github.com/kryptokinght/react-extension-boilerplate)
 
 Graphics:
 
 - [images](https://thenounproject.com/term/images/329997) by lastspark
-- [grip-lines](https://fontawesome.com/icons/grip-lines?style=solid)
-- [trash](https://fontawesome.com/icons/trash-alt?style=solid)
-- [exclamation-triangle](https://fontawesome.com/icons/exclamation-triangle?style=solid)
+- [angle-down](https://fontawesome.com/icons/angle-down?style=solid)
+- [angle-double-down](https://fontawesome.com/icons/angle-double-down?style=solid)
+- [angle-double-left](https://fontawesome.com/icons/angle-double-left?style=solid)
+- [angle-double-right](https://fontawesome.com/icons/angle-double-right?style=solid)
 - [ban](https://fontawesome.com/icons/ban?style=solid)
 - [cog](https://fontawesome.com/icons/cog?style=solid)
-- [folder-open](https://fontawesome.com/icons/folder-open?style=solid)
 - [columns](https://fontawesome.com/icons/columns?style=solid)
-- [angle-down](https://fontawesome.com/icons/angle-down?style=solid)
-- [angle-double-right](https://fontawesome.com/icons/angle-double-right?style=solid)
-- [angle-double-left](https://fontawesome.com/icons/angle-double-left?style=solid)
-- [angle-double-down](https://fontawesome.com/icons/angle-double-down?style=solid)
+- [download](https://fontawesome.com/icons/download?style=solid)
+- [exclamation-triangle](https://fontawesome.com/icons/exclamation-triangle?style=solid)
+- [folder-open](https://fontawesome.com/icons/folder-open?style=solid)
+- [grip-lines](https://fontawesome.com/icons/grip-lines?style=solid)
+- [history](https://fontawesome.com/icons/history?style=solid)
+- [plus](https://fontawesome.com/icons/plus?s=solid)
+- [tasks](https://fontawesome.com/icons/tasks?style=solid)
+- [tools](https://fontawesome.com/icons/tools?style=solid)
+- [trash](https://fontawesome.com/icons/trash-alt?style=solid)
+- [upload](https://fontawesome.com/icons/upload?style=solid)

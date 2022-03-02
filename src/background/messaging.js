@@ -17,23 +17,35 @@ const Messaging = {
     cancel: App.isCancelled(sender.tab.windowId),
   }),
 
+  [MESSAGE_TYPE.BACKUP_DEFAULT]: async (body, sender) =>
+    await App.backupDefault(),
+
+  [MESSAGE_TYPE.BACKUP_EXPORT]: async (body, sender) =>
+    await App.backupExport(),
+
+  [MESSAGE_TYPE.BACKUP_IMPORT]: async (body, sender) =>
+    await App.backupImport(body),
+
+  [MESSAGE_TYPE.LEGACY_TEMPLATE_UPDATE]: async (body, sender) =>
+    await App.legacyTemplateUpdate(),
+
   //[MESSAGE_TYPE.OPTIONS_ACTION]: (request, sender) => App.getAction(),
 
   [MESSAGE_TYPE.OPTIONS_OPTION_SAVE]: async ({ name, value }, sender) =>
     await Options.saveOption(name, value),
 
   [MESSAGE_TYPE.OPTIONS_RULESET_OPTION_SAVE]: async (
-    { name, value, rulesetKey },
+    { name, value, rulesetId },
     sender
-  ) => await Options.saveRulesetOption(name, value, rulesetKey),
+  ) => await Options.saveRulesetOption(name, value, rulesetId),
 
   [MESSAGE_TYPE.OPTIONS_RULESET_CREATE]: async (body, sender) =>
     await Options.createRuleset(),
 
-  [MESSAGE_TYPE.OPTIONS_RULESET_DELETE]: async ({ rulesetKey }, sender) => {
-    const rulesetIndex = await Options.deleteRuleset(rulesetKey);
+  [MESSAGE_TYPE.OPTIONS_RULESET_DELETE]: async ({ rulesetId }, sender) => {
+    const newRulesetIndex = await Options.deleteRuleset(rulesetId);
     return {
-      rulesetIndex,
+      rulesetIndex: newRulesetIndex,
       options: Options.OPTIONS,
       rulesets: Options.RULESETS,
     };

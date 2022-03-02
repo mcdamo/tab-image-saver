@@ -37,6 +37,10 @@
     "description": "Description of executing all tabs",
     "message": "Download all tabs"
   },
+  "commands_test_action_label": {
+    "description": "Description of executing test on current tab",
+    "message": "Test current tab"
+  },
   "button_default_action_label": {
     "description": "Description of executing default action",
     "message": "Download"
@@ -147,6 +151,54 @@
     "description": "Option label for the action to include the current tab (when action is Left or Right of the current tab)",
     "message": "Include current tab (with Left/Right actions)"
   },
+  "options_backup_default_label": {
+    "description": "Label for reset all preferences to default",
+    "message": "Reset Defaults"
+  },
+  "options_backup_default_confirm": {
+    "description": "Warning to reset all preferences to default",
+    "message": "Delete all preferences and reset to defaults"
+  },
+  "options_backup_export_label": {
+    "description": "Label for exporting options",
+    "message": "Export"
+  },
+  "options_backup_import_label": {
+    "description": "Label for import options",
+    "message": "Import"
+  },
+  "options_backup_import_error_invalid_size": {
+    "description": "Error message when import file is too large",
+    "message": "Fize too large: $SIZE$Kb, maximum size: $LIMIT$Kb",
+    "placeholders": {
+      "size": {
+        "content": "$1",
+        "example": "20"
+      },
+      "limit": {
+        "content": "$2",
+        "example": "10"
+      }
+    }
+  },
+  "options_backup_import_error_invalid_type": {
+    "description": "Error message when import file type is invalid",
+    "message": "Invalid file type '$TYPE$', expected '$EXPECTED$'",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "text/plain"
+      },
+      "expected": {
+        "content": "$2",
+        "example": "application/json"
+      }
+    }
+  },
+  "options_backup_import_error_invalid_contents": {
+    "description": "Error message when import file contents is invalid",
+    "message": "Unrecognised configuration file"
+  },
   "options_browser_action_title": {
     "description": "Option title for the default browser action",
     "message": "Browser action"
@@ -170,6 +222,10 @@
   "options_conflict_action_label_overwrite": {
     "description": "Option label for filename conflict to overwrite",
     "message": "Overwrite"
+  },
+  "options_error_title": {
+    "description": "Title of the error popup",
+    "message": "Error"
   },
   "options_filter_title": {
     "description": "Title of the image filtering options",
@@ -222,6 +278,34 @@
   "options_drag_tooltip": {
     "description": "Tooltip for widget to reorder items",
     "message": "Drag to reorder"
+  },
+  "options_indexing_title": {
+    "description": "Ttile for download indexing options",
+    "message": "Download Indexing"
+  },
+  "options_index_method_label_runtime": {
+    "description": "Option label for runtime option",
+    "message": "Per Download Session"
+  },
+  "options_index_method_label_saved": {
+    "description": "Option label for continuing index option",
+    "message": "Continuing"
+  },
+  "options_index_method_label_tabbed": {
+    "description": "Option label for tabbed index option",
+    "message": "Per Tab"
+  },
+  "options_index_increment_label": {
+    "description": "Option label for index increment amount",
+    "message": "Increment"
+  },
+  "options_index_start_label": {
+    "description": "Option label for index starting number",
+    "message": "Start at"
+  },
+  "options_legacy_update_label": {
+    "description": "Label for legacy update button",
+    "message": "Update Path rules"
   },
   "options_path_rules_title": {
     "description": "Title for path rules option",

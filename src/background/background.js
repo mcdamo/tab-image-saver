@@ -19,6 +19,8 @@ const App = {
   constants: {
     contentScript: browser.runtime.getURL("content.js"),
     icon: "", // icon used on notifications
+    version: null, // loaded from manifest
+    id: null, // loaded from manifest
   },
   options: {},
   runtime: new Map(), // active runs
@@ -153,10 +155,8 @@ const App = {
   },
 
   setTitle: async (props = {}) => {
-    const {
-      action = App.getAction(),
-      browserAction = App.getBrowserAction(),
-    } = props;
+    const { action = App.getAction(), browserAction = App.getBrowserAction() } =
+      props;
     const placeholder =
       browserAction === Constants.BROWSER_ACTION.POPUP
         ? "options_browser_action_label_popup"
@@ -292,7 +292,7 @@ const App = {
     try {
       const obj = {
         type: "basic",
-        iconUrl: browser.extension.getURL(App.constants.icon),
+        iconUrl: browser.runtime.getURL(App.constants.icon),
       };
       for (const prop in message) {
         if ({}.propertyIsEnumerable.call(message, prop)) {
@@ -500,27 +500,10 @@ const App = {
   createFilename: async (props) => {
     const { image, rules } = props;
     const obj = Global.getRuleParams(props);
-    let xhrLoaded = false;
-    let errors = [];
     for (const rule of rules) {
-      // check current rule for XHR variables and load XHR if required
-      if (!xhrLoaded && (rule.includes("<x") || rule.includes("|x"))) {
-        try {
-          const hdr = await Global.getHeaderFilename(image.src);
-          if (hdr.filename) {
-            obj.xname = Global.getFilePart(hdr.filename);
-            obj.xext = Global.getFileExt(hdr.filename);
-          }
-          if (hdr.mimeExt) {
-            obj.xmimeext = hdr.mimeExt;
-          }
-          xhrLoaded = true;
-        } catch (err) {
-          // catch errors and push for later
-          errors.push(err);
-        }
-      }
-      const filename = Global.sanitizePath(Global.template(rule, obj).trim());
+      const filename = Global.sanitizePath(
+        (await Global.template(rule, obj)).trim()
+      );
       console.debug(
         `rule: ${rule}, filename: ${filename}, valid: ${Global.isValidPath(
           filename
@@ -535,9 +518,9 @@ const App = {
         return filename;
       }
     }
-    if (errors.length > 0) {
-      console.log("errors", errors);
-      throw new Error(errors);
+    if (obj._errors.length > 0) {
+      console.log("errors", obj._errors);
+      throw new Error(obj._errors);
     }
     return null;
   },
@@ -579,6 +562,39 @@ const App = {
     }
   },
 
+  getDownloadsIndexStart: ({ options, windowId }) => {
+    if (options.indexMethod === Constants.INDEX_METHOD.TABBED) {
+      return options.indexStart;
+    }
+    if (options.rulesetKey && !options.indexingInherit) {
+      if (!App.getRuntime(windowId).imageIndexRulesets[options.rulesetKey]) {
+        App.getRuntime(windowId).imageIndexRulesets[options.rulesetKey] =
+          options.indexStart;
+        return options.indexStart;
+      }
+      return App.getRuntime(windowId).imageIndexRulesets[options.rulesetKey];
+    }
+    return App.getRuntime(windowId).imageIndex;
+  },
+
+  /**
+   * Increment the runtime counter and return the next index
+   * @param {integer} index
+   * @param {object} options tab global/ruleset options
+   * @param {integer} windowId
+   * @returns {integer} next index
+   */
+  getDownloadsIndexNext: ({ index, options, windowId }) => {
+    if (options.indexMethod === Constants.INDEX_METHOD.TABBED) {
+      return index + options.indexIncrement;
+    }
+    if (options.rulesetKey && !options.indexingInherit) {
+      return (App.getRuntime(windowId).imageIndexRulesets[options.rulesetKey] +=
+        options.indexIncrement);
+    }
+    return (App.getRuntime(windowId).imageIndex += options.indexIncrement);
+  },
+
   createDownloads: async (param) => {
     const tabResults = param.response;
     const windowId = param.windowId;
@@ -591,9 +607,9 @@ const App = {
       const tabId = tab.id;
       const images = result.images;
       const options = result.options;
+      let index = App.getDownloadsIndexStart({ options, windowId });
       for (const image of images) {
         try {
-          let index = App.getRuntime(windowId).imageIndex++;
           const path = await App.createPath({
             tab,
             image,
@@ -603,6 +619,15 @@ const App = {
           });
           if (options.action !== Constants.ACTION.TEST) {
             App.addDownload(index, {}, tabId, windowId);
+            downloads.push({
+              url: image.src,
+              path,
+              referrer: tab.url,
+              index,
+              tabId,
+              tabUrl: tab.url,
+              options,
+            });
           } else {
             App.addDownloadTest(windowId, {
               url: image.src,
@@ -610,17 +635,8 @@ const App = {
               index,
               options,
             });
-            continue;
           }
-          downloads.push({
-            url: image.src,
-            path,
-            referrer: tab.url,
-            index,
-            tabId,
-            tabUrl: tab.url,
-            options,
-          });
+          index = App.getDownloadsIndexNext({ index, options, windowId });
         } catch (err) {
           if (err instanceof AppCancelled) {
             console.debug("createDownloads passed cancelled");
@@ -1083,8 +1099,8 @@ const App = {
 
   // load options to trigger onLoad and set commands
   init: async () => {
-    await Messaging.init();
     console.debug("Background.init");
+    await Messaging.init();
     await App.loadManifest(); // will skip if already loaded
     await App.loadOptions();
     await Menus.init(App);
@@ -1096,6 +1112,8 @@ const App = {
       const mf = await browser.runtime.getManifest();
       console.debug("loadManifest", mf);
       App.constants.icon = mf.icons["48"];
+      App.constants.id = mf.applications.gecko.id;
+      App.constants.version = mf.version;
       App.loadedManifest = true;
       return mf;
     }
@@ -1129,7 +1147,13 @@ const App = {
     }
   },
 
-  createRuntime: ({ windowId, tabId, action, finishedCallback }) => {
+  createRuntime: ({
+    windowId,
+    tabId,
+    action,
+    finishedCallback,
+    imageIndex = 1,
+  }) => {
     App.runtime.set(windowId, {
       action,
       finishedCallback,
@@ -1139,7 +1163,8 @@ const App = {
       tabsEnded: 0, // tabs returned a message
       tabsSkipped: 0, // tabs with no valid images
       tabsError: 0, // tabs with no permission
-      imageIndex: 1, // starting index for numbered images
+      imageIndex, // runtime index for numbered images
+      imageIndexRulesets: {}, // populated by ruleset indexes if ruleset indexing
       imagesMatched: 0, // valid images
       imagesSkipped: 0, // skipped duplicates
       imagesDownloading: 0, // active downloads
@@ -1158,8 +1183,34 @@ const App = {
   },
 
   // delete active runtime and insert into history
-  deleteRuntime: (windowId) => {
+  deleteRuntime: async (windowId) => {
     const runtime = App.runtime.get(windowId);
+    // don't update if testing
+    if (runtime.action !== Constants.ACTION.TEST) {
+      // save index for global option
+      if (App.options.indexMethod === Constants.INDEX_METHOD.SAVED) {
+        console.debug(`saving options imageIndex: ${runtime.imageIndex}`);
+        await Options.saveOption("indexStart", runtime.imageIndex);
+      }
+      // save index for rulesets
+      Object.entries(runtime.imageIndexRulesets).forEach(
+        ([rulesetKey, imageIndex]) => {
+          if (
+            Options.getRulesetKeyOption({ rulesetKey, name: "indexMethod" }) ===
+            Constants.INDEX_METHOD.SAVED
+          ) {
+            console.debug(
+              `saving ruleset imageIndex: ${rulesetKey} => ${imageIndex}`
+            );
+            Options.saveRulesetKeyOption({
+              name: "indexStart",
+              value: imageIndex,
+              rulesetKey,
+            });
+          }
+        }
+      );
+    }
     console.log("Saved old runtime", runtime);
     App.runtimeLast.set(windowId, { ...runtime });
     App.runtime.delete(windowId); // cleanup
@@ -1189,7 +1240,13 @@ const App = {
     }
     const action = !browserAction ? App.options.action : browserAction;
     console.debug("running", { windowId, tabId, action });
-    App.createRuntime({ windowId, tabId, action, finishedCallback });
+    App.createRuntime({
+      windowId,
+      tabId,
+      action,
+      finishedCallback,
+      imageIndex: App.options.indexStart,
+    });
     App.setBadgeStart(windowId);
     App.setBadgeLoading(windowId);
     try {
@@ -1275,17 +1332,59 @@ const App = {
   },
 
   handleCommandOptions: () => {
+    // open preferences in tab
+    browser.runtime.openOptionsPage().catch(console.error);
     // open preferences in panel window
-    browser.windows
-      .create({
-        type: "detached_panel",
-        url: "options.html",
-      })
-      .catch(console.error);
+    // browser.windows
+    //   .create({
+    //     type: "detached_panel",
+    //     url: browser.runtime.getURL("options.html"),
+    //     allowScriptsToClose: true,
+    //   })
+    //   .catch(console.error);
   },
 
   handleCommandSidebar: async () => {
     await browser.sidebarAction.toggle();
+  },
+
+  appRefresh: async (version) => {
+    await Version.update(App.constants.version, version);
+    await App.init();
+    // return new options for UI
+    return { options: Options.OPTIONS, rulesets: Options.RULESETS };
+  },
+
+  backupDefault: async () => {
+    await browser.storage.local.clear();
+    return App.appRefresh();
+  },
+
+  backupImport: async (data) => {
+    console.debug(data);
+    if (data.addon_id !== App.constants.id || !data.data) {
+      return {
+        error: browser.i18n.getMessage(
+          "options_backup_import_error_invalid_contents"
+        ),
+      };
+    }
+    const options = data.data;
+    await browser.storage.local.set(options);
+    return await App.appRefresh(options.version);
+  },
+
+  backupExport: async () => {
+    const storage = await browser.storage.local.get();
+    return {
+      addon_id: App.constants.id,
+      data: storage,
+    };
+  },
+
+  legacyTemplateUpdate: async () => {
+    await Version.updateLegacyTemplates();
+    return await App.appRefresh();
   },
 };
 
@@ -1301,8 +1400,8 @@ if (!browser.runtime.onUpdateAvailable.hasListener(App.handleUpdateAvailable)) {
   browser.runtime.onUpdateAvailable.addListener(App.handleUpdateAvailable);
 }
 
-//browser.runtime.onStartup.addListener(App.init);
-App.init();
+browser.runtime.onStartup.addListener(App.init);
+//await App.init();
 
 // attach to window object to make available from getBackgroundPage
 window.getWindowId = getWindowId;

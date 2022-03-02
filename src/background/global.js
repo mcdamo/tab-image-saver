@@ -1,4 +1,5 @@
 // independent functions
+import Expressions from "./expressions";
 
 const Global = {
   // wait for all promises to resolve
@@ -38,84 +39,15 @@ const Global = {
     return true;
   },
 
-  // code: "|command|param|..."
-  // eg.   "|replace|pattern|newSubstr[|regexp flags]"
-  templateCode: (input, code) => {
-    if (code === undefined) {
-      return input;
-    }
-    let delim = code.substr(1, 1);
-    let aCode = code.substr(2).slice(0, -1).split(delim); // remove 2 leading and 1 trailing characters and split
-    switch (aCode[0]) {
-      case "replace": {
-        let rMod;
-        if (aCode.length >= 3) {
-          rMod = aCode[3]; // optional regex modifier
-        }
-        let regex = new RegExp(aCode[1], rMod);
-        let newStr = aCode[2] !== undefined ? aCode[2] : "";
-        return input.replace(regex, newStr);
-      }
-      default: {
-        console.warn(
-          "Ignoring invalid templateCode",
-          code
-        ); /* RemoveLogging:skip */
-        return input;
-      }
-    }
-  },
-
-  // string contains varnames in angled brackets
-  // optional pipe to define 'or'
-  // optional #'s to define zero padding
-  // vars defined in obj
-  // <var1|var2> => var1 || var2
-  // <###index> => 000
-  template: (string, obj) => {
-    let s = string;
-    // greedy match <.> with optional templateCode
-    const r = /<([^>]+)>("[^"\\]*(?:\\.[^"\\]*)*")?/g;
-    s = s.replace(r, (match, p, globalCode) => {
-      // match #key with optional templateCode, repeating separated by pipe '|'
-      const rPipe = /([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?(?:\|([#]*)([^"|]+)("[^"\\]*(?:\\.[^"\\]*)*")?)?/g;
-      // const varsArray = [...p.matchAll(rPipe)]; // target Firefox-67
-      let varsArray = [];
-      let matches = null;
-      while ((matches = rPipe.exec(p)) !== null) {
-        varsArray.push(matches);
-      }
-      for (let h = 0; h < varsArray.length; h++) {
-        let vars = varsArray[h];
-        for (let i = 1; i < vars.length; i += 3) {
-          const pad = vars[i];
-          const key = vars[i + 1];
-          if (key === undefined) {
-            return "";
-          }
-          const localCode = vars[i + 2];
-          const lkey = key.toLowerCase();
-          if (!Object.prototype.hasOwnProperty.call(obj, lkey)) {
-            // treat as a string
-            return key;
-          }
-          if (obj[lkey] !== undefined && obj[lkey].length > 0) {
-            let ret = obj[lkey].padStart(pad.length, "0");
-            if (localCode !== undefined) {
-              ret = Global.templateCode(ret, localCode);
-            }
-            if (globalCode !== undefined) {
-              ret = Global.templateCode(ret, globalCode);
-            }
-            return ret;
-          }
-        }
-      }
-      // return empty string if no vars are evaluated
-      return "";
-    });
-    // return original string if no template is defined
-    return s;
+  template: async (string, obj) => {
+    obj.sanitizePath = Global.sanitizePath;
+    obj.sanitizeFilename = Global.sanitizeFilename;
+    // convert template to expression
+    // wrap expressions in parenthesis for quirk of parser
+    const ret = `"${string
+      // match opening and closing braces
+      .replace(/\${((?:([^}"]*"[^"]*"[^}"]*)*|[^{}]*))}/g, '" + ($1) + "')}"`;
+    return await Expressions.evaluate(ret, obj);
   },
 
   // returned values may be URI encoded
@@ -164,7 +96,10 @@ const Global = {
 
   // replace all invalid characters and slashes
   sanitizeFilename: (filename, str = "_") =>
-    filename.replace(/[*"/\\:<>|?]/g, str).trim(),
+    filename
+      .replace(/[*"/\\:<>|?]/g, str) // replace invalid characters
+      .replace(/^[\s]+/, "") // strip leading spaces
+      .replace(/[.\s]+$/, ""), // strip trailing spaces and period
 
   // replace invalid characters and strip leading/trailing slashes
   sanitizePath: (path, str = "_") =>
@@ -172,8 +107,8 @@ const Global = {
       .replace(/[*":<>|?]/g, str) // replace invalid characters
       .replace(/[/\\]+/g, "/") // replace backslash with forward slash
       .replace(/^[/]/, "") // strip leading slash
-      .replace(/[/]$/, "") // strip trailing slash
-      .replace(/ *\/ */, "/"), // remove spaces around slashes
+      .replace(/[./\s]+$/, "") // strip trailing slash, period, and spaces
+      .replace(/ *\/ */g, "/"), // remove spaces around slashes
 
   pathJoin: (parts, sep) => {
     const separator = sep || "/";
@@ -199,24 +134,80 @@ const Global = {
     const path = parse ? decodeURI(parse.pathname) : null;
     const tabParse = Global.parseURL(tab.url);
     const tabPath = tabParse ? decodeURI(tabParse.pathname) : null;
-    // obj properties should be lowercase
-    const obj = {
-      alt: "",
-      ext: path ? Global.getFileExt(path) : "",
-      hostname: parse ? parse.hostname : "",
-      host: parse ? parse.hostname : "",
-      index: index.toString(),
-      name: path ? Global.getFilePart(path) : "",
-      path: path ? Global.getDirname(path) : "",
-      tabtitle: tab.title,
-      tabhost: tabParse ? tabParse.hostname : "",
-      tabpath: tabPath ? Global.getDirname(tabPath) : "",
-      tabfile: tabPath ? Global.getFilePart(tabPath) : "",
-      tabext: tabPath ? Global.getFileExt(tabPath) : "",
-      xname: "",
-      xext: "",
-      xmimeext: "",
+    // public properties should be lowercase
+    let RuleParams = class {
+      constructor(image_src) {
+        this.alt = "";
+        this.ext = "";
+        this.hostname = "";
+        this.host = "";
+        this.index = "";
+        this.name = "";
+        this.path = "";
+        this.tabtitle = "";
+        this.tabhost = "";
+        this.tabpath = "";
+        this.tabfile = "";
+        this.tabext = "";
+        // internal
+        this._errors = [];
+        this._image_src = image_src;
+        this._xhrLoaded = false;
+        this._xhrHdr;
+      }
+      async _fetchHeader() {
+        if (!this._xhrLoaded) {
+          try {
+            this._xhrHdr = Global.getHeaderFilename(this._image_src); // async
+            this._xhrLoaded = true;
+          } catch (err) {
+            this._errors.push(err);
+          }
+        }
+        return this._xhrHdr;
+      }
+      async xname() {
+        const _xhrHdr = await this._fetchHeader();
+        if (_xhrHdr.filename) {
+          return Global.getFilePart(_xhrHdr.filename);
+        }
+        return "";
+      }
+      async xext() {
+        const _xhrHdr = await this._fetchHeader();
+        if (_xhrHdr.filename) {
+          return Global.getFileExt(_xhrHdr.filename);
+        }
+        return "";
+      }
+      async xmimeext() {
+        const _xhrHdr = await this._fetchHeader();
+        if (_xhrHdr.mimeExt) {
+          return _xhrHdr.mimeExt;
+        }
+        return "";
+      }
     };
+    const obj = new RuleParams(image.src);
+    if (path) {
+      obj.ext = Global.getFileExt(path);
+      obj.name = Global.getFilePart(path);
+      obj.path = Global.getDirname(path);
+    }
+    if (parse) {
+      obj.hostname = parse.hostname;
+      obj.host = parse.hostname;
+    }
+    obj.index = index.toString();
+    obj.tabtitle = tab.title;
+    if (tabParse) {
+      obj.tabhost = tabParse.hostname;
+    }
+    if (tabPath) {
+      obj.tabpath = Global.getDirname(tabPath);
+      obj.tabfile = Global.getFilePart(tabPath);
+      obj.tabext = Global.getFileExt(tabPath);
+    }
     if (image.alt) {
       obj.alt = image.alt;
     }

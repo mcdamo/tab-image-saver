@@ -1,10 +1,50 @@
 import Constants from "../background/constants";
+import Common from "../background/common";
 import "../common.css";
 import "./options.css";
 import React, { Component, Fragment } from "react";
 import { ReactSortable } from "react-sortablejs";
 
 const MESSAGE_TYPE = { ...Constants.MESSAGE_TYPE };
+
+const OptionsGroup = ({ title, children, id }) => (
+  <fieldset id={id} className="optionGroup">
+    <legend>
+      <span>{title}</span>
+    </legend>
+    {children}
+  </fieldset>
+);
+
+const OptionsGroupInherit = ({
+  title,
+  children,
+  id,
+  name,
+  checked,
+  onChange,
+}) => (
+  <fieldset id={id} className="optionGroup">
+    <legend>
+      <span>
+        {title}
+        <label className="checkbox setInherit">
+          <input
+            type="checkbox"
+            name={name}
+            value={1}
+            checked={checked || false}
+            onChange={onChange}
+          />
+          __MSG_options_rulesets_inherit_label__
+        </label>
+      </span>
+    </legend>
+    <fieldset className={`inheritGroup ${checked && "inherited"}`}>
+      {children}
+    </fieldset>
+  </fieldset>
+);
 
 class OptionsUI extends Component {
   constructor(props) {
@@ -18,7 +58,7 @@ class OptionsUI extends Component {
       options: {},
       rulesets: {},
       rulesetSelected: -1,
-      rulesetKey: -1,
+      rulesetId: -1,
       focusInput: {},
       showText: {
         "options.pathRules": false,
@@ -33,11 +73,18 @@ class OptionsUI extends Component {
       testDomainRules: {},
       pathRulesNewValue: "",
       domainRulesNewValue: "",
+      legacyTemplates: false,
     };
 
-    this.getRulesetKeyFromIndex = this.getRulesetKeyFromIndex.bind(this);
+    this.getRulesetIdFromIndex = this.getRulesetIdFromIndex.bind(this);
     this.getScopeName = this.getScopeName.bind(this);
+    this.handleBackupExport = this.handleBackupExport.bind(this);
+    this.handleBackupImport = this.handleBackupImport.bind(this);
+    this.handleBackupImportFile = this.handleBackupImportFile.bind(this);
+    this.handleBackupDefault = this.handleBackupDefault.bind(this);
     this.handleErrorClose = this.handleErrorClose.bind(this);
+    this.handleLegacyTemplateUpdate =
+      this.handleLegacyTemplateUpdate.bind(this);
     this.handleLocalChange = this.handleLocalChange.bind(this);
     this.handleShowTextToggle = this.handleShowTextToggle.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -54,14 +101,27 @@ class OptionsUI extends Component {
     this.testDomainRules = this.testDomainRules.bind(this);
   }
 
+  hasLegacyTemplates({ options, rulesets }) {
+    let legacyTemplates = (options && options._legacy_template) || false;
+    if (!legacyTemplates && rulesets) {
+      for (const ruleset of Object.values(rulesets)) {
+        if (ruleset._legacy_template) {
+          return true;
+        }
+      }
+    }
+    return legacyTemplates;
+  }
+
   async componentDidMount() {
     // load options
     const { options, rulesets, schemas } = await this.sendMessage(
       MESSAGE_TYPE.OPTIONS_SCHEMAS
     );
     const page = await browser.runtime.getBackgroundPage();
-    const allowDownloadPrivate = await browser.extension.isAllowedIncognitoAccess();
-
+    const allowDownloadPrivate =
+      await browser.extension.isAllowedIncognitoAccess();
+    const legacyTemplates = this.hasLegacyTemplates({ options, rulesets });
     this.setState({
       loaded: true,
       allowDownloadPrivate,
@@ -69,6 +129,7 @@ class OptionsUI extends Component {
       rulesets,
       schemas,
       backgroundApp: page.backgroundApp,
+      legacyTemplates,
     });
   }
 
@@ -88,48 +149,43 @@ class OptionsUI extends Component {
     return res.body;
   }
 
-  getRulesetKeyFromIndex(index, rulesetIndex) {
+  getRulesetKeyFromId(id) {
+    return Common.getRulesetKeyFromId(id);
+  }
+
+  getRulesetIdFromIndex(index, rulesetIndex) {
     if (index === -1) {
       return -1;
     }
     if (rulesetIndex !== undefined) {
-      return rulesetIndex[index].key;
+      return rulesetIndex[index].id;
     }
-    return this.state.options.rulesetIndex[index].key;
+    return this.state.options.rulesetIndex[index].id;
   }
 
   // 'extra' allows setting additional state variables
   async setOption(option, extra = {}) {
-    const {
-      loaded,
-      options,
-      rulesets,
-      rulesetSelected,
-      rulesetKey,
-    } = this.state;
+    const { loaded, options, rulesets, rulesetSelected, rulesetId } =
+      this.state;
     if (!loaded) {
       return;
     }
     console.log("setOption", rulesetSelected, option, extra);
     if (rulesetSelected === -1) {
-      const name = option.name;
       const value = await this.sendMessage(MESSAGE_TYPE.OPTIONS_OPTION_SAVE, {
-        name,
-        value: option.value,
+        ...option,
       });
       options[option.name] = value;
       this.setState({ options, ...extra });
     } else {
-      const name = option.name;
       const value = await this.sendMessage(
         MESSAGE_TYPE.OPTIONS_RULESET_OPTION_SAVE,
         {
-          name,
-          value: option.value,
-          rulesetKey,
+          ...option,
+          rulesetId,
         }
       );
-      rulesets[`ruleset_${rulesetKey}`][name] = value;
+      rulesets[this.getRulesetKeyFromId(rulesetId)][option.name] = value;
       this.setState({ rulesets, ...extra });
     }
   }
@@ -156,13 +212,13 @@ class OptionsUI extends Component {
   async handleRulesetShow(selected = null) {
     let rulesetSelected =
       selected !== null ? selected : this.state.rulesetSelected;
-    const rulesetKey = this.getRulesetKeyFromIndex(rulesetSelected);
-    if (rulesetKey === -1) {
+    const rulesetId = this.getRulesetIdFromIndex(rulesetSelected);
+    if (rulesetId === -1) {
       rulesetSelected = -1;
     }
     this.setState({
       rulesetSelected,
-      rulesetKey,
+      rulesetId,
       testDomainRules: {}, // set to empty
       testRulesetPathRules: {}, // set to empty
     });
@@ -178,14 +234,11 @@ class OptionsUI extends Component {
     );
     const rulesetSelected = rulesetIndex.length - 1;
     options.rulesetIndex = rulesetIndex;
-    const rulesetKey = this.getRulesetKeyFromIndex(
-      rulesetSelected,
-      rulesetIndex
-    );
+    const rulesetId = this.getRulesetIdFromIndex(rulesetSelected, rulesetIndex);
     this.setState({
       options,
       rulesetSelected,
-      rulesetKey,
+      rulesetId,
       rulesets,
     });
   }
@@ -201,20 +254,22 @@ class OptionsUI extends Component {
 
   async handleRulesetDelete(ev) {
     ev && ev.preventDefault();
-    const { rulesetKey, rulesetSelected } = this.state;
+    const { rulesetId, rulesetSelected } = this.state;
     const { rulesetIndex, options, rulesets } = await this.sendMessage(
       MESSAGE_TYPE.OPTIONS_RULESET_DELETE,
       {
-        rulesetKey,
+        rulesetId,
       }
     );
     const newSelected = this.getNewSelected(rulesetIndex, rulesetSelected);
-    const newKey = this.getRulesetKeyFromIndex(newSelected, rulesetIndex);
+    const newKey = this.getRulesetIdFromIndex(newSelected, rulesetIndex);
+    const legacyTemplates = this.hasLegacyTemplates({ options, rulesets });
     this.setState({
-      rulesetKey: newKey,
+      rulesetId: newKey,
       rulesetSelected: newSelected,
       options,
       rulesets,
+      legacyTemplates,
     });
   }
 
@@ -227,6 +282,92 @@ class OptionsUI extends Component {
 
   handleErrorClose() {
     this.setState({ error: null });
+  }
+
+  async handleLegacyTemplateUpdate() {
+    const { options, rulesets } = await this.sendMessage(
+      MESSAGE_TYPE.LEGACY_TEMPLATE_UPDATE
+    );
+    const legacyTemplates = this.hasLegacyTemplates({ options, rulesets });
+    this.setState({
+      options,
+      rulesets,
+      legacyTemplates,
+    });
+  }
+
+  async handleBackupExport() {
+    const data = await this.sendMessage(MESSAGE_TYPE.BACKUP_EXPORT);
+    const json = JSON.stringify(data, null, "  ");
+    const blob = new Blob([json], { type: "application/json;charset=utf8" });
+    const element = this.backupExportRef;
+    element.href = URL.createObjectURL(blob);
+    element.download = "tab-image-saver.json";
+    element.click();
+    URL.revokeObjectURL(blob); // cleanup
+  }
+
+  handleBackupImportFile(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    const file = event.target.files[0];
+    console.debug(file);
+    const expectedType = "application/json";
+    const expectedSizeKb = 10;
+    if (file.type !== expectedType) {
+      this.setState({
+        error: browser.i18n.getMessage(
+          "options_backup_import_error_invalid_type",
+          [file.type, expectedType]
+        ),
+      });
+      return;
+    }
+    const fileSizeKb = parseInt(file.size / 1024, 10);
+    if (fileSizeKb > expectedSizeKb) {
+      this.setState({
+        error: browser.i18n.getMessage(
+          "options_backup_import_error_invalid_size",
+          [fileSizeKb, expectedSizeKb]
+        ),
+      });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = this.handleBackupImport;
+    reader.readAsText(file);
+  }
+
+  async handleBackupImport(event) {
+    const content = event.target.result;
+    console.debug(content);
+    try {
+      const data = JSON.parse(content);
+      const ret = await this.sendMessage(MESSAGE_TYPE.BACKUP_IMPORT, data);
+      if (ret.error) {
+        this.setState({ error: ret.error });
+        return;
+      }
+      // refresh options in UI
+      const { options, rulesets } = ret;
+      const legacyTemplates = this.hasLegacyTemplates({ options, rulesets });
+      this.setState({ options, rulesets, legacyTemplates });
+    } catch (err) {
+      console.error(err);
+      this.setState({ error: err.message });
+    }
+  }
+
+  async handleBackupDefault() {
+    const ret = await this.sendMessage(MESSAGE_TYPE.BACKUP_DEFAULT);
+    if (ret.error) {
+      this.setState({ error: ret.error });
+      return;
+    }
+    // refresh options in UI
+    const { options, rulesets } = ret;
+    const legacyTemplates = this.hasLegacyTemplates({ options, rulesets });
+    this.setState({ options, rulesets, legacyTemplates });
   }
 
   handleLocalChange(ev, { name }) {
@@ -244,7 +385,7 @@ class OptionsUI extends Component {
 
   handleChange(ev) {
     ev && ev.preventDefault();
-    const { options, rulesets, rulesetKey, schemas } = this.state;
+    const { options, rulesets, rulesetId, schemas } = this.state;
     const name = ev.target.name;
     let value;
     const scope = this.getScopeName();
@@ -257,7 +398,7 @@ class OptionsUI extends Component {
       // toggle
       value = !(scope === "options"
         ? options[name]
-        : rulesets[`ruleset_${rulesetKey}`][name]);
+        : rulesets[this.getRulesetKeyFromId(rulesetId)][name]);
     } else {
       value = ev.target.value;
     }
@@ -273,14 +414,14 @@ class OptionsUI extends Component {
 
   handleTyping(ev) {
     ev && ev.preventDefault();
-    const { options, rulesets, rulesetKey } = this.state;
+    const { options, rulesets, rulesetId } = this.state;
     const { name, value } = ev.target;
     const scope = this.getScopeName();
     if (scope === "options") {
       options[name] = value;
       this.setState({ options });
     } else {
-      rulesets[`ruleset_${rulesetKey}`][name] = value;
+      rulesets[this.getRulesetKeyFromId(rulesetId)][name] = value;
       this.setState({ rulesets });
     }
   }
@@ -377,7 +518,7 @@ class OptionsUI extends Component {
   handleRuleTyping(ev, { rulesName }) {
     ev && ev.preventDefault();
     console.log("handleRuleTyping", rulesName);
-    const { options, rulesets, rulesetKey } = this.state;
+    const { options, rulesets, rulesetId } = this.state;
     const scope = this.getScopeName();
     let value;
     if (ev.target.name === "rulesText") {
@@ -386,7 +527,7 @@ class OptionsUI extends Component {
         options[rulesName] = value;
         this.setState({ options });
       } else {
-        rulesets[`ruleset_${rulesetKey}`][rulesName] = value;
+        rulesets[this.getRulesetKeyFromId(rulesetId)][rulesName] = value;
         this.setState({ rulesets });
       }
     } else {
@@ -396,7 +537,7 @@ class OptionsUI extends Component {
         options[rulesName][index] = value;
         this.setState({ options });
       } else {
-        rulesets[`ruleset_${rulesetKey}`][rulesName][index] = value;
+        rulesets[this.getRulesetKeyFromId(rulesetId)][rulesName][index] = value;
         this.setState({ rulesets });
       }
     }
@@ -424,8 +565,8 @@ class OptionsUI extends Component {
       options[rulesName] = rules;
       this.setState({ options }, callback);
     } else {
-      const { rulesets, rulesetKey } = this.state;
-      rulesets[`ruleset_${rulesetKey}`][rulesName] = rules;
+      const { rulesets, rulesetId } = this.state;
+      rulesets[this.getRulesetKeyFromId(rulesetId)][rulesName] = rules;
       this.setState({ rulesets }, callback);
     }
   }
@@ -450,7 +591,6 @@ class OptionsUI extends Component {
 
   async testPathRules(url, _rules) {
     // URL() throws error if url is invalid
-    // eslint-disable-next-line
     const rules = await this.sendMessage(MESSAGE_TYPE.OPTIONS_ONSAVERULES, {
       rules: _rules,
     });
@@ -524,6 +664,7 @@ class OptionsUI extends Component {
   renderText({
     name,
     value,
+    size,
     label,
     placeholder,
     className = "inputWrap",
@@ -536,6 +677,7 @@ class OptionsUI extends Component {
           <input
             type="text"
             name={name}
+            size={size}
             placeholder={placeholder}
             value={value || ""}
             onChange={this.handleTyping}
@@ -584,31 +726,6 @@ class OptionsUI extends Component {
           </label>
         </div>
       </Fragment>
-    );
-  }
-
-  renderInheritGroup({ name, checked, title, children }) {
-    return (
-      <fieldset className="optionGroup">
-        <legend>
-          <span>
-            {title}
-            <label className="checkbox setInherit">
-              <input
-                type="checkbox"
-                name={name}
-                value={1}
-                checked={checked || false}
-                onChange={this.handleChange}
-              />
-              __MSG_options_rulesets_inherit_label__
-            </label>
-          </span>
-        </legend>
-        <fieldset className={`inheritGroup ${checked && "inherited"}`}>
-          {children}
-        </fieldset>
-      </fieldset>
     );
   }
 
@@ -854,13 +971,725 @@ class OptionsUI extends Component {
     );
   }
 
+  renderOptionsActions({ options }) {
+    return (
+      <fieldset>
+        {this.renderRadio({
+          name: "action",
+          label: "__MSG_options_action_label_active__",
+          value: Constants.ACTION.ACTIVE,
+          checked: options.action === Constants.ACTION.ACTIVE,
+        })}
+        {this.renderRadio({
+          name: "action",
+          label: "__MSG_options_action_label_left__",
+          value: Constants.ACTION.LEFT,
+          checked: options.action === Constants.ACTION.LEFT,
+        })}
+        {this.renderRadio({
+          name: "action",
+          label: "__MSG_options_action_label_right__",
+          value: Constants.ACTION.RIGHT,
+          checked: options.action === Constants.ACTION.RIGHT,
+        })}
+        {this.renderRadio({
+          name: "action",
+          label: "__MSG_options_action_label_all__",
+          value: Constants.ACTION.ALL,
+          checked: options.action === Constants.ACTION.ALL,
+        })}
+        {this.renderCheckbox({
+          name: "activeTab",
+          label: "__MSG_options_active_tab__",
+          checked: options.activeTab,
+        })}
+      </fieldset>
+    );
+  }
+
+  renderOptionsBrowser({ options }) {
+    return (
+      <fieldset>
+        {this.renderRadio({
+          name: "browserAction",
+          label: "__MSG_options_browser_action_label_download__",
+          value: Constants.BROWSER_ACTION.DOWNLOAD,
+          checked: options.browserAction === Constants.BROWSER_ACTION.DOWNLOAD,
+        })}
+        {this.renderRadio({
+          name: "browserAction",
+          label: "__MSG_options_browser_action_label_popup__",
+          value: Constants.BROWSER_ACTION.POPUP,
+          checked: options.browserAction === Constants.BROWSER_ACTION.POPUP,
+        })}
+      </fieldset>
+    );
+  }
+
+  renderOptionsShortcuts({ options }) {
+    return (
+      <fieldset>
+        <span className="note">__MSG_options_shortcut_example__</span>
+        <a
+          target="_blank"
+          href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/commands#Shortcut_values"
+        >
+          __MSG_options_learn_more__
+        </a>
+        <div className="inputRow inputShortcut">
+          <label className="text">__MSG_commands_default_action_label__</label>
+          {this.renderShortcut({
+            name: "shortcut",
+            value: options.shortcut,
+          })}
+        </div>
+        <div className="inputRow inputShortcut">
+          <label className="text">__MSG_commands_active_action_label__</label>
+          {this.renderShortcut({
+            name: "shortcutActive",
+            value: options.shortcutActive,
+          })}
+        </div>
+        <div className="inputRow inputShortcut">
+          <label className="text">__MSG_commands_left_action_label__</label>
+          {this.renderShortcut({
+            name: "shortcutLeft",
+            value: options.shortcutLeft,
+          })}
+        </div>
+        <div className="inputRow inputShortcut">
+          <label className="text">__MSG_commands_right_action_label__</label>
+          {this.renderShortcut({
+            name: "shortcutRight",
+            value: options.shortcutRight,
+          })}
+        </div>
+        <div className="inputRow inputShortcut">
+          <label className="text">__MSG_commands_all_action_label__</label>
+          {this.renderShortcut({
+            name: "shortcutAll",
+            value: options.shortcutAll,
+          })}
+        </div>
+      </fieldset>
+    );
+  }
+
+  renderOptionsFilters({ options, disabled }) {
+    return (
+      <fieldset>
+        {this.renderRadio({
+          name: "filter",
+          label: "__MSG_options_filter_label_max__",
+          value: Constants.FILTER.MAX,
+          checked: options.filter === Constants.FILTER.MAX,
+          disabled,
+        })}
+        {this.renderRadio({
+          name: "filter",
+          label: "__MSG_options_filter_label_all__",
+          value: Constants.FILTER.ALL,
+          checked: options.filter === Constants.FILTER.ALL,
+          disabled,
+        })}
+        {this.renderRadio({
+          name: "filter",
+          label: (
+            <Fragment>
+              __MSG_options_filter_label_direct__
+              <span className="note">
+                __MSG_options_filter_label_direct_note__
+              </span>
+            </Fragment>
+          ),
+          value: Constants.FILTER.DIRECT,
+          checked: options.filter === Constants.FILTER.DIRECT,
+          disabled,
+        })}
+        <fieldset>
+          <legend>
+            <span>__MSG_options_dimensions_title__</span>
+          </legend>
+          {this.renderText({
+            name: "minWidth",
+            label: "__MSG_options_dimensions_width_label__",
+            className: "",
+            value: options.minWidth,
+            disabled,
+          })}
+          {this.renderText({
+            name: "minHeight",
+            label: "__MSG_options_dimensions_height_label__",
+            className: "",
+            value: options.minHeight,
+            disabled,
+          })}
+        </fieldset>
+      </fieldset>
+    );
+  }
+
+  renderOptionsAdvanced({
+    options,
+    allowDownloadPrivate,
+    disabled,
+    isRuleset,
+  }) {
+    return (
+      <fieldset>
+        {!isRuleset && (
+          <Fragment>
+            <label className="text">
+              __MSG_options_download_num__
+              <input
+                type="text"
+                name="downloadNum"
+                size="3"
+                value={options.downloadNum || ""}
+                onChange={this.handleChange}
+                disabled={disabled}
+              />
+            </label>
+            {this.renderCheckbox({
+              name: "downloadAsync",
+              label: "__MSG_options_download_async__",
+              checked: options.downloadAsync,
+              disabled,
+            })}
+            <span className="note">__MSG_options_download_async_note__</span>
+          </Fragment>
+        )}
+        {this.renderCheckbox({
+          name: "downloadPrivate",
+          disabled: disabled || !allowDownloadPrivate,
+          label: "__MSG_options_download_private__",
+          checked: options.downloadPrivate,
+        })}
+        <span className="note">__MSG_options_download_private_note__</span>
+        {!allowDownloadPrivate && (
+          <span className="note error">
+            <br />
+            __MSG_options_allow_download_private_error__
+          </span>
+        )}
+        {!isRuleset &&
+          this.renderCheckbox({
+            name: "ignoreDiscardedTab",
+            label: "__MSG_options_ignore_discarded_tab__",
+            checked: options.ignoreDiscardedTab,
+            disabled,
+          })}
+      </fieldset>
+    );
+  }
+
+  renderOptionsDownloadsFolder({ options, disabled }) {
+    return (
+      <fieldset>
+        <span className="note">__MSG_options_download_path_note__</span>
+        {this.renderText({
+          name: "downloadPath",
+          label: "__MSG_options_download_path_label__",
+          placeholder: "__MSG_options_download_path_placeholder__",
+          value: options.downloadPath,
+          disabled,
+        })}
+      </fieldset>
+    );
+  }
+
+  renderOptionsDownloadsConflict({ options, disabled }) {
+    return (
+      <fieldset>
+        {this.renderRadio({
+          name: "conflictAction",
+          label: "__MSG_options_conflict_action_label_uniquify__",
+          value: Constants.CONFLICT_ACTION.UNIQUIFY,
+          checked:
+            options.conflictAction === Constants.CONFLICT_ACTION.UNIQUIFY,
+          disabled,
+        })}
+        {this.renderRadio({
+          name: "conflictAction",
+          label: "__MSG_options_conflict_action_label_overwrite__",
+          value: Constants.CONFLICT_ACTION.OVERWRITE,
+          checked:
+            options.conflictAction === Constants.CONFLICT_ACTION.OVERWRITE,
+          disabled,
+        })}
+      </fieldset>
+    );
+  }
+
+  renderOptionsDownloadsComplete({ options, disabled, isRuleset }) {
+    return (
+      <fieldset>
+        {this.renderCheckbox({
+          name: "closeTab",
+          label: "__MSG_options_close_tab__",
+          checked: options.closeTab,
+          disabled,
+        })}
+        {!isRuleset &&
+          this.renderCheckbox({
+            name: "notifyEnded",
+            label: "__MSG_options_notify_ended__",
+            checked: options.notifyEnded,
+            disabled,
+          })}
+        {this.renderCheckbox({
+          name: "removeEnded",
+          label: "__MSG_options_remove_ended__",
+          checked: options.removeEnded,
+          disabled,
+        })}
+      </fieldset>
+    );
+  }
+
+  renderOptionsDownloadsIndex({ options, disabled }) {
+    return (
+      <fieldset>
+        {this.renderRadio({
+          name: "indexMethod",
+          label: "__MSG_options_index_method_label_runtime__",
+          value: Constants.INDEX_METHOD.RUNTIME,
+          checked: options.indexMethod === Constants.INDEX_METHOD.RUNTIME,
+          disabled,
+        })}
+        {this.renderRadio({
+          name: "indexMethod",
+          label: "__MSG_options_index_method_label_tabbed__",
+          value: Constants.INDEX_METHOD.TABBED,
+          checked: options.indexMethod === Constants.INDEX_METHOD.TABBED,
+          disabled,
+        })}
+        {this.renderRadio({
+          name: "indexMethod",
+          label: "__MSG_options_index_method_label_saved__",
+          value: Constants.INDEX_METHOD.SAVED,
+          checked: options.indexMethod === Constants.INDEX_METHOD.SAVED,
+          disabled,
+        })}
+        {this.renderText({
+          name: "indexStart",
+          label: "__MSG_options_index_start_label__",
+          className: "",
+          value: options.indexStart,
+          size: "3",
+          disabled,
+        })}
+        {this.renderText({
+          name: "indexIncrement",
+          label: "__MSG_options_index_increment_label__",
+          className: "",
+          value: options.indexIncrement,
+          size: "3",
+          disabled,
+        })}
+      </fieldset>
+    );
+  }
+
+  renderOptionsPathRules({
+    options,
+    pathRulesNewValue,
+    showText,
+    focusInput,
+    testPathRules,
+    testPathRulesUrl,
+  }) {
+    return (
+      <fieldset className="optionGroup">
+        <legend>
+          <span>
+            __MSG_options_path_rules_title__{" "}
+            <a
+              target="_blank"
+              href="https://github.com/mcdamo/tab-image-saver/#path-rules"
+            >
+              __MSG_options_learn_more__
+            </a>
+          </span>
+        </legend>
+        <fieldset>
+          <span className="note">__MSG_options_path_rules_note__</span>
+          <label className="text">__MSG_options_path_rules_label__</label>
+          {this.renderRules({
+            rules: options.pathRules,
+            ruleNewValue: pathRulesNewValue,
+            scopeName: "options",
+            rulesName: "pathRules",
+            showText,
+            placeholder: browser.i18n.getMessage(
+              "options_path_rule_add_placeholder"
+            ),
+            focusInput:
+              focusInput &&
+              focusInput.name === "options.pathRules" &&
+              focusInput,
+            testLabel: "__MSG_options_path_rule_test_label__",
+            testNote: (
+              <span className="note">__MSG_options_path_rule_test_note__</span>
+            ),
+            testUrl: testPathRulesUrl,
+            test: testPathRules,
+            onTestChange: (ev) =>
+              this.handleLocalChange(ev, {
+                name: "testPathRulesUrl",
+              }),
+            onTestSubmit: (ev) =>
+              this.handleTestRules(ev, {
+                url: testPathRulesUrl,
+                name: "testPathRules",
+                rules: options.pathRules,
+              }),
+          })}
+        </fieldset>
+      </fieldset>
+    );
+  }
+
+  renderOptions({
+    allowDownloadPrivate,
+    focusInput,
+    options,
+    pathRulesNewValue,
+    showText,
+    testPathRules,
+    testPathRulesUrl,
+  }) {
+    return (
+      <Fragment>
+        <h2 className="header2">__MSG_options_rulesets_global_title__</h2>
+        <p className="note">__MSG_options_rulesets_global_note__</p>
+        <div className="optionGroups">
+          <div className="row">
+            <div className="column">
+              <OptionsGroup title="__MSG_options_action_title__">
+                {this.renderOptionsActions({ options })}
+              </OptionsGroup>
+              <OptionsGroup title="__MSG_options_browser_action_title__">
+                {this.renderOptionsBrowser({ options })}
+              </OptionsGroup>
+            </div>
+            <div className="column">
+              <OptionsGroup
+                id="shortcuts"
+                title="__MSG_options_shortcut_title__"
+              >
+                {this.renderOptionsShortcuts({ options })}
+              </OptionsGroup>
+            </div>
+          </div>
+          <div className="row">
+            <div className="column">
+              <OptionsGroup title="__MSG_options_filter_title__">
+                {this.renderOptionsFilters({ options })}
+              </OptionsGroup>
+              <OptionsGroup title="__MSG_options_download_path_title__">
+                {this.renderOptionsDownloadsFolder({ options })}
+              </OptionsGroup>
+              <OptionsGroup title="__MSG_options_conflict_action_title__">
+                {this.renderOptionsDownloadsConflict({ options })}
+              </OptionsGroup>
+            </div>
+            <div className="column">
+              <OptionsGroup title="__MSG_options_indexing_title__">
+                {this.renderOptionsDownloadsIndex({ options })}
+              </OptionsGroup>
+              <OptionsGroup title="__MSG_options_download_complete_title__">
+                {this.renderOptionsDownloadsComplete({ options })}
+              </OptionsGroup>
+              <OptionsGroup title="__MSG_options_advanced_title__">
+                {this.renderOptionsAdvanced({ options, allowDownloadPrivate })}
+              </OptionsGroup>
+            </div>
+          </div>
+          <div className="row">
+            <div className="column">
+              {this.renderOptionsPathRules({
+                options,
+                pathRulesNewValue,
+                showText,
+                focusInput,
+                testPathRules,
+                testPathRulesUrl,
+              })}
+            </div>
+          </div>
+        </div>
+      </Fragment>
+    );
+  }
+
+  renderRulesetDomainRules({
+    ruleset,
+    domainRulesNewValue,
+    showText,
+    focusInput,
+    testDomainRules,
+    testDomainRulesUrl,
+  }) {
+    return (
+      <fieldset>
+        <label className="text">__MSG_options_domain_rules_label__</label>
+        <div id="rulesetDomainRulesToggle">
+          {this.renderRules({
+            rules: ruleset.domainRules,
+            ruleNewValue: domainRulesNewValue,
+            rulesName: "domainRules",
+            scopeName: "ruleset",
+            showText,
+            placeholder: browser.i18n.getMessage(
+              "options_domain_rule_add_placeholder"
+            ),
+            focusInput:
+              focusInput &&
+              focusInput.name === "ruleset.domainRules" &&
+              focusInput,
+            testLabel: "__MSG_options_domain_rule_test_label__",
+            testUrl: testDomainRulesUrl,
+            test: testDomainRules,
+            onTestChange: (ev) =>
+              this.handleLocalChange(ev, {
+                name: "testDomainRulesUrl",
+              }),
+            onTestSubmit: (ev) =>
+              this.handleTestRules(ev, {
+                url: testDomainRulesUrl,
+                name: "testDomainRules",
+                rules: ruleset.domainRules,
+              }),
+          })}
+        </div>
+      </fieldset>
+    );
+  }
+
+  renderRulesetPathRules({
+    ruleset,
+    showText,
+    focusInput,
+    pathRulesNewValue,
+    testRulesetPathRules,
+    testRulesetPathRulesUrl,
+  }) {
+    return (
+      <OptionsGroupInherit
+        name="pathRulesInherit"
+        checked={ruleset.pathRulesInherit}
+        onChange={this.handleChange}
+        title={
+          <Fragment>
+            __MSG_options_path_rules_title__ &nbsp;
+            <a
+              target="_blank"
+              href="https://github.com/mcdamo/tab-image-saver/#path-rules"
+            >
+              __MSG_options_learn_more__
+            </a>
+          </Fragment>
+        }
+      >
+        <Fragment>
+          <span className="note">__MSG_options_path_rules_note__</span>
+          <label className="text">__MSG_options_path_rules_label__</label>
+          {this.renderRules({
+            rules: ruleset.pathRules,
+            ruleNewValue: pathRulesNewValue,
+            rulesName: "pathRules",
+            scopeName: "ruleset",
+            showText,
+            placeholder: browser.i18n.getMessage(
+              "options_path_rule_add_placeholder"
+            ),
+            focusInput:
+              focusInput &&
+              focusInput.name === "ruleset.pathRules" &&
+              focusInput,
+            testLabel: "__MSG_options_path_rule_test_label__",
+            testNote: (
+              <span className="note">__MSG_options_path_rule_test_note__</span>
+            ),
+            testUrl: testRulesetPathRulesUrl,
+            test: testRulesetPathRules,
+            onTestChange: (ev) =>
+              this.handleLocalChange(ev, {
+                name: "testRulesetPathRulesUrl",
+              }),
+            onTestSubmit: (ev) =>
+              this.handleTestRules(ev, {
+                url: testRulesetPathRulesUrl,
+                name: "testRulesetPathRules",
+                rules: ruleset.pathRules,
+              }),
+          })}
+        </Fragment>
+      </OptionsGroupInherit>
+    );
+  }
+
+  renderRuleset({
+    ruleset,
+    domainRulesNewValue,
+    focusInput,
+    pathRulesNewValue,
+    showText,
+    testDomainRulesUrl,
+    testDomainRules,
+    testRulesetPathRulesUrl,
+    testRulesetPathRules,
+  }) {
+    return (
+      <Fragment>
+        <div className="header2">
+          <div
+            id="rulesetDelete"
+            className="delete button"
+            onClick={this.handleRulesetDelete}
+          >
+            <div className="delete-icon">
+              __MSG_options_rulesets_delete_label__
+            </div>
+          </div>
+          <h2 id="rulesetName"></h2>
+        </div>
+        <p className="note">__MSG_options_rulesets_global_note__</p>
+        <div className="row">
+          <div className="column">
+            <fieldset className="optionGroup">
+              <legend>
+                <span>__MSG_options_rulesets_ruleset_title__</span>
+              </legend>
+              <fieldset>
+                <div className="inputWrap">
+                  <label className="text">
+                    __MSG_options_rulesets_ruleset_name_label__
+                  </label>
+                  <input
+                    type="text"
+                    name="rulesetName"
+                    value={ruleset.rulesetName || ""}
+                    onChange={this.handleTyping}
+                    onBlur={this.handleChange}
+                  />
+                </div>
+                {this.renderRulesetDomainRules({
+                  ruleset,
+                  domainRulesNewValue,
+                  showText,
+                  focusInput,
+                  testDomainRules,
+                  testDomainRulesUrl,
+                })}
+              </fieldset>
+            </fieldset>
+          </div>
+        </div>
+        <div className="optionGroups">
+          <div className="row">
+            <div className="column">
+              <OptionsGroupInherit
+                title="__MSG_options_filter_title__"
+                name="filterInherit"
+                checked={ruleset.filterInherit}
+                onChange={this.handleChange}
+              >
+                {this.renderOptionsFilters({
+                  options: ruleset,
+                  disabled: ruleset.filterInherit,
+                  isRuleset: true,
+                })}
+              </OptionsGroupInherit>
+              <OptionsGroupInherit
+                title="__MSG_options_download_path_title__"
+                name="downloadPathInherit"
+                checked={ruleset.downloadPathInherit}
+                onChange={this.handleChange}
+              >
+                {this.renderOptionsDownloadsFolder({
+                  options: ruleset,
+                  disabled: ruleset.downloadPathInherit,
+                  isRuleset: true,
+                })}
+              </OptionsGroupInherit>
+              <OptionsGroupInherit
+                title="__MSG_options_conflict_action_title__"
+                name="conflictActionInherit"
+                checked={ruleset.conflictActionInherit}
+                onChange={this.handleChange}
+              >
+                {this.renderOptionsDownloadsConflict({
+                  options: ruleset,
+                  disabled: ruleset.conflictActionInherit,
+                  isRuleset: true,
+                })}
+              </OptionsGroupInherit>
+            </div>
+            <div className="column">
+              <OptionsGroupInherit
+                title="__MSG_options_indexing_title__"
+                name="indexingInherit"
+                checked={ruleset.indexingInherit}
+                onChange={this.handleChange}
+              >
+                {this.renderOptionsDownloadsIndex({
+                  options: ruleset,
+                  disabled: ruleset.indexingInherit,
+                  isRuleset: true,
+                })}
+              </OptionsGroupInherit>
+              <OptionsGroupInherit
+                title="__MSG_options_download_complete_title__"
+                name="downloadCompleteInherit"
+                checked={ruleset.downloadCompleteInherit}
+                onChange={this.handleChange}
+              >
+                {this.renderOptionsDownloadsComplete({
+                  options: ruleset,
+                  disabled: ruleset.downloadCompleteInherit,
+                  isRuleset: true,
+                })}
+              </OptionsGroupInherit>
+              <OptionsGroupInherit
+                title="__MSG_options_advanced_title__"
+                name="downloadAdvancedInherit"
+                checked={ruleset.downloadAdvancedInherit}
+                onChange={this.handleChange}
+              >
+                {this.renderOptionsAdvanced({
+                  options: ruleset,
+                  disabled: ruleset.downloadAdvancedInherit,
+                  isRuleset: true,
+                })}
+              </OptionsGroupInherit>
+            </div>
+          </div>
+          <div className="row">
+            <div className="column">
+              {this.renderRulesetPathRules({
+                ruleset,
+                showText,
+                focusInput,
+                pathRulesNewValue,
+                testRulesetPathRules,
+                testRulesetPathRulesUrl,
+              })}
+            </div>
+          </div>
+        </div>
+      </Fragment>
+    );
+  }
+
   render() {
     const {
       error,
       options,
       rulesets,
       rulesetSelected,
-      rulesetKey,
+      rulesetId,
       focusInput,
       showText,
       testPathRulesUrl,
@@ -872,9 +1701,11 @@ class OptionsUI extends Component {
       allowDownloadPrivate,
       pathRulesNewValue,
       domainRulesNewValue,
+      legacyTemplates,
     } = this.state;
 
-    const ruleset = rulesetKey !== -1 ? rulesets[`ruleset_${rulesetKey}`] : {};
+    const ruleset =
+      rulesetId !== -1 ? rulesets[this.getRulesetKeyFromId(rulesetId)] : {};
 
     const optionsError =
       !("pathRules" in options) || options.pathRules.length === 0;
@@ -882,8 +1713,11 @@ class OptionsUI extends Component {
     return (
       <div id="container">
         {error && (
-          <div id="errorPopup" onClick={this.handleErrorClose}>
-            {error}
+          <div id="errorFill" onClick={this.handleErrorClose}>
+            <div id="errorPopup">
+              <h1>{browser.i18n.getMessage("options_error_title")}</h1>
+              <p>{error}</p>
+            </div>
           </div>
         )}
         <div id="sidebar">
@@ -918,7 +1752,7 @@ class OptionsUI extends Component {
                   handle=".handle"
                 >
                   {options.rulesetIndex.map((obj, index) => {
-                    const ruleset = rulesets[`ruleset_${obj.key}`];
+                    const ruleset = rulesets[this.getRulesetKeyFromId(obj.id)];
                     const rulesetError =
                       (ruleset.pathRulesInherit === false &&
                         ruleset.pathRules.length === 0) ||
@@ -962,11 +1796,71 @@ class OptionsUI extends Component {
                   id="rulesetAdd"
                   className="button"
                 >
-                  <em>__MSG_options_rulesets_add_label__</em>
+                  <div className={"add-icon icon"}>
+                    __MSG_options_rulesets_add_label__
+                  </div>
                 </div>
               </div>
             </div>
           </fieldset>
+          <div id="backup">
+            <div
+              onClick={() =>
+                legacyTemplates && this.handleLegacyTemplateUpdate()
+              }
+              className={
+                legacyTemplates
+                  ? "button button-important"
+                  : "button button-disabled"
+              }
+            >
+              <div className={"update-icon icon"}>
+                __MSG_options_legacy_update_label__
+              </div>
+            </div>
+            <div
+              onClick={() => this.handleBackupExport()}
+              id="backupExport"
+              className="button"
+            >
+              <div className={"export-icon icon"}>
+                __MSG_options_backup_export_label__
+              </div>
+            </div>
+            <a
+              style={{ display: "none" }}
+              ref={(ref) => (this.backupExportRef = ref)}
+            />
+            <div
+              onClick={() => this.backupImportRef.click()}
+              id="backupImport"
+              className="button"
+            >
+              <div className={"import-icon icon"}>
+                __MSG_options_backup_import_label__
+              </div>
+            </div>
+            <input
+              style={{ display: "none" }}
+              type="file"
+              ref={(ref) => (this.backupImportRef = ref)}
+              onChange={(e) => this.handleBackupImportFile(e)}
+            />
+            <div
+              onClick={() =>
+                // eslint-disable-next-line
+                window.confirm(
+                  browser.i18n.getMessage("options_backup_default_confirm")
+                ) && this.handleBackupDefault()
+              }
+              id="backupDefault"
+              className="button"
+            >
+              <div className={"defaults-icon icon"}>
+                __MSG_options_backup_default_label__
+              </div>
+            </div>
+          </div>
         </div>
         <div id="content">
           <form id="options">
@@ -975,651 +1869,31 @@ class OptionsUI extends Component {
                 id="rulesetGlobal"
                 className={rulesetSelected === -1 ? "" : "hidden"}
               >
-                <h2 className="header2">
-                  __MSG_options_rulesets_global_title__
-                </h2>
-                <p className="note">__MSG_options_rulesets_global_note__</p>
-                <div className="optionGroups">
-                  <div className="row">
-                    <div className="column">
-                      <fieldset className="optionGroup">
-                        <legend>
-                          <span>__MSG_options_action_title__</span>
-                        </legend>
-                        <fieldset>
-                          {this.renderRadio({
-                            name: "action",
-                            label: "__MSG_options_action_label_active__",
-                            value: Constants.ACTION.ACTIVE,
-                            checked: options.action === Constants.ACTION.ACTIVE,
-                          })}
-                          {this.renderRadio({
-                            name: "action",
-                            label: "__MSG_options_action_label_left__",
-                            value: Constants.ACTION.LEFT,
-                            checked: options.action === Constants.ACTION.LEFT,
-                          })}
-                          {this.renderRadio({
-                            name: "action",
-                            label: "__MSG_options_action_label_right__",
-                            value: Constants.ACTION.RIGHT,
-                            checked: options.action === Constants.ACTION.RIGHT,
-                          })}
-                          {this.renderRadio({
-                            name: "action",
-                            label: "__MSG_options_action_label_all__",
-                            value: Constants.ACTION.ALL,
-                            checked: options.action === Constants.ACTION.ALL,
-                          })}
-                          {this.renderCheckbox({
-                            name: "activeTab",
-                            label: "__MSG_options_active_tab__",
-                            checked: options.activeTab,
-                          })}
-                        </fieldset>
-                      </fieldset>
-                      <fieldset className="optionGroup">
-                        <legend>
-                          <span>__MSG_options_browser_action_title__</span>
-                        </legend>
-                        <fieldset>
-                          {this.renderRadio({
-                            name: "browserAction",
-                            label:
-                              "__MSG_options_browser_action_label_download__",
-                            value: Constants.BROWSER_ACTION.DOWNLOAD,
-                            checked:
-                              options.browserAction ===
-                              Constants.BROWSER_ACTION.DOWNLOAD,
-                          })}
-                          {this.renderRadio({
-                            name: "browserAction",
-                            label: "__MSG_options_browser_action_label_popup__",
-                            value: Constants.BROWSER_ACTION.POPUP,
-                            checked:
-                              options.browserAction ===
-                              Constants.BROWSER_ACTION.POPUP,
-                          })}
-                        </fieldset>
-                      </fieldset>
-                    </div>
-                    <div className="column">
-                      <fieldset id="shortcuts" className="optionGroup">
-                        <legend>
-                          <span>__MSG_options_shortcut_title__</span>
-                        </legend>
-                        <fieldset>
-                          <span className="note">
-                            __MSG_options_shortcut_example__
-                          </span>
-                          <a
-                            target="_blank"
-                            href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/commands#Shortcut_values"
-                          >
-                            __MSG_options_learn_more__
-                          </a>
-                          <div className="inputRow inputShortcut">
-                            <label className="text">
-                              __MSG_commands_default_action_label__
-                            </label>
-                            {this.renderShortcut({
-                              name: "shortcut",
-                              value: options.shortcut,
-                            })}
-                          </div>
-                          <div className="inputRow inputShortcut">
-                            <label className="text">
-                              __MSG_commands_active_action_label__
-                            </label>
-                            {this.renderShortcut({
-                              name: "shortcutActive",
-                              value: options.shortcutActive,
-                            })}
-                          </div>
-                          <div className="inputRow inputShortcut">
-                            <label className="text">
-                              __MSG_commands_left_action_label__
-                            </label>
-                            {this.renderShortcut({
-                              name: "shortcutLeft",
-                              value: options.shortcutLeft,
-                            })}
-                          </div>
-                          <div className="inputRow inputShortcut">
-                            <label className="text">
-                              __MSG_commands_right_action_label__
-                            </label>
-                            {this.renderShortcut({
-                              name: "shortcutRight",
-                              value: options.shortcutRight,
-                            })}
-                          </div>
-                          <div className="inputRow inputShortcut">
-                            <label className="text">
-                              __MSG_commands_all_action_label__
-                            </label>
-                            {this.renderShortcut({
-                              name: "shortcutAll",
-                              value: options.shortcutAll,
-                            })}
-                          </div>
-                        </fieldset>
-                      </fieldset>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="column">
-                      <fieldset className="optionGroup">
-                        <legend>
-                          <span>__MSG_options_filter_title__</span>
-                        </legend>
-                        <fieldset>
-                          {this.renderRadio({
-                            name: "filter",
-                            label: "__MSG_options_filter_label_max__",
-                            value: Constants.FILTER.MAX,
-                            checked: options.filter === Constants.FILTER.MAX,
-                          })}
-                          {this.renderRadio({
-                            name: "filter",
-                            label: "__MSG_options_filter_label_all__",
-                            value: Constants.FILTER.ALL,
-                            checked: options.filter === Constants.FILTER.ALL,
-                          })}
-                          {this.renderRadio({
-                            name: "filter",
-                            label: (
-                              <Fragment>
-                                __MSG_options_filter_label_direct__
-                                <span className="note">
-                                  __MSG_options_filter_label_direct_note__
-                                </span>
-                              </Fragment>
-                            ),
-                            value: Constants.FILTER.DIRECT,
-                            checked: options.filter === Constants.FILTER.DIRECT,
-                          })}
-                          <fieldset>
-                            <legend>
-                              <span>__MSG_options_dimensions_title__</span>
-                            </legend>
-                            {this.renderText({
-                              name: "minWidth",
-                              label: "__MSG_options_dimensions_width_label__",
-                              className: "",
-                              value: options.minWidth,
-                            })}
-                            {this.renderText({
-                              name: "minHeight",
-                              label: "__MSG_options_dimensions_height_label__",
-                              className: "",
-                              value: options.minHeight,
-                            })}
-                          </fieldset>
-                        </fieldset>
-                      </fieldset>
-                      <fieldset className="optionGroup">
-                        <legend>
-                          <span>__MSG_options_advanced_title__</span>
-                        </legend>
-                        <fieldset>
-                          <label className="text">
-                            __MSG_options_download_num__
-                            <input
-                              type="text"
-                              name="downloadNum"
-                              size="3"
-                              value={options.downloadNum || ""}
-                              onChange={this.handleChange}
-                            />
-                          </label>
-                          {this.renderCheckbox({
-                            name: "downloadAsync",
-                            label: "__MSG_options_download_async__",
-                            checked: options.downloadAsync,
-                          })}
-                          <span className="note">
-                            __MSG_options_download_async_note__
-                          </span>
-                          {this.renderCheckbox({
-                            name: "downloadPrivate",
-                            disabled: !allowDownloadPrivate,
-                            label: "__MSG_options_download_private__",
-                            checked: options.downloadPrivate,
-                          })}
-                          <span className="note">
-                            __MSG_options_download_private_note__
-                          </span>
-                          {!allowDownloadPrivate && (
-                            <span className="note error">
-                              <br />
-                              __MSG_options_allow_download_private_error__
-                            </span>
-                          )}
-                          {this.renderCheckbox({
-                            name: "ignoreDiscardedTab",
-                            label: "__MSG_options_ignore_discarded_tab__",
-                            checked: options.ignoreDiscardedTab,
-                          })}
-                        </fieldset>
-                      </fieldset>
-                    </div>
-                    <div className="column">
-                      <fieldset className="optionGroup">
-                        <legend>
-                          <span>__MSG_options_download_path_title__</span>
-                        </legend>
-                        <fieldset>
-                          <span className="note">
-                            __MSG_options_download_path_note__
-                          </span>
-                          {this.renderText({
-                            name: "downloadPath",
-                            label: "__MSG_options_download_path_label__",
-                            placeholder:
-                              "__MSG_options_download_path_placeholder__",
-                            value: options.downloadPath,
-                          })}
-                        </fieldset>
-                      </fieldset>
-                      <fieldset className="optionGroup">
-                        <legend>
-                          <span>__MSG_options_conflict_action_title__</span>
-                        </legend>
-                        <fieldset>
-                          {this.renderRadio({
-                            name: "conflictAction",
-                            label:
-                              "__MSG_options_conflict_action_label_uniquify__",
-                            value: Constants.CONFLICT_ACTION.UNIQUIFY,
-                            checked:
-                              options.conflictAction ===
-                              Constants.CONFLICT_ACTION.UNIQUIFY,
-                          })}
-                          {this.renderRadio({
-                            name: "conflictAction",
-                            label:
-                              "__MSG_options_conflict_action_label_overwrite__",
-                            value: Constants.CONFLICT_ACTION.OVERWRITE,
-                            checked:
-                              options.conflictAction ===
-                              Constants.CONFLICT_ACTION.OVERWRITE,
-                          })}
-                        </fieldset>
-                      </fieldset>
-                      <fieldset className="optionGroup">
-                        <legend>
-                          <span>__MSG_options_download_complete_title__</span>
-                        </legend>
-                        <fieldset>
-                          {this.renderCheckbox({
-                            name: "closeTab",
-                            label: "__MSG_options_close_tab__",
-                            checked: options.closeTab,
-                          })}
-                          {this.renderCheckbox({
-                            name: "notifyEnded",
-                            label: "__MSG_options_notify_ended__",
-                            checked: options.notifyEnded,
-                          })}
-                          {this.renderCheckbox({
-                            name: "removeEnded",
-                            label: "__MSG_options_remove_ended__",
-                            checked: options.removeEnded,
-                          })}
-                        </fieldset>
-                      </fieldset>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="column">
-                      <fieldset className="optionGroup">
-                        <legend>
-                          <span>
-                            __MSG_options_path_rules_title__{" "}
-                            <a
-                              target="_blank"
-                              href="https://github.com/mcdamo/tab-image-saver/#path-rules"
-                            >
-                              __MSG_options_learn_more__
-                            </a>
-                          </span>
-                        </legend>
-                        <fieldset>
-                          <span className="note">
-                            __MSG_options_path_rules_note__
-                          </span>
-                          <label className="text">
-                            __MSG_options_path_rules_label__
-                          </label>
-                          {this.renderRules({
-                            rules: options.pathRules,
-                            ruleNewValue: pathRulesNewValue,
-                            scopeName: "options",
-                            rulesName: "pathRules",
-                            showText,
-                            placeholder: browser.i18n.getMessage(
-                              "options_path_rule_add_placeholder"
-                            ),
-                            focusInput:
-                              focusInput &&
-                              focusInput.name === "options.pathRules" &&
-                              focusInput,
-                            testLabel: "__MSG_options_path_rule_test_label__",
-                            testNote: (
-                              <span className="note">
-                                __MSG_options_path_rule_test_note__
-                              </span>
-                            ),
-                            testUrl: testPathRulesUrl,
-                            test: testPathRules,
-                            onTestChange: (ev) =>
-                              this.handleLocalChange(ev, {
-                                name: "testPathRulesUrl",
-                              }),
-                            onTestSubmit: (ev) =>
-                              this.handleTestRules(ev, {
-                                url: testPathRulesUrl,
-                                name: "testPathRules",
-                                rules: options.pathRules,
-                              }),
-                          })}
-                        </fieldset>
-                      </fieldset>
-                    </div>
-                  </div>
-                </div>
+                {this.renderOptions({
+                  allowDownloadPrivate,
+                  focusInput,
+                  options,
+                  pathRulesNewValue,
+                  showText,
+                  testPathRules,
+                  testPathRulesUrl,
+                })}
               </div>
               <div
                 id="rulesetContent"
                 className={rulesetSelected !== -1 ? "" : "hidden"}
               >
-                <div className="header2">
-                  <div
-                    id="rulesetDelete"
-                    className="delete button"
-                    onClick={this.handleRulesetDelete}
-                  >
-                    <div className="delete-icon">
-                      __MSG_options_rulesets_delete_label__
-                    </div>
-                  </div>
-                  <h2 id="rulesetName"></h2>
-                </div>
-                <p className="note">__MSG_options_rulesets_global_note__</p>
-                <div className="row">
-                  <div className="column">
-                    <fieldset className="optionGroup">
-                      <legend>
-                        <span>__MSG_options_rulesets_ruleset_title__</span>
-                      </legend>
-                      <fieldset>
-                        <div className="inputWrap">
-                          <label className="text">
-                            __MSG_options_rulesets_ruleset_name_label__
-                          </label>
-                          <input
-                            type="text"
-                            name="rulesetName"
-                            value={ruleset.rulesetName || ""}
-                            onChange={this.handleTyping}
-                            onBlur={this.handleChange}
-                          />
-                        </div>
-                        <fieldset>
-                          <label className="text">
-                            __MSG_options_domain_rules_label__
-                          </label>
-                          <div id="rulesetDomainRulesToggle">
-                            {this.renderRules({
-                              rules: ruleset.domainRules,
-                              ruleNewValue: domainRulesNewValue,
-                              rulesName: "domainRules",
-                              scopeName: "ruleset",
-                              showText,
-                              placeholder: browser.i18n.getMessage(
-                                "options_domain_rule_add_placeholder"
-                              ),
-                              focusInput:
-                                focusInput &&
-                                focusInput.name === "ruleset.domainRules" &&
-                                focusInput,
-                              testLabel:
-                                "__MSG_options_domain_rule_test_label__",
-                              testUrl: testDomainRulesUrl,
-                              test: testDomainRules,
-                              onTestChange: (ev) =>
-                                this.handleLocalChange(ev, {
-                                  name: "testDomainRulesUrl",
-                                }),
-                              onTestSubmit: (ev) =>
-                                this.handleTestRules(ev, {
-                                  url: testDomainRulesUrl,
-                                  name: "testDomainRules",
-                                  rules: ruleset.domainRules,
-                                }),
-                            })}
-                          </div>
-                        </fieldset>
-                      </fieldset>
-                    </fieldset>
-                  </div>
-                </div>
-                <div className="optionGroups">
-                  <div className="row">
-                    <div className="column">
-                      {this.renderInheritGroup({
-                        name: "filterInherit",
-                        checked: ruleset.filterInherit,
-                        title: "__MSG_options_filter_title__",
-                        children: (
-                          <Fragment>
-                            {this.renderRadio({
-                              name: "filter",
-                              label: "__MSG_options_filter_label_max__",
-                              value: Constants.FILTER.MAX,
-                              checked: ruleset.filter === Constants.FILTER.MAX,
-                              disabled: ruleset.filterInherit,
-                            })}
-                            {this.renderRadio({
-                              name: "filter",
-                              label: "__MSG_options_filter_label_all__",
-                              value: Constants.FILTER.ALL,
-                              checked: ruleset.filter === Constants.FILTER.ALL,
-                              disabled: ruleset.filterInherit,
-                            })}
-                            {this.renderRadio({
-                              name: "filter",
-                              label: (
-                                <Fragment>
-                                  __MSG_options_filter_label_direct__
-                                  <span className="note">
-                                    __MSG_options_filter_label_direct_note__
-                                  </span>
-                                </Fragment>
-                              ),
-                              value: Constants.FILTER.DIRECT,
-                              checked:
-                                ruleset.filter === Constants.FILTER.DIRECT,
-                              disabled: ruleset.filterInherit,
-                            })}
-                            <fieldset>
-                              <legend>
-                                <span>__MSG_options_dimensions_title__</span>
-                              </legend>
-                              {this.renderText({
-                                name: "minWidth",
-                                label: "__MSG_options_dimensions_width_label__",
-                                className: "",
-                                value: ruleset.minWidth,
-                                disabled: ruleset.filterInherit,
-                              })}
-                              {this.renderText({
-                                name: "minHeight",
-                                label:
-                                  "__MSG_options_dimensions_height_label__",
-                                className: "",
-                                value: ruleset.minHeight,
-                                disabled: ruleset.filterInherit,
-                              })}
-                            </fieldset>
-                          </Fragment>
-                        ),
-                      })}
-                      {this.renderInheritGroup({
-                        name: "downloadAdvancedInherit",
-                        checked: ruleset.downloadAdvancedInherit,
-                        title: "__MSG_options_advanced_title__",
-                        children: (
-                          <Fragment>
-                            {this.renderCheckbox({
-                              name: "downloadPrivate",
-                              label: "__MSG_options_download_private__",
-                              checked: ruleset.downloadPrivate,
-                              disabled: ruleset.downloadAdvancedInherit,
-                            })}
-                            <span className="note">
-                              __MSG_options_download_private_note__
-                            </span>
-                          </Fragment>
-                        ),
-                      })}
-                    </div>
-                    <div className="column">
-                      {this.renderInheritGroup({
-                        name: "downloadPathInherit",
-                        checked: ruleset.downloadPathInherit,
-                        title: "__MSG_options_download_path_title__",
-                        children: (
-                          <Fragment>
-                            <span className="note">
-                              __MSG_options_download_path_note__
-                            </span>
-                            {this.renderText({
-                              name: "downloadPath",
-                              label: "__MSG_options_download_path_label__",
-                              placeholder:
-                                "__MSG_options_download_path_placeholder__",
-                              value: ruleset.downloadPath,
-                              disabled: ruleset.downloadPathInherit,
-                            })}
-                          </Fragment>
-                        ),
-                      })}
-                      {this.renderInheritGroup({
-                        name: "conflictActionInherit",
-                        checked: ruleset.conflictActionInherit,
-                        title: "__MSG_options_conflict_action_title__",
-                        children: (
-                          <Fragment>
-                            {this.renderRadio({
-                              name: "conflictAction",
-                              label:
-                                "__MSG_options_conflict_action_label_uniquify__",
-                              value: Constants.CONFLICT_ACTION.UNIQUIFY,
-                              checked:
-                                ruleset.conflictAction ===
-                                Constants.CONFLICT_ACTION.UNIQUIFY,
-                              disabled: ruleset.conflictActionInherit,
-                            })}
-                            {this.renderRadio({
-                              name: "conflictAction",
-                              label:
-                                "__MSG_options_conflict_action_label_overwrite__",
-                              value: Constants.CONFLICT_ACTION.OVERWRITE,
-                              checked:
-                                ruleset.conflictAction ===
-                                Constants.CONFLICT_ACTION.OVERWRITE,
-                              disabled: ruleset.conflictActionInherit,
-                            })}
-                          </Fragment>
-                        ),
-                      })}
-                      {this.renderInheritGroup({
-                        name: "downloadCompleteInherit",
-                        checked: ruleset.downloadCompleteInherit,
-                        title: "__MSG_options_download_complete_title__",
-                        children: (
-                          <Fragment>
-                            {this.renderCheckbox({
-                              name: "closeTab",
-                              label: "__MSG_options_close_tab__",
-                              checked: ruleset.closeTab,
-                              disabled: ruleset.downloadCompleteInherit,
-                            })}
-                            {this.renderCheckbox({
-                              name: "removeEnded",
-                              label: "__MSG_options_remove_ended__",
-                              checked: ruleset.removeEnded,
-                              disabled: ruleset.downloadCompleteInherit,
-                            })}
-                          </Fragment>
-                        ),
-                      })}
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="column">
-                      {this.renderInheritGroup({
-                        name: "pathRulesInherit",
-                        checked: ruleset.pathRulesInherit,
-                        title: (
-                          <Fragment>
-                            __MSG_options_path_rules_title__ &nbsp;
-                            <a
-                              target="_blank"
-                              href="https://github.com/mcdamo/tab-image-saver/#path-rules"
-                            >
-                              __MSG_options_learn_more__
-                            </a>
-                          </Fragment>
-                        ),
-                        children: (
-                          <Fragment>
-                            <span className="note">
-                              __MSG_options_path_rules_note__
-                            </span>
-                            <label className="text">
-                              __MSG_options_path_rules_label__
-                            </label>
-                            {this.renderRules({
-                              rules: ruleset.pathRules,
-                              ruleNewValue: pathRulesNewValue,
-                              rulesName: "pathRules",
-                              scopeName: "ruleset",
-                              showText,
-                              placeholder: browser.i18n.getMessage(
-                                "options_path_rule_add_placeholder"
-                              ),
-                              focusInput:
-                                focusInput &&
-                                focusInput.name === "ruleset.pathRules" &&
-                                focusInput,
-                              testLabel: "__MSG_options_path_rule_test_label__",
-                              testNote: (
-                                <span className="note">
-                                  __MSG_options_path_rule_test_note__
-                                </span>
-                              ),
-                              testUrl: testRulesetPathRulesUrl,
-                              test: testRulesetPathRules,
-                              onTestChange: (ev) =>
-                                this.handleLocalChange(ev, {
-                                  name: "testRulesetPathRulesUrl",
-                                }),
-                              onTestSubmit: (ev) =>
-                                this.handleTestRules(ev, {
-                                  url: testRulesetPathRulesUrl,
-                                  name: "testRulesetPathRules",
-                                  rules: ruleset.pathRules,
-                                }),
-                            })}
-                          </Fragment>
-                        ),
-                      })}
-                    </div>
-                  </div>
-                </div>
+                {this.renderRuleset({
+                  ruleset,
+                  domainRulesNewValue,
+                  focusInput,
+                  pathRulesNewValue,
+                  showText,
+                  testDomainRulesUrl,
+                  testDomainRules,
+                  testRulesetPathRulesUrl,
+                  testRulesetPathRules,
+                })}
               </div>
             </div>
           </form>

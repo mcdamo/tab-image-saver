@@ -124,6 +124,11 @@ describe("global.js", function () {
         "filename.jpg"
       );
     });
+    it("should remove trailing period", function () {
+      expect(Global.sanitizeFilename("filename.jpg. ")).to.equal(
+        "filename.jpg"
+      );
+    });
   });
 
   describe("sanitizePath", function () {
@@ -136,11 +141,14 @@ describe("global.js", function () {
     });
 
     it("should remove spaces around slashes", function () {
-      expect(Global.sanitizePath("pa / th")).to.equal("pa/th");
+      expect(Global.sanitizePath("p / a / th")).to.equal("p/a/th");
     });
 
     it("should reduce duplicate slashes", function () {
       expect(Global.sanitizePath("pa//th")).to.equal("pa/th");
+    });
+    it("should remove trailing period", function () {
+      expect(Global.sanitizePath("path./")).to.equal("path");
     });
   });
 
@@ -223,98 +231,142 @@ describe("global.js", function () {
     });
   });
 
-  describe("templateCode", function () {
-    it("should return input if code undefined", function () {
-      expect(Global.templateCode("input")).to.equal("input");
-    });
-    it("should return input if code invalid", function () {
-      expect(Global.templateCode("input", '""'), "undefined code").to.equal(
-        "input"
-      );
-      expect(
-        Global.templateCode("input", '"/invalid//"'),
-        "invalid action"
-      ).to.equal("input");
-    });
-    it("should replace with regexp", function () {
-      expect(
-        Global.templateCode("the cat", '"/replace/([a-z]+)/_$1_/g"')
-      ).to.equal("_the_ _cat_");
-    });
-  });
+  // describe("templateCode", function () {
+  //   it("should return input if code undefined", function () {
+  //     expect(Global.templateCode("input")).to.equal("input");
+  //   });
+  //   it("should return input if code invalid", function () {
+  //     expect(Global.templateCode("input", '""'), "undefined code").to.equal(
+  //       "input"
+  //     );
+  //     expect(
+  //       Global.templateCode("input", '"/invalid//"'),
+  //       "invalid action"
+  //     ).to.equal("input");
+  //   });
+  //   it("should replace with regexp", function () {
+  //     expect(
+  //       Global.templateCode("the cat", '"/replace/([a-z]+)/_$1_/g"')
+  //     ).to.equal("_the_ _cat_");
+  //   });
+  // });
 
   describe("template", function () {
-    it("should replace all variables", function () {
-      expect(
-        Global.template("<var1><var2>", { var1: "x", var2: "y" })
-      ).to.equal("xy");
+    it("should substitute all variables", async function () {
+      await expect(
+        Global.template("${var1}${var2}", { var1: "x", var2: "y" })
+      ).to.eventually.become("xy");
     });
-    it("should replace variables using lower-case naming", function () {
-      expect(Global.template("<VarA>", { vara: "x", VarA: "y" })).to.equal("x");
+    it("should substitute variables using lower-case naming", async function () {
+      await expect(
+        Global.template("${VarA}", { vara: "x", VarA: "y" })
+      ).to.eventually.become("x");
     });
-    it("should replace conditional variable", function () {
-      expect(Global.template("<var1|var2>", { var1: "", var2: "y" })).to.equal(
-        "y"
-      );
+    it("should substitute conditional variable", async function () {
+      await expect(
+        Global.template("${var1||var2}", { var1: "", var2: "y" })
+      ).to.eventually.become("y");
     });
-    it("should replace conditional variables in order", function () {
-      expect(
-        Global.template("<var1|var2|var3>", { var1: "x", var2: "y", var3: "z" })
-      ).to.equal("x");
-      expect(
-        Global.template("<var1|var2|var3>", { var1: "", var2: "y", var3: "z" })
-      ).to.equal("y");
-      expect(
-        Global.template("<var1|var2|var3>", { var1: "", var2: "", var3: "z" })
-      ).to.equal("z");
+    it("should substitute conditional variables in order", async function () {
+      await expect(
+        Global.template("${var1||var2||var3}", {
+          var1: "x",
+          var2: "y",
+          var3: "z",
+        })
+      ).to.eventually.become("x");
+      await expect(
+        Global.template("${var1||var2||var3}", {
+          var1: "",
+          var2: "y",
+          var3: "z",
+        })
+      ).to.eventually.become("y");
+      await expect(
+        Global.template("${var1||var2||var3}", {
+          var1: "",
+          var2: "",
+          var3: "z",
+        })
+      ).to.eventually.become("z");
     });
-    it("should replace conditional constant", function () {
-      expect(Global.template("<var1|.ext>", { var1: "" })).to.equal(".ext");
+    // it("should replace conditional constant", function () {
+    //   expect(Global.template("<var1|.ext>", { var1: "" })).to.equal(".ext");
+    // });
+    it("should zero-pad number", async function () {
+      await expect(
+        Global.template("${var1.padStart(4,0)}", { var1: "42" })
+      ).to.eventually.become("0042");
     });
-    it("should zero-pad number", function () {
-      expect(Global.template("<####var1>", { var1: "42" })).to.equal("0042");
-    });
-    it("should handle undefined variables", function () {
-      expect(
-        Global.template("<var1>,<var2>", { var1: undefined, var2: undefined }),
+    it("should handle undefined variables", async function () {
+      await expect(
+        Global.template("${var1},${var2}", {
+          //var1: undefined,
+          //var2: undefined,
+        }),
         "var1,var2"
-      ).to.equal(",");
-      expect(
-        Global.template("<var1|var2>", { var1: undefined, var2: undefined }),
+      ).to.eventually.become(",");
+      await expect(
+        Global.template("${var1||var2}", {
+          //var1: undefined,
+          //var2: undefined
+        }),
         "var1|var2"
-      ).to.equal("");
+      ).to.eventually.become("");
     });
-    it("should replace outer regex", function () {
-      expect(
-        Global.template('<var1|var2>"/replace/\\s*\\|.*//"', {
+    it("should replace outer regex", async function () {
+      await expect(
+        Global.template('${(var1||var2).replace(/\\s*\\|.*/, "")}', {
           var1: "",
-          var2: "title | site",
+          var2: "title2 | site",
         })
-      ).to.equal("title");
+      ).to.eventually.become("title2");
     });
-    it("should replace inner regex", function () {
-      expect(
-        Global.template('<var1"/replace/.*/"|var2"/replace/([a-z]+)/_$1_/g">', {
-          var1: "",
-          var2: "title | site",
-        })
-      ).to.equal("_title_ | _site_");
-    });
-    it("should replace inner regex with escaped quotation marks", function () {
-      expect(
-        Global.template('<var1|var2"/replace/\\"([a-z]+)\\"/_$1_/g">', {
-          var1: "",
-          var2: '"title" | "site"',
-        })
-      ).to.equal("_title_ | _site_");
-    });
-    it("should replace inner & outer regex", function () {
-      expect(
+    it("should replace inner regex", async function () {
+      await expect(
         Global.template(
-          '<var1|var2"/replace/([a-z]+)/_$1_/g">"/replace/\\s*\\|.*//"',
-          { var1: "", var2: "title | site" }
+          '${var1.replace(/.*/, "")||var2.replace(/([a-z0-9]+)/g, "_$1_")}',
+          {
+            var1: "var1",
+            var2: "title | site2",
+          }
         )
-      ).to.equal("_title_");
+      ).to.eventually.become("_title_ | _site2_");
+    });
+    it("should replace inner regex with escaped quotation marks", async function () {
+      await expect(
+        Global.template(
+          '${(var1||var2).replace(/\\"([a-z0-9]+)\\"/g, "_$1_")}',
+          {
+            var1: "",
+            var2: '"title" | "site2"',
+          }
+        )
+      ).to.eventually.become("_title_ | _site2_");
+    });
+    it("should handle escaped backslashes in regex", async function () {
+      await expect(
+        Global.template('${(var1||var2).replace(/\\\\/, "_")}', {
+          var1: "",
+          var2: '"title" \\\\ "site2"',
+        })
+      ).to.eventually.become('"title" _\\ "site2"');
+    });
+    it("should handle backslashes in regex", async function () {
+      await expect(
+        Global.template('${(var1||var2).replace(/title\\s+\\|\\s+/g, "_")}', {
+          var1: "",
+          var2: "title | site2",
+        })
+      ).to.eventually.become("_site2");
+    });
+    it("should replace inner & outer regex", async function () {
+      await expect(
+        Global.template(
+          '${((var1||var2).replace(/([a-z0-9]+)/g, "_$1_")).replace(/\\s*\\|.*/, "")}',
+          { var1: "", var2: "title2 | site" }
+        )
+      ).to.eventually.become("_title2_");
     });
   });
 

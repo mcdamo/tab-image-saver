@@ -39,7 +39,7 @@ describe("version.js", function () {
       browser.windows = windowsOrig;
       sinon.restore();
     });
-    it("should upgrade from 2.1.1, altIsFilename to pathRules and action=current to action=active", async function () {
+    it("should upgrade to 2.2.0, altIsFilename to pathRules and action=current to action=active", async function () {
       let storage = {
         version: "2.1.0",
         action: "current",
@@ -62,7 +62,7 @@ describe("version.js", function () {
       await browser.storage.local.remove(Object.keys(opts));
     });
 
-    it("should upgrade from 2.5.6, pathRules to array and take period out of ext", async function () {
+    it("should upgrade to 3.0.0, pathRules to array and take period out of ext", async function () {
       let storage = {
         version: "2.5.6",
         pathRules:
@@ -87,6 +87,29 @@ describe("version.js", function () {
       await browser.storage.local.remove(Object.keys(opts));
     });
 
+    it("should upgrade to 4.0.0", async function () {
+      let storage = {
+        version: "3.0.0",
+        rulesetIndex: [{ key: 0 }, { key: 1 }],
+        ruleset_0: {},
+        ruleset_1: {},
+      };
+      let newVer = "4.0.0";
+      await browser.storage.local.set(storage);
+      await Version.update(newVer, storage.version);
+      const opts = {
+        version: newVer,
+        rulesetIndex: [{ id: 0 }, { id: 1 }],
+        ruleset_0: {},
+        ruleset_1: {},
+      };
+      console.log("became", await browser.storage.local.get());
+      await expect(browser.storage.local.get()).to.eventually.become(opts);
+      //.and.to.have.property("version").to.equal(newVer);
+      // TODO cleanup
+      await browser.storage.local.remove(Object.keys(opts));
+    });
+
     it("should always update version number", async function () {
       let newVer = "x.y.z";
       await Version.update(newVer);
@@ -95,6 +118,92 @@ describe("version.js", function () {
       });
       // TODO cleanup
       await browser.storage.local.remove("version");
+    });
+  });
+
+  describe("_legacy_template", function () {
+    it("should replace all variables", function () {
+      expect(
+        Version._legacy_template("<var1><var2>", { var1: "", var2: "" })
+      ).to.equal("${var1}${var2}");
+    });
+    it("should replace variables using lower-case naming", function () {
+      expect(Version._legacy_template("<VarA>", { vara: "" })).to.equal(
+        "${VarA}"
+      );
+    });
+    it("should replace conditional variable", function () {
+      expect(
+        Version._legacy_template("<var1|var2>", { var1: "", var2: "" })
+      ).to.equal("${var1||var2}");
+    });
+    it("should replace conditional variables in order", function () {
+      expect(
+        Version._legacy_template("<var1|var2|var3>", {
+          var1: "",
+          var2: "",
+          var3: "",
+        })
+      ).to.equal("${var1||var2||var3}");
+    });
+    it("should replace conditional constant", function () {
+      expect(Version._legacy_template("<var1|.ext>", { var1: "" })).to.equal(
+        '${var1||".ext"}'
+      );
+    });
+    it("should zero-pad number", function () {
+      expect(Version._legacy_template("<####var1>", { var1: "" })).to.equal(
+        "${var1.padStart(4,0)}"
+      );
+    });
+    it("should handle undefined variables", function () {
+      expect(
+        Version._legacy_template("<var1>,<var2>", { var1: "", var2: "" }),
+        "var1,var2"
+      ).to.equal("${var1},${var2}");
+      expect(
+        Version._legacy_template("<var1|var2>", { var1: "", var2: "" }),
+        "var1|var2"
+      ).to.equal("${var1||var2}");
+    });
+    it("should replace outer regex", function () {
+      expect(
+        Version._legacy_template('<var1|var2>"/replace/\\s*\\|.*//"', {
+          var1: "",
+          var2: "",
+        })
+      ).to.equal('${(var1||var2).replace(/\\s*\\|.*/, "")}');
+    });
+    it("should replace inner regex", function () {
+      expect(
+        Version._legacy_template(
+          '<var1"/replace/.*/"|var2"/replace/([a-z]+)/_$1_/g">',
+          { var1: "", var2: "" }
+        )
+      ).to.equal(
+        '${var1.replace(/.*/, "")||var2.replace(/([a-z]+)/g, "_$1_")}'
+      );
+    });
+    it("should replace inner regex with escaped quotation marks", function () {
+      expect(
+        Version._legacy_template(
+          '<var1|var2"/replace/\\"([a-z]+)\\"/_$1_/g">',
+          {
+            var1: "",
+            var2: "",
+          }
+        )
+      ).to.equal('${var1||var2.replace(/\\"([a-z]+)\\"/g, "_$1_")}');
+    });
+    it("should replace inner & outer regex", function () {
+      expect(
+        Version._legacy_template(
+          '<var1|var2"/replace/([a-z]+)/_$1_/g">"/replace/\\s*\\|.*//"',
+          { var1: "", var2: "" }
+        )
+      ).to.equal(
+        '${(var1||var2.replace(/([a-z]+)/g, "_$1_")).replace(/\\s*\\|.*/, "")}'
+      );
     });
   });
 });

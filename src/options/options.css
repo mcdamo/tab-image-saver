@@ -7,23 +7,34 @@
 	overflow: hidden;
 }
 
-#errorPopup {
+#errorFill {
 	z-index: 99;
-	position: fixed;
-	top: 30vh;
-	left: 45vw;
-	width: 250px;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,.6);
+}
+
+#errorPopup {
+	position: absolute;
+	top: 40%;
+	left: 50%;
+	width: 50%;
 	padding: 1rem;
 	border: 1px solid black;
 	background: lightcoral;
 	text-align: center;
+	-webkit-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
 }
 
 #sidebar {
-	overflow-y: auto;
+	/*overflow-y: auto;*/
 	padding: 1rem;
 	min-width: 200px;
 	border-right: 1px solid var(--color-border);
+	display: flex;
+	flex-direction: column;
 }
 
 #content {
@@ -210,6 +221,8 @@ fieldset .wrap > * {
 
 #rulesetSelect {
 	margin-top: 1rem;
+	flex-grow: 2;
+	overflow-y: auto;
 }
 
 #rulesetSelect .button {
@@ -226,6 +239,17 @@ fieldset .wrap > * {
 #rulesetSelect .button.selected .error-icon {
 	filter: invert(); /* make svg white */
 	color: var(--color-button-fg);
+}
+
+#sidebar #backup {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+#sidebar #backup > * {
+	margin: 1px;
 }
 
 .button.delete {
@@ -266,6 +290,39 @@ fieldset .wrap > * {
 	filter: invert() brightness(0.5);
 }
 
+.add-icon {
+	background-image: url('/img/plus-solid.svg');
+}
+
+.export-icon {
+	background-image: url('/img/download-solid.svg');
+}
+
+.import-icon {
+	background-image: url('/img/upload-solid.svg');
+}
+
+.defaults-icon {
+	background-image: url('/img/history-solid.svg');
+}
+
+.update-icon {
+	background-image: url('/img/tools-solid.svg');
+}
+
+.button.button-important {
+	background-color: lightcoral;
+}
+
+.button.button-disabled {
+	background-color:var(--color-disable);
+	cursor: default;
+	font-style: italic;
+}
+
+.button.button-disabled:hover {
+	filter: none;
+}
 /*
 #rulesetSelect .drag-icon {
 	width: 1rem;

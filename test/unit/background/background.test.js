@@ -248,17 +248,18 @@ describe("background.js", function () {
         alt: "alt string",
       };
       let rules = {
-        "<alt>.jpg": "alt string.jpg",
-        "<name>,<ext>": "file,ext",
-        "<xName>,<xExt>,<xMimeExt>": "xhr name,xhrext,xm",
-        "<####index>": "0042",
-        "<host>": "domain.tld",
-        "<hostname>": "domain.tld",
-        "<path>": "path/part",
-        " <undef> ": "undef", // strip whitespace and treat as literal
-        "<tabtitle>": "tab title - site name",
-        "<tabhost>,<tabpath>,<tabfile>,<tabext>":
+        "${alt}.jpg": "alt string.jpg",
+        "${name},${ext}": "file,ext",
+        "${xName},${xExt},${xMimeExt}": "xhr name,xhrext,xm",
+        "${index.padStart(4,0)}": "0042",
+        "${host}": "domain.tld",
+        "${hostname}": "domain.tld",
+        "${path}": "path/part",
+        "${tabtitle}": "tab title - site name",
+        "${tabhost},${tabpath},${tabfile},${tabext}":
           "my.tab.url,path/to,page,html",
+        // no longer a valid replacement
+        // " ${undef} ": "undef", // strip whitespace and return literal
       };
       //Object.entries(rules).forEach(async ([test, result]) => {
       for (const test in rules) {
@@ -275,7 +276,7 @@ describe("background.js", function () {
         src: "http://domain.tld/path/",
       };
       let rules = {
-        "<alt>,<name>,<ext>": ",,",
+        "${alt},${name},${ext}": ",,",
       };
       //Object.entries(rules).forEach(async ([test, result]) => {
       for (const test in rules) {
@@ -298,8 +299,8 @@ describe("background.js", function () {
         alt: '*":<>|?alt string*":<>|?',
       };
       let rules = {
-        "<alt>.jpg": "_______alt string_______.jpg",
-        "<tabtitle>": "_______tab title_______",
+        "${alt}.jpg": "_______alt string_______.jpg",
+        "${tabtitle}": "_______tab title_______",
       };
       //Object.entries(rules).forEach(async ([test, result]) => {
       for (const test in rules) {
@@ -316,9 +317,9 @@ describe("background.js", function () {
         src: "http://domain.tld/path%20name/part/file%20name.ext?query",
       };
       let rules = {
-        "<name>,<ext>": "file name,ext",
-        "<hostname>": "domain.tld",
-        "<path>": "path name/part",
+        "${name},${ext}": "file name,ext",
+        "${hostname}": "domain.tld",
+        "${path}": "path name/part",
       };
       //Object.entries(rules).forEach(async ([test, result]) => {
       for (const test in rules) {
@@ -339,7 +340,7 @@ describe("background.js", function () {
           tab: {},
           image: img,
           index: 42,
-          rules: ["<name>,<ext>"],
+          rules: ["${name},${ext}"],
         })
       ).to.eventually.become("file,ext");
     });
@@ -372,7 +373,7 @@ describe("background.js", function () {
     });
 
     it("should join path with options.downloadPath", async function () {
-      let rules = ["<name>.<ext>"];
+      let rules = ["${name}.${ext}"];
       await expect(
         App.createPath({ tab: {}, image: img, index: 0, rules, ...param })
       ).to.eventually.become("t/file.ext");
