@@ -369,8 +369,13 @@ const Options = {
 
   getRulesetKeyFromId: (id) => Common.getRulesetKeyFromId(id),
 
-  getRulesetKeyFromIndex: (index) =>
-    Options.getRulesetKeyFromId(Options.OPTIONS.rulesetIndex[index].id),
+  getRulesetKeyFromIndex: (index) => {
+    const id = Options.OPTIONS.rulesetIndex[index].id;
+    if (id === undefined) {
+      throw new Error(`rulesetIndex:${index} missing id`);
+    }
+    return Options.getRulesetKeyFromId(id);
+  },
 
   // test rule against url
   //
@@ -470,8 +475,13 @@ const Options = {
       Options.OPTIONS.rulesetIndex &&
       Options.OPTIONS.rulesetIndex.length > 0
     ) {
-      for (let i = 0; i < Options.OPTIONS.rulesetIndex.length; i++) {
-        await Options.loadRuleset(Options.getRulesetKeyFromIndex(i));
+      for (let i = Options.OPTIONS.rulesetIndex.length - 1; i >= 0; i--) {
+        try {
+          await Options.loadRuleset(Options.getRulesetKeyFromIndex(i));
+        } catch (err) {
+          console.error(err);
+          Options.OPTIONS.rulesetIndex.splice(i, 1);
+        }
       }
     }
     Options.loaded = true;
@@ -482,13 +492,13 @@ const Options = {
   // process schema defaults on ruleset
   loadRuleset: async (rulesetKey) => {
     const loaded = await browser.storage.local.get([rulesetKey]);
-    console.log("loadRuleset", loaded);
+    console.log(`loadRuleset ${rulesetKey}`, loaded);
     return await Options.setRuleset(rulesetKey, loaded[rulesetKey]);
   },
 
   setRuleset: async (rulesetKey, loaded) => {
-    console.log("setRuleset loaded", loaded);
-    console.log("setRuleset defaults", Options.RULESET_DEFAULTS);
+    console.log(`setRuleset ${rulesetKey} loaded`, loaded);
+    console.log(`setRuleset ${rulesetKey} defaults`, Options.RULESET_DEFAULTS);
     // merge ruleset defaults with new 'loaded' options
     const options = {
       ...JSON.parse(JSON.stringify(Options.RULESET_DEFAULTS)), // deep clone
@@ -554,8 +564,12 @@ const Options = {
       Options.OPTIONS.rulesetIndex.length > 0
     ) {
       for (let i = 0; i < Options.OPTIONS.rulesetIndex.length; i++) {
-        rulesetKey = Options.getRulesetKeyFromIndex(i);
-        Options.setRulesetInherited(rulesetKey, Options.RULESETS[rulesetKey]);
+        try {
+          rulesetKey = Options.getRulesetKeyFromIndex(i);
+          Options.setRulesetInherited(rulesetKey, Options.RULESETS[rulesetKey]);
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
   },

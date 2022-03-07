@@ -20,6 +20,9 @@ const Version = {
       if (ver >= "4.0.0" && prev < "4.0.0") {
         await Version.update_4_0_0(prev);
       }
+      if (ver >= "4.0.1" && prev < "4.0.1") {
+        await Version.update_4_0_1(prev);
+      }
       await browser.storage.local.set({ version: ver });
       console.log(`Updated to ${ver}`); /* RemoveLogging:skip */
     }
@@ -90,6 +93,7 @@ const Version = {
       });
     }
   },
+
   update_4_0_0: async (prev) => {
     // convert pathRules to expressions
     console.debug(`Update part ${prev} => 4.0.0`); /* RemoveLogging:skip */
@@ -101,11 +105,8 @@ const Version = {
     }
     if (oldOpts.rulesetIndex) {
       // rename rulesetIndex key => id
-      const rulesetIndex = oldOpts.rulesetIndex.map((idx) => {
-        const { key, ...rest } = idx;
-        rest.id = key;
-        return rest;
-      });
+      const rulesetIndex = oldOpts.rulesetIndex.map((_) => ({ id: _.key }));
+      console.log("New index", rulesetIndex);
       set.rulesetIndex = rulesetIndex;
 
       keys = rulesetIndex.reduce((acc, val) => {
@@ -113,19 +114,48 @@ const Version = {
         return acc;
       }, []);
       const oldRulesets = await browser.storage.local.get(keys);
-      console.log(oldRulesets);
+      console.log("oldRulesets", oldRulesets);
       for (const [rulesetKey, oldRuleset] of Object.entries(oldRulesets)) {
         if (oldRuleset.pathRules) {
           set[rulesetKey] = { ...oldRuleset, _legacy_template: true };
         }
       }
     }
+    console.log("4.0.0 update:", set); /* RemoveLogging:skip */
     await browser.storage.local.set(set);
     if (prev !== undefined) {
       // open readme page for v4.0
       await browser.windows.create({
         url: "https://github.com/mcdamo/tab-image-saver/blob/master/CHANGES-4.0.md",
       });
+    }
+  },
+
+  update_4_0_1: async (prev) => {
+    console.debug(`Update part ${prev} => 4.0.1`); /* RemoveLogging:skip */
+    const set = {};
+    let oldOpts = await browser.storage.local.get();
+    if (oldOpts.rulesetIndex) {
+      // test for invalid index states
+      const test = oldOpts.rulesetIndex.filter(
+        (_) =>
+          !Object.prototype.hasOwnProperty.call(_, "id") ||
+          !Object.prototype.hasOwnProperty.call(oldOpts, `ruleset_${_.id}`)
+      );
+      if (test.length > 0) {
+        console.log("rulestIndex invalid", test); /* RemoveLogging:skip */
+        // fix index
+        const rulesetIndex = Object.keys(oldOpts).reduce((acc, _) => {
+          const found = _.match(/^ruleset_([\d]+)$/);
+          if (found) {
+            acc.push({ id: parseInt(found[1], 10) });
+          }
+          return acc;
+        }, []);
+        set.rulesetIndex = rulesetIndex;
+        console.log("4.0.1 update:", set); /* RemoveLogging:skip */
+        await browser.storage.local.set(set);
+      }
     }
   },
 
