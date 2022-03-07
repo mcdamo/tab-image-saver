@@ -5,6 +5,9 @@ module.exports = function (grunt) {
       build: {
         src: "build/**/*.js", // Each file will be overwritten with the output!
       },
+      options: {
+        methods: ["debug", "info", "log"],
+      },
     },
   });
 
