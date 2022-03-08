@@ -418,7 +418,7 @@ const Options = {
   // inherit options are evaluated
   // other rulesets are not returned
   getTabOptions: async (url = null) => {
-    console.log("getTabOptions", url);
+    console.debug("getTabOptions", url);
     if (!Options.loaded) {
       await Options.loadOptions();
     }
@@ -466,7 +466,7 @@ const Options = {
   },
 
   loadOptions: async () => {
-    console.log("loadOptions");
+    console.debug("loadOptions");
     console.log("ALLOW_DOWNLOAD_PRIVATE", Options.ALLOW_DOWNLOAD_PRIVATE);
     const keys = Options.getKeys();
     const loadedOptions = await browser.storage.local.get(keys);
@@ -485,20 +485,23 @@ const Options = {
       }
     }
     Options.loaded = true;
-    console.log("loadOptions:end");
+    console.debug("loadOptions:end");
     return Options.OPTIONS;
   },
 
   // process schema defaults on ruleset
   loadRuleset: async (rulesetKey) => {
     const loaded = await browser.storage.local.get([rulesetKey]);
-    console.log(`loadRuleset ${rulesetKey}`, loaded);
+    console.debug(`loadRuleset ${rulesetKey}`, loaded);
     return await Options.setRuleset(rulesetKey, loaded[rulesetKey]);
   },
 
   setRuleset: async (rulesetKey, loaded) => {
-    console.log(`setRuleset ${rulesetKey} loaded`, loaded);
-    console.log(`setRuleset ${rulesetKey} defaults`, Options.RULESET_DEFAULTS);
+    console.debug(`setRuleset ${rulesetKey} loaded`, loaded);
+    console.debug(
+      `setRuleset ${rulesetKey} defaults`,
+      Options.RULESET_DEFAULTS
+    );
     // merge ruleset defaults with new 'loaded' options
     const options = {
       ...JSON.parse(JSON.stringify(Options.RULESET_DEFAULTS)), // deep clone
@@ -516,7 +519,7 @@ const Options = {
       const val = await fn(options[k]);
       options[k] = val;
     }
-    console.log("setRuleset options", options);
+    console.debug("setRuleset options", options);
     Options.RULESETS[rulesetKey] = options;
     Options.setRulesetInherited(rulesetKey, loaded);
     return options;
@@ -537,7 +540,7 @@ const Options = {
         // include 'inherit*' key in options
         optionsInherit[k] = loaded[k];
         if (!loaded[k]) {
-          console.log("overriding inherit for", k);
+          console.debug("overriding inherit for", k);
           for (const childName of optionType.inherit) {
             // use ruleset-default if option has not been saved
             optionsInherit[childName] =
@@ -552,7 +555,7 @@ const Options = {
     optionsInherit.domainRules = loaded.domainRules || []; // options.domainRules;
     optionsInherit.rulesetName = loaded.rulesetName;
     optionsInherit.rulesetKey = rulesetKey;
-    console.log("setRuleset inherit", optionsInherit);
+    console.debug("setRuleset inherit", optionsInherit);
     Options.OPTIONS_RULESETS[rulesetKey] = optionsInherit;
   },
 
@@ -596,7 +599,7 @@ const Options = {
    * @returns {string} value
    */
   saveRulesetOption: async (name, value, id) => {
-    console.log("saveRulesetOption", Options.RULESET_DEFAULTS);
+    console.debug("saveRulesetOption", Options.RULESET_DEFAULTS);
     const rulesetKey = Options.getRulesetKeyFromId(id);
     return await Options.saveRulesetKeyOption({ name, value, rulesetKey });
   },
@@ -611,13 +614,13 @@ const Options = {
   saveRulesetKeyOption: async ({ name, value, rulesetKey }) => {
     // get sparse ruleset from storage
     const ruleset = (await browser.storage.local.get(rulesetKey))[rulesetKey];
-    console.log("saveRulesetOption:load", ruleset, name);
+    console.debug("saveRulesetOption:load", ruleset, name);
     const opt = Options.getRulesetOptionMeta(name);
-    console.log("opt", opt);
+    console.debug("opt", opt);
     const newValue = opt.onsave ? await opt.onsave.function(value) : value;
     ruleset[name] = newValue;
     await browser.storage.local.set({ [rulesetKey]: ruleset });
-    console.log("opt", opt);
+    console.debug("opt", opt);
     // run onload functions
     // update OPTIONS_RULESETS with inherit rules
     // TODO set only the changed option, not the entire ruleset.
@@ -626,7 +629,7 @@ const Options = {
   },
 
   saveOption: async (name, value) => {
-    console.log("saveOption", name, value);
+    console.debug("saveOption", name, value);
     const opt = Options.getOptionMeta(name);
     const newValue = opt.onsave ? await opt.onsave.function(value) : value;
     const options = { [name]: newValue };
@@ -640,7 +643,7 @@ const Options = {
   loadShortcut: async (name, key) => await Commands.setCommand(name, key),
 
   setShortcut: async (name, key) => {
-    console.log("key", key);
+    console.debug("key", key);
     // check for conflicting shortcuts
     if (
       key &&
@@ -651,7 +654,7 @@ const Options = {
           Options.OPTIONS[optionName] === key
       )
     ) {
-      console.log("shortcut conflict, throwing error");
+      console.debug("shortcut conflict, throwing error");
       throw new Error("shortcut conflict");
     }
     return await Commands.setCommand(name, key);
@@ -662,7 +665,7 @@ const Options = {
     if (value === Constants.BROWSER_ACTION.POPUP) {
       popup = browser.runtime.getURL("popup.html");
     }
-    console.log("loadBrowserAction", value, popup);
+    console.debug("loadBrowserAction", value, popup);
     await browser.browserAction.setPopup({ popup });
     return value;
   },
@@ -690,7 +693,7 @@ const Options = {
     );
     rulesetIndex.push({ id });
     let ruleset = { rulesetName };
-    console.log("createRuleset", ruleset);
+    console.debug("createRuleset", ruleset);
     await browser.storage.local.set({
       rulesetIndex,
       [rulesetKey]: ruleset,
@@ -709,7 +712,7 @@ const Options = {
       Options.setTitle = App.setTitle;
     }
     // set default options
-    console.log("Options.init");
+    console.debug("Options.init");
     const defaults = Object.entries(Options.OPTION_SCHEMA).reduce(
       (acc, [optionName, option]) => {
         acc[optionName] = JSON.parse(JSON.stringify(option.default)); // deep clone

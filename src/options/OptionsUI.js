@@ -170,7 +170,7 @@ class OptionsUI extends Component {
     if (!loaded) {
       return;
     }
-    console.log("setOption", rulesetSelected, option, extra);
+    console.debug("setOption", rulesetSelected, option, extra);
     if (rulesetSelected === -1) {
       const value = await this.sendMessage(MESSAGE_TYPE.OPTIONS_OPTION_SAVE, {
         ...option,
@@ -468,7 +468,7 @@ class OptionsUI extends Component {
 
   handleRuleChange(ev, { rules, rulesName }) {
     ev && ev.preventDefault();
-    console.log("handleRuleChange", rules, rulesName);
+    console.debug("handleRuleChange", rules, rulesName);
     const { name, value } = ev.target;
     const focusInput = {};
     if (name === "rulesText") {
@@ -485,7 +485,7 @@ class OptionsUI extends Component {
 
   handleRuleChangeNew(ev, { rules, rulesName, focus = false }) {
     ev && ev.preventDefault();
-    console.log("handleRuleChangeNew", rules, rulesName);
+    console.debug("handleRuleChangeNew", rules, rulesName);
     const { value } = ev.target;
     if (!value || value.length === 0) {
       return;
@@ -510,14 +510,14 @@ class OptionsUI extends Component {
   handleRulesDefault(ev, { rules, rulesName }) {
     ev && ev.preventDefault();
     const scope = this.getScopeName();
-    console.log("handleRulesDefault", scope, rulesName);
+    console.debug("handleRulesDefault", scope, rulesName);
     const defaults = this.state.schemas[scope][rulesName].default;
     this.setOption({ name: rulesName, value: [...rules, ...defaults] });
   }
 
   handleRuleTyping(ev, { rulesName }) {
     ev && ev.preventDefault();
-    console.log("handleRuleTyping", rulesName);
+    console.debug("handleRuleTyping", rulesName);
     const { options, rulesets, rulesetId } = this.state;
     const scope = this.getScopeName();
     let value;
@@ -545,7 +545,7 @@ class OptionsUI extends Component {
 
   handleRuleTypingNew(ev, { rulesName }) {
     ev && ev.preventDefault();
-    console.log("handleRuleTypingNew", rulesName);
+    console.debug("handleRuleTypingNew", rulesName);
     const focusInput = {};
     this.setState({ [`${rulesName}NewValue`]: ev.target.value, focusInput });
   }

@@ -61,7 +61,7 @@ const Menus = {
   // init with App object for action callbacks
   init: async (App) => {
     Menus.App = App;
-    console.log("Menus.init");
+    console.debug("Menus.init");
     for (const [id, menu] of Object.entries(Menus.menus)) {
       if (menu.type && menu.type === "separator") {
         browser.menus.create({

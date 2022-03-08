@@ -5,7 +5,7 @@
   }
 
   function sleep(ms) {
-    console.log("sleep", ms);
+    console.debug("sleep", ms);
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
@@ -54,10 +54,10 @@
           return img;
         }
         if (await App.getCancelled()) {
-          console.log("cancel:waitForDomImage");
+          console.debug("cancel:waitForDomImage");
           return false;
         }
-        console.log(
+        console.debug(
           `waitForDomImage: loaded:${img.complete} ${img.naturalWidth}x${img.naturalHeight}`,
           img
         );
@@ -72,7 +72,7 @@
         img.naturalWidth >= App.options.minWidth &&
         img.naturalHeight >= App.options.minHeight
       ) {
-        console.log(
+        console.debug(
           `valid image (${img.naturalWidth}x${img.naturalHeight}):`,
           img
         );
@@ -155,12 +155,12 @@
 
     sendMessage: async (type, body = null) => {
       try {
-        console.log(body);
+        console.debug(body);
         const message = await browser.runtime.sendMessage({
           type,
           body,
         });
-        console.log("Message received:", message);
+        console.debug("Message received:", message);
         if (message.type === type) {
           return message.body;
         }

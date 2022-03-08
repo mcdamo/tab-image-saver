@@ -65,7 +65,7 @@ class SidebarUI extends Component {
     if (this.state.backgroundApp) {
       // reset state before calling action
       const finishedCallback = (runtime) => {
-        console.log("actionTest finishedCallback");
+        console.debug("actionTest finishedCallback");
         this.showErrors(runtime);
       };
       return this.setState(
@@ -148,7 +148,7 @@ class SidebarUI extends Component {
 
   async showErrors(loaded) {
     const runtime = loaded ? loaded : await this.getRuntimeLast();
-    console.log("runtime", runtime);
+    console.debug("runtime", runtime);
     return this.setState({
       showErrors: true,
       runtime,
@@ -160,7 +160,7 @@ class SidebarUI extends Component {
     return (
       <Fragment>
         {results.map((props, key) => {
-          console.log(props);
+          console.debug("renderResults", props);
           const { url, tabUrl, path, index, options, message } = props;
           let rulesetName = null;
           if (options) {
@@ -199,7 +199,7 @@ class SidebarUI extends Component {
   }
 
   renderErrors(runtime) {
-    console.log("renderErrors", runtime);
+    console.debug("renderErrors", runtime);
     if (!runtime || !runtime.pathsFailed || !runtime.imagesFailed) {
       return (
         <h3 className="title">{browser.i18n.getMessage("no_history_title")}</h3>

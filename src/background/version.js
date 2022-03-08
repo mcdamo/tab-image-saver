@@ -106,7 +106,7 @@ const Version = {
     if (oldOpts.rulesetIndex) {
       // rename rulesetIndex key => id
       const rulesetIndex = oldOpts.rulesetIndex.map((_) => ({ id: _.key }));
-      console.log("New index", rulesetIndex);
+      console.debug("New index", rulesetIndex);
       set.rulesetIndex = rulesetIndex;
 
       keys = rulesetIndex.reduce((acc, val) => {
@@ -114,14 +114,14 @@ const Version = {
         return acc;
       }, []);
       const oldRulesets = await browser.storage.local.get(keys);
-      console.log("oldRulesets", oldRulesets);
+      console.debug("oldRulesets", oldRulesets);
       for (const [rulesetKey, oldRuleset] of Object.entries(oldRulesets)) {
         if (oldRuleset.pathRules) {
           set[rulesetKey] = { ...oldRuleset, _legacy_template: true };
         }
       }
     }
-    console.log("4.0.0 update:", set); /* RemoveLogging:skip */
+    console.debug("4.0.0 update:", set); /* RemoveLogging:skip */
     await browser.storage.local.set(set);
     if (prev !== undefined) {
       // open readme page for v4.0
@@ -143,7 +143,7 @@ const Version = {
           !Object.prototype.hasOwnProperty.call(oldOpts, `ruleset_${_.id}`)
       );
       if (test.length > 0) {
-        console.log("rulestIndex invalid", test); /* RemoveLogging:skip */
+        console.debug("rulestIndex invalid", test); /* RemoveLogging:skip */
         // fix index
         const rulesetIndex = Object.keys(oldOpts).reduce((acc, _) => {
           const found = _.match(/^ruleset_([\d]+)$/);
@@ -153,7 +153,7 @@ const Version = {
           return acc;
         }, []);
         set.rulesetIndex = rulesetIndex;
-        console.log("4.0.1 update:", set); /* RemoveLogging:skip */
+        console.debug("4.0.1 update:", set); /* RemoveLogging:skip */
         await browser.storage.local.set(set);
       }
     }
@@ -286,7 +286,7 @@ const Version = {
               ret += `.padStart(${pad.length},0)`;
             }
             if (localCode !== undefined) {
-              console.log("local", localCode);
+              console.debug("local", localCode);
               ret = Version._legacy_templateCode(ret, localCode);
             }
             ors.push(ret);
@@ -297,7 +297,7 @@ const Version = {
       if (ors.length > 0) {
         ret = ors.join("||");
         if (globalCode !== undefined) {
-          console.log("global", globalCode);
+          console.debug("global", globalCode);
           ret = Version._legacy_templateCode(ret, globalCode, true);
         }
         ret = `\${${ret}}`;

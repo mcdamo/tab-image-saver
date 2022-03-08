@@ -376,7 +376,7 @@ const App = {
     // if (App.runtime.tabsSkipped > 0) {
     //  msg += `${App.runtime.tabsSkipped} tabs skipped\n`;
     // }
-    console.log("Notify finished");
+    console.debug("Notify finished");
     App.notify(`finished_${windowId}`, {
       title,
       message: `${msg}${msgErr}`,
@@ -455,7 +455,7 @@ const App = {
       if (App.hasTabDownloads(tabId, windowId) === false) {
         try {
           await browser.tabs.remove(tabId);
-          console.log(`Closed Tab(${tabId})`);
+          console.debug(`Closed Tab(${tabId})`);
         } catch (err) {
           console.error(
             `Failed removing tab ${tabId}:`,
@@ -504,17 +504,13 @@ const App = {
       const filename = Global.sanitizePath(
         (await Global.template(rule, obj)).trim()
       );
-      console.debug(
+      console.log(
         `rule: ${rule}, filename: ${filename}, valid: ${Global.isValidPath(
           filename
         )}`
       );
       if (Global.isValidPath(filename)) {
-        console.debug(
-          "createFilename",
-          rule,
-          filename
-        ); /* RemoveLogging: skip */
+        console.log("createFilename", rule, filename); /* RemoveLogging: skip */
         return filename;
       }
     }
@@ -773,7 +769,7 @@ const App = {
         App.getRuntime(windowId).imagesSkipped++;
       } else {
         App.addUrl(url, windowId);
-        console.debug("URL queued:", url);
+        console.log("URL queued:", url);
         App.getRuntime(windowId).imagesMatched++;
         result.push(image);
       }
@@ -794,7 +790,7 @@ const App = {
       tab = param.tab;
     }
     try {
-      console.log(`Executing Tab(${tab.id})`);
+      console.debug(`Executing Tab(${tab.id})`);
       console.debug(
         `Sending tab ${tab.id}: ${App.constants.contentScript}`,
         tab
@@ -882,7 +878,7 @@ const App = {
           console.log(`Tab ${tab.id} discarded, reloading:`, tab.url);
           tab = await browser.tabs.update(tab.id, { url: tab.url }); // reload() does not affect discarded state
         } catch (err) {
-          console.debug("cannot reload tab:", tab.url);
+          console.warn("cannot reload tab:", tab.url);
           return waiting;
         }
         sleepMore = true;
@@ -1121,7 +1117,7 @@ const App = {
   },
 
   loadOptions: async () => {
-    console.debug("Loading background options");
+    console.log("Loading background options");
     await Options.init(App); // pass App down to Commands for shortcut callbacks
     App.options = await Options.loadOptions();
     await App.setTitle();
@@ -1211,7 +1207,7 @@ const App = {
         }
       );
     }
-    console.log("Saved old runtime", runtime);
+    console.debug("Saved old runtime", runtime);
     App.runtimeLast.set(windowId, { ...runtime });
     App.runtime.delete(windowId); // cleanup
   },
@@ -1239,7 +1235,7 @@ const App = {
       browser.downloads.onChanged.addListener(Downloads.handleDownloadChanged);
     }
     const action = !browserAction ? App.options.action : browserAction;
-    console.debug("running", { windowId, tabId, action });
+    console.log("running", { windowId, tabId, action });
     App.createRuntime({
       windowId,
       tabId,
