@@ -116,6 +116,27 @@ The following examples are for `https://example.com/page.html`
 | /page.html | Yes |
 | #//example\.[^/]{3}/# | Yes |
 
+
+## FAQ
+
+### Filenames are `_name_._ext_`
+
+Path rules are not in the latest format. Follow the [update instructions](CHANGES-4.0.md)
+
+### Cache is not used
+
+Since Firefox 85.0 the network partitioning means that the addon cannot access the browser cache and images are re-fetched from the network for every download.
+
+This security feature can be disabled to improve download performance by editing Firefox config:
+
+`about:config` -> `privacy.partition.network_state` -> `false`
+
+### Images fail to download
+
+If images load in the browser but fail to download this is often caused by Tracking Protection.
+
+In Firefox settings try reducing the protection level from *Strict* or adding a site exception.
+
 ## Acknowledgements
 
 Libraries:

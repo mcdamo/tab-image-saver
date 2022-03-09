@@ -1,3 +1,15 @@
+v4.0.5
+======
+ - Fix enable/disable via addon manager
+
+v4.0.2
+======
+ - Add console logging
+
+v4.0.1
+======
+ - Fix ruleset index if in invalid state
+
 v4.0.0
 ======
  - New Path rules syntax based on template strings
