@@ -135,20 +135,20 @@ describe("global.js", function () {
     it("should replace backslashes with forward slashes", function () {
       expect(Global.sanitizePath("p\\a\\t\\h")).to.equal("p/a/t/h");
     });
-
-    it("should strip leading and trailing slashes", function () {
-      expect(Global.sanitizePath("/path/")).to.equal("path");
+    it("should strip leading slashes", function () {
+      expect(Global.sanitizePath("/path")).to.equal("path");
     });
-
     it("should remove spaces around slashes", function () {
       expect(Global.sanitizePath("p / a / th")).to.equal("p/a/th");
     });
-
     it("should reduce duplicate slashes", function () {
       expect(Global.sanitizePath("pa//th")).to.equal("pa/th");
     });
-    it("should remove trailing period", function () {
-      expect(Global.sanitizePath("path./")).to.equal("path");
+    it("should remove periods before slashes", function () {
+      expect(Global.sanitizePath("path./name")).to.equal("path/name");
+    });
+    it("should NOT strip trailing slashes", function () {
+      expect(Global.sanitizePath("/path/")).to.equal("path/");
     });
   });
 

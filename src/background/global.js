@@ -107,7 +107,7 @@ const Global = {
       .replace(/[*":<>|?]/g, str) // replace invalid characters
       .replace(/[/\\]+/g, "/") // replace backslash with forward slash
       .replace(/^[/]/, "") // strip leading slash
-      .replace(/[./\s]+$/, "") // strip trailing slash, period, and spaces
+      .replace(/\.?\/\s*/g, "/") // replace sequence of period-slash-space to slash
       .replace(/ *\/ */g, "/"), // remove spaces around slashes
 
   pathJoin: (parts, sep) => {

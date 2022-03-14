@@ -1397,7 +1397,7 @@ if (!browser.runtime.onUpdateAvailable.hasListener(App.handleUpdateAvailable)) {
 }
 
 // browser.runtime.onStartup.addListener(App.init); // does not fire when addon is 'Enabled' in addon manager
-await App.init();
+App.init();
 
 // attach to window object to make available from getBackgroundPage
 window.getWindowId = getWindowId;
