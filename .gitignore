@@ -1,8 +1,8 @@
-build
-dev
-dist
-extension
-node_modules
+/build
+/dev
+/dist
+/extension
+/node_modules
 npm-debug.log
-release
-report
+/release
+/report
