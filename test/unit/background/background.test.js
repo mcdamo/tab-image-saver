@@ -271,6 +271,34 @@ describe("background.js", function () {
       }
     });
 
+    it("should support regex using template", async function () {
+      let tab = {
+        id: 6,
+        title: "tab title \\|/ site name",
+        url: "http://my.tab.url/path/to/page.html",
+      };
+      let img = {
+        src: "http://domain.tld/path/part/file.ext?query",
+        alt: "alt string",
+      };
+      let rules = {
+        '${alt.replace(/\\s/g, "_")}.jpg': "alt_string.jpg",
+        "${tabtitle}": "tab title/_/site name", // automatic sanitization
+        '${tabtitle.replace(/[\\/]/g, "#")}': "tab title/_# site name", // automatic sanitization
+        '${tabtitle.replace(/[\\\\]/g, "#")}': "tab title #_/site name", // automatic sanitization
+        '${tabtitle.replace(/[\\|\\/]/g, "#")}': "tab title/## site name", // automatic sanitization
+        '${tabtitle.replace(/[\\\\\\|\\/]/g, "#")}': "tab title ### site name",
+      };
+      //Object.entries(rules).forEach(async ([test, result]) => {
+      for (const test in rules) {
+        const result = rules[test];
+        await expect(
+          App.createFilename({ tab, image: img, index: 42, rules: [test] }),
+          `Rule: ${test}`
+        ).to.eventually.become(result);
+      }
+    });
+
     it("should return empty string if template doesn't match", async function () {
       let img = {
         src: "http://domain.tld/path/",

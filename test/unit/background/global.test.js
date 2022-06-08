@@ -360,6 +360,14 @@ describe("global.js", function () {
         })
       ).to.eventually.become("_site2");
     });
+    it("should handle escaped slashes in regex", async function () {
+      await expect(
+        Global.template('${(var1||var2).replace(/\\//, "_")}', {
+          var1: "",
+          var2: '"title" / "site2"',
+        })
+      ).to.eventually.become('"title" _ "site2"');
+    });
     it("should replace inner & outer regex", async function () {
       await expect(
         Global.template(
