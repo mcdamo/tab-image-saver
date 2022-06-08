@@ -1,3 +1,11 @@
+v4.0.8
+======
+ - Fix regex parser
+
+v4.0.7
+======
+ - Fix default path rules
+
 v4.0.5
 ======
  - Fix enable/disable via addon manager
