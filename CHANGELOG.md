@@ -1,3 +1,7 @@
+v4.1.0
+======
+ - Add support for embedded Data URL images
+
 v4.0.8
 ======
  - Fix regex parser
