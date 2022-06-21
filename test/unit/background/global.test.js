@@ -231,6 +231,8 @@ describe("global.js", function () {
     });
   });
 
+  // TODO getRuleParams (this is broadly tested by Background.createFilename)
+
   // describe("templateCode", function () {
   //   it("should return input if code undefined", function () {
   //     expect(Global.templateCode("input")).to.equal("input");

@@ -130,6 +130,7 @@ const Global = {
 
   getRuleParams: (props) => {
     const { tab, image, index } = props;
+    const isDataUrl = Global.isDataUrl(image.src);
     const parse = Global.parseURL(image.src); // URI components will be encoded
     const path = parse ? decodeURI(parse.pathname) : null;
     const tabParse = Global.parseURL(tab.url);
@@ -194,7 +195,11 @@ const Global = {
       obj.name = Global.getFilePart(path);
       obj.path = Global.getDirname(path);
     }
-    if (parse) {
+    if (isDataUrl) {
+      // inherit the hostname from the tab
+      obj.hostname = tabParse.hostname;
+      obj.host = tabParse.hostname;
+    } else if (parse) {
       obj.hostname = parse.hostname;
       obj.host = parse.hostname;
     }
@@ -300,6 +305,8 @@ const Global = {
     }
     return nums.length;
   },
+
+  isDataUrl: (url) => url.indexOf("data:image/") === 0,
 };
 
 export default Global;

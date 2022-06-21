@@ -74,6 +74,15 @@ const App = {
     };
   },
 
+  // called by content script via messaging
+  // and also for data-url tabs
+  getTabOptions: async (windowId, url) => {
+    const options = await Options.getTabOptions(url);
+    // 'action' can be overridden by runtime
+    options.action = App.getRuntime(windowId).action;
+    return options;
+  },
+
   // window is idle, all downloads ended
   isFinished: (windowId) => !App.runtime.has(windowId),
 
@@ -757,13 +766,11 @@ const App = {
     }
     for (const image of images) {
       const url = image.src;
-      if (url.indexOf("data:") === 0) {
-        App.getRuntime(windowId).imagesFailed.set(url, {
-          url,
-          message: "(embedded images not supported)",
-        });
-        // TODO support embedded images
-        console.warn("Embedded image is unsupported"); /* RemoveLogging:skip */
+      if (Global.isDataUrl(url)) {
+        // skip testing for unique
+        App.getRuntime(windowId).imagesMatched++;
+        result.push(image);
+        console.log("Data-URL queued");
       } else if (App.isUniqueUrl(url, windowId) === false) {
         console.log("Duplicate URL skipped", url);
         App.getRuntime(windowId).imagesSkipped++;
@@ -791,17 +798,35 @@ const App = {
     }
     try {
       console.debug(`Executing Tab(${tab.id})`);
-      console.debug(
-        `Sending tab ${tab.id}: ${App.constants.contentScript}`,
-        tab
-      );
-      // returns array of script result for each loaded tab
-      const result = await browser.tabs.executeScript(tab.id, {
-        file: App.constants.contentScript,
-        runAt: "document_end", // "document_idle" may block if page is manually stopped
-      });
-      //console.log(`Result from Tab(${tab.id})`);
-      console.debug(`Response from tab ${tab.id}`, result);
+      let result;
+      if (Global.isDataUrl(tab.url)) {
+        // cannot executeScript in data-url tab, so manually craft the result response
+        console.debug("executeTab: using data-url workaround");
+        const images = [];
+        // manually filter the image dimensions by decoding the image
+        let img = new Image();
+        img.src = tab.url;
+        await img.decode();
+        const options = await App.getTabOptions(windowId);
+        if (
+          img.naturalWidth >= options.minWidth &&
+          img.naturalHeight >= options.minHeight
+        ) {
+          images.push({ src: tab.url });
+        }
+        result = [{ images, options }];
+      } else {
+        console.debug(
+          `Sending tab ${tab.id}: ${App.constants.contentScript}`,
+          tab
+        );
+        // returns array of script result for each loaded tab
+        result = await browser.tabs.executeScript(tab.id, {
+          file: App.constants.contentScript,
+          runAt: "document_end", // "document_idle" may block if page is manually stopped
+        });
+        console.debug(`Response from tab ${tab.id}`, result);
+      }
       App.getRuntime(windowId).tabsLoaded++;
       const images = App.filterImages({ images: result[0].images, windowId });
       if (images.length > 0) {
@@ -1000,7 +1025,10 @@ const App = {
   filterTabs: (param) => {
     const tabs = param.tabs;
     // filter tabs without URLs
-    return tabs.filter((tab) => /^(https?|ftps?):\/\/.+/.test(tab.url));
+    return tabs.filter(
+      (tab) =>
+        /^(https?|ftps?):\/\/.+/.test(tab.url) || Global.isDataUrl(tab.url)
+    );
   },
 
   selectTabs: async (param) => {

@@ -5,13 +5,8 @@ import App from "./background";
 const MESSAGE_TYPE = { ...Constants.MESSAGE_TYPE };
 
 const Messaging = {
-  [MESSAGE_TYPE.TAB_OPTIONS]: async ({ url }, sender) => {
-    const options = await Options.getTabOptions(url);
-    // 'action' can be overridden by runtime
-    const windowId = sender.tab.windowId;
-    options.action = App.getRuntime(windowId).action;
-    return options;
-  },
+  [MESSAGE_TYPE.TAB_OPTIONS]: async ({ url }, sender) =>
+    await App.getTabOptions(sender.tab.windowId, url),
 
   [MESSAGE_TYPE.CANCEL]: (body, sender) => ({
     cancel: App.isCancelled(sender.tab.windowId),

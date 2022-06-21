@@ -320,10 +320,10 @@ describe("background.js", function () {
       let tab = {
         id: 6,
         title: '*":<>|?tab title*":<>|?',
-        //url: "http://my.tab.url/path/to/page.html",
+        url: null,
       };
       let img = {
-        //src: "http://domain.tld/path/part/file.ext?query",
+        src: "http://domain.tld/path/part/file.ext?query",
         alt: '*":<>|?alt string*":<>|?',
       };
       let rules = {
@@ -374,7 +374,7 @@ describe("background.js", function () {
     });
 
     it("should return null when filename is not valid", async function () {
-      let img = {};
+      let img = { src: "http://domain.tld" };
       let rules = [
         "", // empty
         ".", // period only
@@ -385,6 +385,48 @@ describe("background.js", function () {
           App.createFilename({ tab: {}, image: img, index: 42, rules: [test] }),
           `Rule: ${test}`
         ).to.eventually.become(null);
+      }
+    });
+
+    it("should subtitute tab hostname for data-url", async function () {
+      let tab = {
+        id: 6,
+        title: "Data URL example",
+        url: "http://domain.tld/",
+      };
+      let img = {
+        src: "data:image/jpeg;base64,FAKE==",
+      };
+      let rules = {
+        "${host}.${xMimeExt}": "domain.tld.xm",
+      };
+      for (const test in rules) {
+        const result = rules[test];
+        await expect(
+          App.createFilename({ tab, image: img, index: 42, rules: [test] }),
+          `Rule: ${test}`
+        ).to.eventually.become(result);
+      }
+    });
+
+    it("should support data-url in a tab", async function () {
+      let tab = {
+        id: 6,
+        title: "Data URL example",
+        url: "data:image/jpeg;base64,FAKE==",
+      };
+      let img = {
+        src: "data:image/jpeg;base64,FAKE==",
+      };
+      let rules = {
+        "${host}/img_${index}.${xMimeExt}": "img_42.xm",
+      };
+      for (const test in rules) {
+        const result = rules[test];
+        await expect(
+          App.createFilename({ tab, image: img, index: 42, rules: [test] }),
+          `Rule: ${test}`
+        ).to.eventually.become(result);
       }
     });
   });
@@ -561,9 +603,10 @@ describe("background.js", function () {
       { id: 3, url: "about://x" },
       { id: 4, url: "http://x" },
       { id: 5, url: "ftp://x" },
+      { id: 6, url: "data:image/x" },
     ];
     it("should return all tabs with urls", function () {
-      let mytabs = [tabs[0], tabs[1], tabs[4], tabs[5]];
+      let mytabs = [tabs[0], tabs[1], tabs[4], tabs[5], tabs[6]];
       expect(App.filterTabs({ tabs, windowId })).to.deep.equal(mytabs);
     });
   });

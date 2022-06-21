@@ -141,7 +141,9 @@
           //newImg.setAttribute("style", "border: 1px solid #8b67b3;");
           wrapper.appendChild(newImg);
           wrapper.appendChild(label);
-          img.parentNode.replaceChild(wrapper, img);
+          if (img.parentNode) {
+            img.parentNode.replaceChild(wrapper, img);
+          }
         }
         let obj = { src: img.src };
         if (!direct) {
