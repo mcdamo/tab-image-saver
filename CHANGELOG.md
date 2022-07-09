@@ -1,3 +1,7 @@
+v4.2.0
+======
+ - Add image url regex filter
+
 v4.1.0
 ======
  - Add support for embedded Data URL images
