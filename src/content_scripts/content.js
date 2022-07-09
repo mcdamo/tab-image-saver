@@ -76,10 +76,18 @@
           `valid image (${img.naturalWidth}x${img.naturalHeight}):`,
           img
         );
-        return true;
+      } else {
+        // console.log(`invalid image (${img.naturalWidth}x${img.naturalHeight}):`, img);
+        return false;
       }
-      // console.log(`invalid image (${img.naturalWidth}x${img.naturalHeight}):`, img);
-      return false;
+      if (App.options.imageRegex) {
+        const regex = new RegExp(App.options.imageRegex);
+        if (!regex.test(img.src)) {
+          console.debug(`image failed regex: ${App.options.imageRegex}`, img);
+          return false;
+        }
+      }
+      return true;
     },
 
     // run chosen filter and return array of images

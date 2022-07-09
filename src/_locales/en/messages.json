@@ -247,17 +247,21 @@
     "description": "Additional note for selecting tabs that are only images",
     "message": "(ignore tabs with webpages)"
   },
-  "options_dimensions_title": {
+  "//options_dimensions_title": {
     "description": "Title of the minimum image dimensions option",
     "message": "Minimum dimensions (pixels)"
   },
   "options_dimensions_width_label": {
     "description": "Option label for minimum image width",
-    "message": "Width:"
+    "message": "Min Width (px):"
   },
   "options_dimensions_height_label": {
     "description": "Option label for minimum image height",
-    "message": "Height:"
+    "message": "Min Height (px):"
+  },
+  "options_image_regex_label": {
+    "description": "Option label for image regex",
+    "message": "Image URL regex match:"
   },
   "options_download_path_title": {
     "description": "Title for download folder option",

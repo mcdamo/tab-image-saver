@@ -123,6 +123,12 @@ label.setInherit {
 	margin-right: 1rem;
 }
 
+.cols {
+	display: flex;
+	flex-direction: row;
+	column-gap: 20px;
+}
+
 @media screen and (max-width: 1000px) {
 	.row {
 		flex-direction: column;

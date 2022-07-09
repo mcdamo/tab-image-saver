@@ -77,6 +77,10 @@ const Options = {
       type: T.BOOL,
       default: false,
     },
+    imageRegex: {
+      type: T.VALUE,
+      default: "",
+    },
     indexIncrement: {
       type: T.VALUE,
       default: 1,
@@ -259,7 +263,7 @@ const Options = {
       values: Object.values(Constants.FILTER),
     },
     filterInherit: {
-      inherit: ["filter", "minHeight", "minWidth"],
+      inherit: ["filter", "imageRegex", "minHeight", "minWidth"],
       type: T.BOOL,
       default: true,
     },
@@ -286,6 +290,10 @@ const Options = {
       regex: "^[0-9][0-9]*$", // integer >= 0
       onload: { function: (v) => parseInt(v, 10) },
       onsave: { function: (v) => parseInt(v, 10) },
+    },
+    imageRegex: {
+      type: T.VALUE,
+      default: "",
     },
     minHeight: {
       type: T.VALUE,

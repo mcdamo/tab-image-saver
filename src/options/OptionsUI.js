@@ -1096,7 +1096,7 @@ class OptionsUI extends Component {
           name: "filter",
           label: (
             <Fragment>
-              __MSG_options_filter_label_direct__
+              __MSG_options_filter_label_direct__{" "}
               <span className="note">
                 __MSG_options_filter_label_direct_note__
               </span>
@@ -1107,21 +1107,31 @@ class OptionsUI extends Component {
           disabled,
         })}
         <fieldset>
-          <legend>
-            <span>__MSG_options_dimensions_title__</span>
-          </legend>
+          <div class="cols">
+            {this.renderText({
+              name: "minWidth",
+              label: "__MSG_options_dimensions_width_label__",
+              className: "",
+              value: options.minWidth,
+              size: "6",
+              disabled,
+            })}
+            {this.renderText({
+              name: "minHeight",
+              label: "__MSG_options_dimensions_height_label__",
+              className: "",
+              value: options.minHeight,
+              size: "6",
+              disabled,
+            })}
+          </div>
+        </fieldset>
+        <fieldset>
           {this.renderText({
-            name: "minWidth",
-            label: "__MSG_options_dimensions_width_label__",
-            className: "",
-            value: options.minWidth,
-            disabled,
-          })}
-          {this.renderText({
-            name: "minHeight",
-            label: "__MSG_options_dimensions_height_label__",
-            className: "",
-            value: options.minHeight,
+            name: "imageRegex",
+            label: "__MSG_options_image_regex_label__",
+            placeholder: "^https://.+$",
+            value: options.imageRegex,
             disabled,
           })}
         </fieldset>
@@ -1271,22 +1281,24 @@ class OptionsUI extends Component {
           checked: options.indexMethod === Constants.INDEX_METHOD.SAVED,
           disabled,
         })}
-        {this.renderText({
-          name: "indexStart",
-          label: "__MSG_options_index_start_label__",
-          className: "",
-          value: options.indexStart,
-          size: "3",
-          disabled,
-        })}
-        {this.renderText({
-          name: "indexIncrement",
-          label: "__MSG_options_index_increment_label__",
-          className: "",
-          value: options.indexIncrement,
-          size: "3",
-          disabled,
-        })}
+        <div class="cols">
+          {this.renderText({
+            name: "indexStart",
+            label: "__MSG_options_index_start_label__",
+            className: "",
+            value: options.indexStart,
+            size: "3",
+            disabled,
+          })}
+          {this.renderText({
+            name: "indexIncrement",
+            label: "__MSG_options_index_increment_label__",
+            className: "",
+            value: options.indexIncrement,
+            size: "3",
+            disabled,
+          })}
+        </div>
       </fieldset>
     );
   }
