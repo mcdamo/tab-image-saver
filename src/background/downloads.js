@@ -158,12 +158,12 @@ const Downloads = {
       Downloads.addDownload(dlid, context);
       return dlid;
     } catch (err) {
-      // catch errors related to Access Denied for data:image URLs
+      // catch errors related to Access Denied eg. illegal filenames
       console.error("Download failed", err, download); /* RemoveLogging:skip */
+      const fn = context.error || ((x) => x);
+      await fn({ ...context, error: err });
+      return false;
     }
-    const fn = context.error || ((x) => x);
-    await fn(context);
-    return false;
   },
 };
 

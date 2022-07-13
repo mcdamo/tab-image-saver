@@ -1107,7 +1107,7 @@ class OptionsUI extends Component {
           disabled,
         })}
         <fieldset>
-          <div class="cols">
+          <div className="cols">
             {this.renderText({
               name: "minWidth",
               label: "__MSG_options_dimensions_width_label__",
@@ -1281,7 +1281,7 @@ class OptionsUI extends Component {
           checked: options.indexMethod === Constants.INDEX_METHOD.SAVED,
           disabled,
         })}
-        <div class="cols">
+        <div className="cols">
           {this.renderText({
             name: "indexStart",
             label: "__MSG_options_index_start_label__",
