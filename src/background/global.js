@@ -76,10 +76,10 @@ const Global = {
   getBasename: (path) => path.replace(/^.*\//, ""), // strip everything before last slash
 
   // sanitized filename
-  getFilename: (path) => Global.getBasename(path).replace(/:.*$/, ""), // strip twitter-style tags ":large"
+  getFilename: (path) => Global.getBasename(path).replace(/\?.*$/, "").replace(/:.*$/, ""), // strip twitter-style tags "?format=jpg" and/or ":large"
 
   // sanitize filename, remove extension
-  getFilePart: (path) => Global.getFilename(path).replace(/.[^.]+$/, ""), // strip extension
+  getFilePart: (path) => Global.getFilename(path).replace(/\.[^.]*$/, ""), // strip extension
 
   getFileExt: (path) => {
     const m = Global.getFilename(path).match(/\.([^./]+)$/);
