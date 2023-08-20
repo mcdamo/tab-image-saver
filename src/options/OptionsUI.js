@@ -52,7 +52,6 @@ class OptionsUI extends Component {
     this.state = {
       error: null,
       loaded: false,
-      backgroundApp: null,
       allowDownloadPrivate: false,
       schemas: {},
       options: {},
@@ -118,7 +117,6 @@ class OptionsUI extends Component {
     const { options, rulesets, schemas } = await this.sendMessage(
       MESSAGE_TYPE.OPTIONS_SCHEMAS
     );
-    const page = await browser.runtime.getBackgroundPage();
     const allowDownloadPrivate =
       await browser.extension.isAllowedIncognitoAccess();
     const legacyTemplates = this.hasLegacyTemplates({ options, rulesets });
@@ -128,7 +126,6 @@ class OptionsUI extends Component {
       options,
       rulesets,
       schemas,
-      backgroundApp: page.backgroundApp,
       legacyTemplates,
     });
   }
@@ -145,6 +142,7 @@ class OptionsUI extends Component {
         res
       ); /* RemoveLogging:skip */
       this.setState({ error: res.body.error });
+      throw Error(res.body.error);
     }
     return res.body;
   }
@@ -596,19 +594,17 @@ class OptionsUI extends Component {
     });
     const results = [];
     for (const rule of rules) {
-      const result = { rule };
-      try {
-        result.result = await this.state.backgroundApp.createFilename({
+      // returns { result: <string>(path), error: <string>(message) }
+      const result = await this.sendMessage(
+        MESSAGE_TYPE.OPTIONS_TEST_PATHRULE,
+        {
           tab: {},
           image: { src: url },
           index: 1,
           rules: [rule],
-        });
-      } catch (err) {
-        console.log(err.message);
-        result.error = err.message;
-      }
-      results.push(result);
+        }
+      );
+      results.push({ rule, ...result });
     }
     return { result: results };
   }

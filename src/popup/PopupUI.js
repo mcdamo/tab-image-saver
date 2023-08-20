@@ -16,7 +16,6 @@ class PopupUI extends Component {
     super(props);
     this.state = {
       loaded: false,
-      backgroundApp: null,
       windowId: null,
       action: "default",
       error: null, // TODO: exception from sendMessage
@@ -35,12 +34,10 @@ class PopupUI extends Component {
 
   async componentDidMount() {
     try {
-      const page = await browser.runtime.getBackgroundPage();
-      const action = page ? page.backgroundApp.getAction() : this.state.action;
+      const action = await this.sendMessage(MESSAGE_TYPE.OPTIONS_ACTION);
       const windowId = await getWindowId();
       this.setState({
         loaded: true,
-        backgroundApp: page && page.backgroundApp,
         windowId,
         action,
       });
@@ -64,10 +61,6 @@ class PopupUI extends Component {
   }
 
   async runAction(action) {
-    if (this.state.backgroundApp) {
-      return await this.state.backgroundApp.run(this.state.windowId, action);
-    }
-    // privateWindow
     return await this.sendMessage(MESSAGE_TYPE.RUN_ACTION, {
       windowId: this.state.windowId,
       action,
@@ -99,21 +92,15 @@ class PopupUI extends Component {
   }
 
   showOptions() {
-    this.state.backgroundApp
-      ? this.state.backgroundApp.handleCommandOptions()
-      : this.sendMessage(MESSAGE_TYPE.COMMAND_OPTIONS);
+    this.sendMessage(MESSAGE_TYPE.COMMAND_OPTIONS);
   }
 
   showDownloads() {
-    this.state.backgroundApp
-      ? this.state.backgroundApp.handleCommandDownloads()
-      : this.sendMessage(MESSAGE_TYPE.COMMAND_DOWNLOADS);
+    this.sendMessage(MESSAGE_TYPE.COMMAND_DOWNLOADS);
   }
 
   showSidebar() {
-    this.state.backgroundApp
-      ? this.state.backgroundApp.handleCommandSidebar()
-      : this.sendMessage(MESSAGE_TYPE.COMMAND_SIDEBAR);
+    browser.sidebarAction.toggle(); // can't be called via sendMessage
   }
 
   render() {

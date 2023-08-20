@@ -24,7 +24,7 @@ const Messaging = {
   [MESSAGE_TYPE.LEGACY_TEMPLATE_UPDATE]: async (body, sender) =>
     await App.legacyTemplateUpdate(),
 
-  //[MESSAGE_TYPE.OPTIONS_ACTION]: (request, sender) => App.getAction(),
+  [MESSAGE_TYPE.OPTIONS_ACTION]: (request, sender) => App.getAction(),
 
   [MESSAGE_TYPE.OPTIONS_OPTION_SAVE]: async ({ name, value }, sender) =>
     await Options.saveOption(name, value),
@@ -89,8 +89,14 @@ const Messaging = {
     App.handleCommandDownloads();
   },
 
-  [MESSAGE_TYPE.COMMAND_SIDEBAR]: (body, sender) => {
-    App.handleCommandSidebar();
+  [MESSAGE_TYPE.OPTIONS_TEST_PATHRULE]: async (body, sender) => {
+    let result = {};
+    try {
+      result.result = await App.createFilename(body);
+    } catch (err) {
+      result.error = err.message;
+    }
+    return result;
   },
 
   handleMessage: async (request, sender, sendResponse) => {
