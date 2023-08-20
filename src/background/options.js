@@ -433,19 +433,21 @@ const Options = {
     if (url) {
       // check for matching ruleset
       console.debug("rulesets", Options.OPTIONS_RULESETS);
-      const match = Object.entries(Options.OPTIONS_RULESETS).find(
-        ([key, r]) => {
-          if (!("domainRules" in r)) {
-            return false;
-          }
-          if (r.domainRules.find((val) => Options.domainRuleMatch(url, val))) {
-            return true;
-          }
+      // use rulesetIndex ordering
+      const match = Options.OPTIONS.rulesetIndex.find((val) => {
+        const key = Options.getRulesetKeyFromId(val.id);
+        const r = Options.OPTIONS_RULESETS[key];
+        if (!("domainRules" in r)) {
           return false;
         }
-      );
+        if (r.domainRules.find((val) => Options.domainRuleMatch(url, val))) {
+          return true;
+        }
+        return false;
+      });
       if (match) {
-        const [key, ruleset] = match;
+        const key = Options.getRulesetKeyFromId(match.id);
+        const ruleset = Options.OPTIONS_RULESETS[key];
         console.info(`matched ruleset ${key}`, ruleset);
         return ruleset;
       }
