@@ -501,6 +501,10 @@ const Options = {
   loadRuleset: async (rulesetKey) => {
     const loaded = await browser.storage.local.get([rulesetKey]);
     console.debug(`loadRuleset ${rulesetKey}`, loaded);
+    if (loaded[rulesetKey] === undefined) {
+      // can happen if rulesetIndex is corrupted and refers to a deleted ruleset
+      throw new Error(`loadRuleset ${rulesetKey} returned empty`);
+    }
     return await Options.setRuleset(rulesetKey, loaded[rulesetKey]);
   },
 
@@ -587,10 +591,8 @@ const Options = {
 
   // use id instead of index to prevent accidents.
   deleteRuleset: async (id) => {
-    let rulesetIndex = Options.OPTIONS.rulesetIndex;
-    let index = rulesetIndex.findIndex((_) => _.id === id);
+    let rulesetIndex = Options.OPTIONS.rulesetIndex.filter((_) => _.id !== id);
     const rulesetKey = Options.getRulesetKeyFromId(id);
-    rulesetIndex.splice(index, 1);
     rulesetIndex = await Options.saveOption("rulesetIndex", rulesetIndex);
     await browser.storage.local.remove([rulesetKey]);
     delete Options.RULESETS[rulesetKey];
