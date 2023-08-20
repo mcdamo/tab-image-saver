@@ -13,7 +13,8 @@ const copyPatterns = [
     transform: transformManifestVersion,
   },
   { from: 'src/_locales', to: '_locales' },
-  { from: 'src/img', to: 'img' },
+  { from: 'src/img', to: 'img' }, // some img needed for toolbar context menu (menus.js)
+  { from: 'src/icons', to: 'icons' }, // icons are needed for webextension
   {
     from: 'src/lib',
     to: 'lib/',

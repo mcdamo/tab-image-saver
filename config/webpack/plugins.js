@@ -1,16 +1,15 @@
 const { IgnorePlugin } = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-var FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const HtmlIncAssetsPlugin = require('html-webpack-include-assets-plugin');
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const safePostCssParser = require('postcss-safe-parser');
-const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 const paths = require('../paths');
 const staticFiles = require('./static-files');
@@ -84,56 +83,64 @@ const getPlugins = (isEnvProduction = false, shouldUseSourceMap = false) => {
 
   const moduleNotFoundPlugin = new ModuleNotFoundPlugin(paths.appPath);
   const caseSensitivePathsPlugin = new CaseSensitivePathsPlugin();
-  const watchMissingNodeModulesPlugin = new WatchMissingNodeModulesPlugin(paths.appNodeModules);
   const miniCssExtractPlugin = new MiniCssExtractPlugin({
     filename: '[name].css',
-    // chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+    chunkFilename: '[id].css', // 'static/css/[name].[contenthash:8].chunk.css',
   });
-  const ignorePlugin = new IgnorePlugin(/^\.\/locale$/, /moment$/);
+  const ignorePlugin = new IgnorePlugin({resourceRegExp: /^\.\/locale$/, contextRegExp: /moment$/});
   const terserPlugin = new TerserPlugin({
+    parallel: true,
     terserOptions: {
-      parse: {
-        ecma: 8,
-      },
+      sourceMap: shouldUseSourceMap,
       compress: {
+        defaults: false, // disable all defaults; some defaults breaks extension for only 3% saving in space
         ecma: 5,
-        warnings: false,
         comparisons: false,
-        inline: 2,
-      },
-      mangle: {
-        safari10: true,
+        // inline: 2,
+        negate_iife: false, // breaks extension
+        side_effects: false, // breaks extension
       },
       output: {
         ecma: 5,
         comments: false,
-        ascii_only: true,
+        //ascii_only: true,
       },
     },
-    parallel: true,
-    cache: true,
-    sourceMap: shouldUseSourceMap,
   });
-  const optimizeCSSAssetsPlugin = new OptimizeCSSAssetsPlugin({
-    cssProcessorOptions: {
-      parser: safePostCssParser,
-      map: shouldUseSourceMap
-        ? {
-          inline: false,
-          annotation: true,
-        }
-        : false,
-    },
+  const cssMinimizerPlugin = new CssMinimizerPlugin({
+    minimizerOptions: {
+      processorOptions: {
+        // parser: safePostCssParser, // FIXME: breaks build
+        map: false,
+      }
+    }
   });
   /* Include these static JS and CSS assets in the generated HTML files */
-  const htmlIncAssetsPlugin = new HtmlIncAssetsPlugin({
+  const htmlWebpackTagsPlugin = new HtmlWebpackTagsPlugin({
     append: false,
     assets: staticFiles.htmlAssets,
   });
 
   const moduleScopePlugin = new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]);
   const copyPlugin = new CopyPlugin({ patterns: staticFiles.copyPatterns});
-  const friendlyErrorsWebpackPlugin = new FriendlyErrorsWebpackPlugin();
+  
+  const eslintPlugin = new ESLintPlugin( {
+    emitError: true,
+    emitWarning: true,
+    failOnError: true,
+    test: /\.(js|mjs|jsx)$/,
+    enforce: 'pre',
+    use: [
+      {
+        options: {
+          formatter: require.resolve('react-dev-utils/eslintFormatter'),
+          eslintPath: require.resolve('eslint'),
+
+        },
+      },
+    ],
+    include: paths.appSrc,
+  } );
 
   return {
     optionsHtmlPlugin,
@@ -141,15 +148,14 @@ const getPlugins = (isEnvProduction = false, shouldUseSourceMap = false) => {
     sidebarHtmlPlugin,
     moduleNotFoundPlugin,
     caseSensitivePathsPlugin,
-    watchMissingNodeModulesPlugin,
     miniCssExtractPlugin,
     ignorePlugin,
     terserPlugin,
-    optimizeCSSAssetsPlugin,
+    cssMinimizerPlugin,
     moduleScopePlugin,
     copyPlugin,
-    htmlIncAssetsPlugin,
-    friendlyErrorsWebpackPlugin
+    htmlWebpackTagsPlugin,
+    eslintPlugin,
   };
 };
 

@@ -25,26 +25,9 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        include: [path.resolve(__dirname, addon)],
-        exclude: path.resolve("node_modules/"),
-      },
-
-      {
         enforce: "post",
-        test: /\.js$/,
-        loader: "istanbul-instrumenter-loader",
-        query: {
-          // https://github.com/webpack-contrib/istanbul-instrumenter-loader/issues/33
-          esModules: true,
-        },
-        //    include: helpers.root('src', 'app'),
-        include: [
-          path.resolve(__dirname, addon),
-          /*exclude: [
-          path.resolve('node_modules/'),
-          path.resolve(__dirname, addon, 'lib')
-          */
-        ],
+        include: [path.resolve(__dirname, addon)],
+        use: "@jsdevtools/coverage-istanbul-loader",
       },
     ],
   },

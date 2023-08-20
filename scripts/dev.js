@@ -55,6 +55,7 @@ compiler.watch({}, (err, stats) => {
     if (messages.errors.length > 1) {
       messages.errors.length = 1;
     }
+    console.log(messages.errors);
     console.log(chalk.red("Failed to compile.\n"));
     // process.exit(1);
   }

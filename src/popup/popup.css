@@ -10,7 +10,7 @@
 #header {
 	font-size:1.2em;
 	padding-left: 30px;
-	background: url("/img/icons/tab-image-saver-v2@24.png") no-repeat;
+	background: url("../icons/tab-image-saver-v2@24.png") no-repeat;
 }
 
 #actions .row {

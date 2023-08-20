@@ -3,12 +3,10 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 // NOTE: Loader `include` paths are relative to this module
 const paths = require('../paths');
+const path = require("path");
 
 const cssRegex = /\.css$/;
 const cssModuleRegex = /\.module\.css$/;
-
-
-
 
 const getLoaders = (isEnvProduction = false, isEnvDevelopment = true, shouldUseRelativeAssetPaths = true, shouldUseSourceMap = false) => {
 
@@ -19,8 +17,16 @@ const getLoaders = (isEnvProduction = false, isEnvDevelopment = true, shouldUseR
         loader: MiniCssExtractPlugin.loader,
         options: Object.assign(
           {},
-          shouldUseRelativeAssetPaths ? { publicPath: '../../' } : undefined
+          shouldUseRelativeAssetPaths ? { publicPath: '../../' } : undefined,
         ),
+        // options: {
+        //   publicPath: (resourcePath, context) => {
+        //     // publicPath is the relative path of the resource to the context
+        //     // e.g. for ./css/admin/main.css the publicPath will be ../../
+        //     // while for ./css/main.css the publicPath will be ../
+        //     return path.relative(path.dirname(resourcePath), context) + "/";
+        //   },
+        // },
       },
       {
         loader: require.resolve('css-loader'),
@@ -29,16 +35,17 @@ const getLoaders = (isEnvProduction = false, isEnvDevelopment = true, shouldUseR
       {
         loader: require.resolve('postcss-loader'),
         options: {
-          ident: 'postcss',
-          plugins: () => [
-            require('postcss-flexbugs-fixes'),
-            require('postcss-preset-env')({
+          postcssOptions: {
+            plugins: [
+              require.resolve('postcss-flexbugs-fixes')
+              [require.resolve('postcss-preset-env'), {
               autoprefixer: {
                 flexbox: 'no-2009',
               },
               stage: 3,
-            }),
-          ],
+              }]
+            ]
+          },
           sourceMap: isEnvProduction && shouldUseSourceMap,
         },
       },
@@ -54,30 +61,6 @@ const getLoaders = (isEnvProduction = false, isEnvDevelopment = true, shouldUseR
     return styleLoaders;
   };
 
-  const eslintLoader = {
-    test: /\.(js|mjs|jsx)$/,
-    enforce: 'pre',
-    use: [
-      {
-        options: {
-          formatter: require.resolve('react-dev-utils/eslintFormatter'),
-          eslintPath: require.resolve('eslint'),
-
-        },
-        loader: require.resolve('eslint-loader'),
-      },
-    ],
-    include: paths.appSrc,
-  };
-
-  const urlLoader = {
-    test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-    loader: require.resolve('url-loader'),
-    options: {
-      limit: 10000,
-      name: 'static/media/[name].[hash:8].[ext]',
-    },
-  };
   // Process application JS with Babel.
   // The preset includes JSX, Flow, TypeScript, and some ESnext features.
   const insideBabelLoader = {
@@ -89,6 +72,7 @@ const getLoaders = (isEnvProduction = false, isEnvDevelopment = true, shouldUseR
         'babel-preset-react-app/webpack-overrides'
       ),
 
+      // probably redundant
       plugins: [
         [
           require.resolve('babel-plugin-named-asset-import'),
@@ -158,22 +142,20 @@ const getLoaders = (isEnvProduction = false, isEnvDevelopment = true, shouldUseR
     }),
   };
 
-  const fileLoader = {
-    loader: require.resolve('file-loader'),
-    exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
-    options: {
-      name: 'static/media/[name].[hash:8].[ext]',
+  const assetLoader = {
+    test: [/\.(gif|jpe?g|png|svg)$/],
+    type: 'asset/resource',
+    generator: {
+      filename: 'static/media/[name].[hash:8][ext]',
     },
   };
 
   return {
-    eslintLoader,
-    urlLoader,
     insideBabelLoader,
     outsideBabelLoader,
     styleLoader,
     cssModuleLoader,
-    fileLoader
+    assetLoader,
   };
 };
 

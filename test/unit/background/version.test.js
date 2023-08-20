@@ -4,25 +4,19 @@ import Version from "background/version";
 import Options from "background/options";
 
 describe("version.js", function () {
-  describe("init", function () {
-    let storage;
-    before(async function () {
-      storage = {
-        version: "1.2.3",
-      };
-      // await browser.storage.local.clear(); // not faked
-      await browser.storage.local.set(storage);
-    });
-    after(async function () {
-      await browser.storage.local.remove(Object.keys(storage)); // TODO use sandbox
-    });
-    /*
-    // no longer required
-    it("should get previous version from storage", async () => {
-      await expect(Version.init()).to.eventually.become(storage.version);
-    });
-    */
+  let storage;
+  beforeEach(async function () {
+    storage = {
+      version: "1.2.3",
+    };
+    await browser.storage.local.set(storage);
   });
+  afterEach(async function () {
+    await browser.storage.local.clear();
+  });
+
+  //describe("init", function () {
+  //});
 
   describe("update", function () {
     let { windowsOrig, windowsStub } = {};
@@ -58,8 +52,6 @@ describe("version.js", function () {
       };
       await expect(browser.storage.local.get()).to.eventually.become(opts);
       //.and.to.have.property("version").to.equal(newVer);
-      // TODO cleanup
-      await browser.storage.local.remove(Object.keys(opts));
     });
 
     it("should upgrade to 3.0.0, pathRules to array and take period out of ext", async function () {
@@ -83,8 +75,6 @@ describe("version.js", function () {
       console.log("became", await browser.storage.local.get());
       await expect(browser.storage.local.get()).to.eventually.become(opts);
       //.and.to.have.property("version").to.equal(newVer);
-      // TODO cleanup
-      await browser.storage.local.remove(Object.keys(opts));
     });
 
     it("should upgrade to 4.0.0", async function () {
@@ -106,8 +96,6 @@ describe("version.js", function () {
       console.log("became", await browser.storage.local.get());
       await expect(browser.storage.local.get()).to.eventually.become(opts);
       //.and.to.have.property("version").to.equal(newVer);
-      // TODO cleanup
-      await browser.storage.local.remove(Object.keys(opts));
     });
 
     it("should always update version number", async function () {
@@ -116,8 +104,6 @@ describe("version.js", function () {
       await expect(browser.storage.local.get("version")).to.eventually.become({
         version: newVer,
       });
-      // TODO cleanup
-      await browser.storage.local.remove("version");
     });
   });
 

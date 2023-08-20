@@ -67,7 +67,7 @@ module.exports = function (webpackEnv) {
       minimize: isEnvProduction,
       minimizer: [
         plugins.terserPlugin,
-        plugins.optimizeCSSAssetsPlugin,
+        plugins.cssMinimizerPlugin,
       ]
     },
     resolve: {
@@ -91,43 +91,32 @@ module.exports = function (webpackEnv) {
       strictExportPresence: true,
       rules: [
         { parser: { requireEnsure: false } },
-        loaders.eslintLoader,
         {
           // "oneOf" will traverse all following loaders until one will match the requirements. 
           // When no loader matches it will fall back to the "file" loader at the end of the loader list.
           oneOf: [
-            loaders.urlLoader,
             loaders.insideBabelLoader,
             loaders.outsideBabelLoader,
             loaders.styleLoader,
             loaders.cssModuleLoader,
-            loaders.fileLoader
+            loaders.assetLoader,
             // ** STOP ** Are you adding a new loader?
-            // Make sure to add the new loader(s) before the "file" loader.
+            // Make sure to add the new loader(s) before the asset loader.
           ],
         },
       ],
     },
     plugins: [
-      plugins.friendlyErrorsWebpackPlugin,
       doesOptionsHtmlExist && plugins.optionsHtmlPlugin,
       doesPopupHtmlExist && plugins.popupHtmlPlugin,
       doesSidebarHtmlExist && plugins.sidebarHtmlPlugin,
-      plugins.htmlIncAssetsPlugin,
+      plugins.htmlWebpackTagsPlugin,
       plugins.moduleNotFoundPlugin,
       isEnvDevelopment && plugins.CaseSensitivePathsPlugin,
-      isEnvDevelopment && plugins.watchMissingNodeModulesPlugin,
       isEnvProduction && plugins.miniCssExtractPlugin,
       plugins.ignorePlugin,
       plugins.copyPlugin,
     ].filter(Boolean),
-    node: {
-      dgram: 'empty',
-      fs: 'empty',
-      net: 'empty',
-      tls: 'empty',
-      child_process: 'empty',
-    },
     performance: false,
   };
 };
