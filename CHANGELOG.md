@@ -1,3 +1,14 @@
+v4.2.2
+======
+ - Fixed processing of Rulesets by user ordering
+ - Fixed Options UI in Private Browsing
+ - Fixed handling of corrupted addon data
+ - Upgraded dependencies
+
+v4.2.1
+======
+ - Fixed error handling
+
 v4.2.0
 ======
  - Add image url regex filter
