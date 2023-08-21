@@ -334,7 +334,7 @@ class SidebarUI extends Component {
             <div
               id="show-errors"
               className="button"
-              onClick={() => this.showErrors(runtime)}
+              onClick={() => this.showErrors()}
             >
               <div className="errors-action-icon icon">
                 __MSG_button_errors_action_label__
