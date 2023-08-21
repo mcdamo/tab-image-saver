@@ -29,10 +29,10 @@ const Messaging = {
   [MESSAGE_TYPE.OPTIONS_OPTION_SAVE]: async ({ name, value }, sender) =>
     await Options.saveOption(name, value),
 
-  [MESSAGE_TYPE.OPTIONS_RULESET_OPTION_SAVE]: async (
+  [MESSAGE_TYPE.OPTIONS_RULESET_OPTION_SAVE]: (
     { name, value, rulesetId },
     sender
-  ) => await Options.saveRulesetOption(name, value, rulesetId),
+  ) => Options.saveRulesetOption(name, value, rulesetId),
 
   [MESSAGE_TYPE.OPTIONS_RULESET_CREATE]: async (body, sender) =>
     await Options.createRuleset(),

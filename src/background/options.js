@@ -610,10 +610,10 @@ const Options = {
    * @param {integer} id numerical ruleset id
    * @returns {string} value
    */
-  saveRulesetOption: async (name, value, id) => {
+  saveRulesetOption: (name, value, id) => {
     console.debug("saveRulesetOption", Options.RULESET_DEFAULTS);
     const rulesetKey = Options.getRulesetKeyFromId(id);
-    return await Options.saveRulesetKeyOption({ name, value, rulesetKey });
+    return Options.saveRulesetKeyOption({ name, value, rulesetKey });
   },
 
   /**
@@ -632,7 +632,6 @@ const Options = {
     const newValue = opt.onsave ? await opt.onsave.function(value) : value;
     ruleset[name] = newValue;
     await browser.storage.local.set({ [rulesetKey]: ruleset });
-    console.debug("opt", opt);
     // run onload functions
     // update OPTIONS_RULESETS with inherit rules
     // TODO set only the changed option, not the entire ruleset.
