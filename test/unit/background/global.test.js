@@ -2,7 +2,7 @@
 /* globals expect */
 import Global from "background/global";
 
-describe("global.js", function () {
+describe.only("global.js", function () {
   describe("allPromises", function () {
     let { pAll, stub, stub2 } = {};
     before(function () {
@@ -82,9 +82,15 @@ describe("global.js", function () {
         "file.ext:large"
       );
     });
+    it("should return filename without extension", function () {
+      expect(Global.getBasename("/path/to/file:large")).to.equal("file:large");
+    });
   });
 
   describe("getFilename", function () {
+    it("should return filename without extension and remove any twitter-style tags", function () {
+      expect(Global.getFilename("/path/to/file:large")).to.equal("file");
+    });
     it("should return filename and remove any twitter-style tags", function () {
       expect(Global.getFilename("/path/to/file.ext:large")).to.equal(
         "file.ext"
@@ -93,8 +99,11 @@ describe("global.js", function () {
   });
 
   describe("getFilePart", function () {
-    it("should return filename without extension", function () {
+    it("should return filename with extension removed", function () {
       expect(Global.getFilePart("/path/to/file.ext:large")).to.equal("file");
+    });
+    it("should return filename that does not have extension", function () {
+      expect(Global.getFilePart("/path/to/file:large")).to.equal("file");
     });
   });
 

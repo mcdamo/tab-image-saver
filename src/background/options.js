@@ -124,7 +124,8 @@ const Options = {
       default: [
         "${name}.${ext}",
         "${xName}.${xExt||xMimeExt}",
-        "${host}/img_${index.padStart(3,0)}.${ext||xExt||xMimeExt||'jpg'}",
+        '${name}.${ext||xMimeExt||"jpg"}',
+        '${host}/img_${index.padStart(3,0)}.${ext||xExt||xMimeExt||"jpg"}',
       ],
     },
     removeEnded: {
