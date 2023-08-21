@@ -124,7 +124,8 @@ const Options = {
       default: [
         "${name}.${ext}",
         "${xName}.${xExt||xMimeExt}",
-        "${host}/img_${index.padStart(3,0)}.${ext||xExt||xMimeExt||'jpg'}",
+        '${name}.${ext||xMimeExt||"jpg"}',
+        '${host}/img_${index.padStart(3,0)}.${ext||xExt||xMimeExt||"jpg"}',
       ],
     },
     removeEnded: {
@@ -433,19 +434,21 @@ const Options = {
     if (url) {
       // check for matching ruleset
       console.debug("rulesets", Options.OPTIONS_RULESETS);
-      const match = Object.entries(Options.OPTIONS_RULESETS).find(
-        ([key, r]) => {
-          if (!("domainRules" in r)) {
-            return false;
-          }
-          if (r.domainRules.find((val) => Options.domainRuleMatch(url, val))) {
-            return true;
-          }
+      // use rulesetIndex ordering
+      const match = Options.OPTIONS.rulesetIndex.find((val) => {
+        const key = Options.getRulesetKeyFromId(val.id);
+        const r = Options.OPTIONS_RULESETS[key];
+        if (!("domainRules" in r)) {
           return false;
         }
-      );
+        if (r.domainRules.find((val) => Options.domainRuleMatch(url, val))) {
+          return true;
+        }
+        return false;
+      });
       if (match) {
-        const [key, ruleset] = match;
+        const key = Options.getRulesetKeyFromId(match.id);
+        const ruleset = Options.OPTIONS_RULESETS[key];
         console.info(`matched ruleset ${key}`, ruleset);
         return ruleset;
       }
@@ -501,6 +504,10 @@ const Options = {
   loadRuleset: async (rulesetKey) => {
     const loaded = await browser.storage.local.get([rulesetKey]);
     console.debug(`loadRuleset ${rulesetKey}`, loaded);
+    if (loaded[rulesetKey] === undefined) {
+      // can happen if rulesetIndex is corrupted and refers to a deleted ruleset
+      throw new Error(`loadRuleset ${rulesetKey} returned empty`);
+    }
     return await Options.setRuleset(rulesetKey, loaded[rulesetKey]);
   },
 
@@ -587,10 +594,8 @@ const Options = {
 
   // use id instead of index to prevent accidents.
   deleteRuleset: async (id) => {
-    let rulesetIndex = Options.OPTIONS.rulesetIndex;
-    let index = rulesetIndex.findIndex((_) => _.id === id);
+    let rulesetIndex = Options.OPTIONS.rulesetIndex.filter((_) => _.id !== id);
     const rulesetKey = Options.getRulesetKeyFromId(id);
-    rulesetIndex.splice(index, 1);
     rulesetIndex = await Options.saveOption("rulesetIndex", rulesetIndex);
     await browser.storage.local.remove([rulesetKey]);
     delete Options.RULESETS[rulesetKey];
@@ -606,10 +611,10 @@ const Options = {
    * @param {integer} id numerical ruleset id
    * @returns {string} value
    */
-  saveRulesetOption: async (name, value, id) => {
+  saveRulesetOption: (name, value, id) => {
     console.debug("saveRulesetOption", Options.RULESET_DEFAULTS);
     const rulesetKey = Options.getRulesetKeyFromId(id);
-    return await Options.saveRulesetKeyOption({ name, value, rulesetKey });
+    return Options.saveRulesetKeyOption({ name, value, rulesetKey });
   },
 
   /**
@@ -628,7 +633,6 @@ const Options = {
     const newValue = opt.onsave ? await opt.onsave.function(value) : value;
     ruleset[name] = newValue;
     await browser.storage.local.set({ [rulesetKey]: ruleset });
-    console.debug("opt", opt);
     // run onload functions
     // update OPTIONS_RULESETS with inherit rules
     // TODO set only the changed option, not the entire ruleset.

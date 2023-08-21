@@ -52,7 +52,6 @@ class OptionsUI extends Component {
     this.state = {
       error: null,
       loaded: false,
-      backgroundApp: null,
       allowDownloadPrivate: false,
       schemas: {},
       options: {},
@@ -96,6 +95,7 @@ class OptionsUI extends Component {
     this.setOption = this.setOption.bind(this);
     this.handleRulesetsSort = this.handleRulesetsSort.bind(this);
     this.handleRulesetDelete = this.handleRulesetDelete.bind(this);
+    this.handleStorageChanged = this.handleStorageChanged.bind(this);
     this.handleTestRules = this.handleTestRules.bind(this);
     this.testPathRules = this.testPathRules.bind(this);
     this.testDomainRules = this.testDomainRules.bind(this);
@@ -113,22 +113,35 @@ class OptionsUI extends Component {
     return legacyTemplates;
   }
 
+  async handleStorageChanged(changes, areaName) {
+    // refresh all options from storage
+    const { options, rulesets, schemas } = await this.sendMessage(
+      MESSAGE_TYPE.OPTIONS_SCHEMAS
+    );
+    this.setState({
+      options,
+      rulesets,
+      schemas,
+    });
+  }
+
   async componentDidMount() {
     // load options
     const { options, rulesets, schemas } = await this.sendMessage(
       MESSAGE_TYPE.OPTIONS_SCHEMAS
     );
-    const page = await browser.runtime.getBackgroundPage();
     const allowDownloadPrivate =
       await browser.extension.isAllowedIncognitoAccess();
     const legacyTemplates = this.hasLegacyTemplates({ options, rulesets });
+    await browser.storage.local.onChanged.addListener(
+      this.handleStorageChanged
+    );
     this.setState({
       loaded: true,
       allowDownloadPrivate,
       options,
       rulesets,
       schemas,
-      backgroundApp: page.backgroundApp,
       legacyTemplates,
     });
   }
@@ -145,6 +158,7 @@ class OptionsUI extends Component {
         res
       ); /* RemoveLogging:skip */
       this.setState({ error: res.body.error });
+      throw Error(res.body.error);
     }
     return res.body;
   }
@@ -596,19 +610,17 @@ class OptionsUI extends Component {
     });
     const results = [];
     for (const rule of rules) {
-      const result = { rule };
-      try {
-        result.result = await this.state.backgroundApp.createFilename({
+      // returns { result: <string>(path), error: <string>(message) }
+      const result = await this.sendMessage(
+        MESSAGE_TYPE.OPTIONS_TEST_PATHRULE,
+        {
           tab: {},
           image: { src: url },
           index: 1,
           rules: [rule],
-        });
-      } catch (err) {
-        console.log(err.message);
-        result.error = err.message;
-      }
-      results.push(result);
+        }
+      );
+      results.push({ rule, ...result });
     }
     return { result: results };
   }

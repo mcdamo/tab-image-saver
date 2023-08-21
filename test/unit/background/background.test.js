@@ -544,7 +544,7 @@ describe("background.js", function () {
   });
 
   describe("waitForTabs", function () {
-    let { cancelStub, getStub, tabIds, tabs, tabsMap } = {};
+    let { cancelStub, getStub, sleepStub, tabIds, tabs, tabsMap } = {};
     before(function () {
       tabs = [
         { id: 1, status: "-", discarded: false },
@@ -571,13 +571,14 @@ describe("background.js", function () {
         .onCall(1)
         .resolves({ id: tabs[idx].id, status: "complete" });
       //browser.tabs.update
-      Global.sleepCallback = sinon.stub().resolves(true);
+      sleepStub = sinon.stub(Global, "sleepCallback");
+      sleepStub.resolves(true);
       cancelStub = sinon.stub(App, "isCancelled").returns(false);
     });
     after(function () {
       cancelStub.restore();
       getStub.reset();
-      //Global.sleepCallback.restore();
+      sleepStub.restore();
     });
     it("should return tabs in same order as provided", async function () {
       let readyTabs = await App.waitForTabs({ tabs, windowId });
@@ -783,12 +784,8 @@ describe("background.js", function () {
   });
 
   describe("handleInstalled", function () {
-    let { spyVer, stubInit, stubMf, stubVer } = {};
+    let { spyVer, stubInit, stubMf } = {};
     before(function () {
-      /*stubVer = sinon.stub().resolves();
-      Version = {
-        update: stubVer,
-      };*/
       spyVer = sinon.spy(Version, "update");
       stubInit = sinon.stub(App, "init").resolves();
       stubMf = sinon.stub(App, "loadManifest").resolves({ version: "1.x" });
@@ -837,15 +834,24 @@ describe("background.js", function () {
   });
 
   describe("run", function () {
-    let { sleep, stub, stub2, waitFn } = {};
+    let {
+      sleep,
+      stubExecuteTabs,
+      stubGetActiveTab,
+      stubGetWindowTabs,
+      waitFn,
+    } = {};
     before(function () {
       sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       waitFn = async () => {
         await sleep(500);
         return false;
       };
-      stub = sinon.stub(App, "executeTabs").callsFake(waitFn);
-      stub2 = sinon.stub(App, "getActiveTab").resolves(1);
+      stubExecuteTabs = sinon.stub(App, "executeTabs").callsFake(waitFn);
+      stubGetActiveTab = sinon.stub(App, "getActiveTab").resolves(1);
+      stubGetWindowTabs = sinon
+        .stub(App, "getWindowTabs")
+        .resolves([{ id: 1 }]);
     });
     beforeEach(function () {
       // increment mocked windowId to prevent interference
@@ -853,8 +859,9 @@ describe("background.js", function () {
       windowsStub.resolves({ id: windowId });
     });
     after(function () {
-      stub.restore();
-      stub2.restore();
+      stubExecuteTabs.restore();
+      stubGetActiveTab.restore();
+      stubGetWindowTabs.restore();
     });
     it("should block upon concurrent call", async function () {
       const p1 = App.run(windowId, "active");
@@ -866,7 +873,13 @@ describe("background.js", function () {
   });
 
   describe("handleBrowserAction", function () {
-    let { sleep, stub, stub2, waitFn } = {};
+    let {
+      sleep,
+      stubExecuteTabs,
+      stubGetActiveTabs,
+      stubGetWindowTabs,
+      waitFn,
+    } = {};
     // workaround new config default: dom.min_background_timeout_value_without_budget_throttling=1000
     this.timeout(5000); // sleep timeout may be throttled to 1000ms each call
     before(function () {
@@ -875,8 +888,11 @@ describe("background.js", function () {
         await sleep(2000);
         return false;
       };
-      stub = sinon.stub(App, "executeTabs").callsFake(waitFn);
-      stub2 = sinon.stub(App, "getActiveTab").resolves(1);
+      stubExecuteTabs = sinon.stub(App, "executeTabs").callsFake(waitFn);
+      stubGetActiveTabs = sinon.stub(App, "getActiveTab").resolves(1);
+      stubGetWindowTabs = sinon
+        .stub(App, "getWindowTabs")
+        .resolves([{ id: 1 }]);
     });
     beforeEach(function () {
       // increment mocked windowId to prevent interference
@@ -884,8 +900,9 @@ describe("background.js", function () {
       windowsStub.resolves({ id: windowId });
     });
     after(function () {
-      stub.restore();
-      stub2.restore();
+      stubExecuteTabs.restore();
+      stubGetActiveTabs.restore();
+      stubGetWindowTabs.restore();
     });
     afterEach(function () {
       /*try {

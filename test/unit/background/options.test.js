@@ -86,15 +86,14 @@ describe("options.js", function () {
   });
   describe("loadOptions", function () {
     before(async function () {
-      //await browser.storage.local.clear(); // clear() is not faked
       await browser.storage.local.set(storage);
+    });
+    after(async function () {
+      await browser.storage.local.clear();
     });
     beforeEach(function () {
       onloadStub.resetHistory();
       onsaveStub.resetHistory();
-    });
-    after(async function () {
-      await browser.storage.local.remove(Object.keys(storage)); // TODO use sandbox
     });
     afterEach(function () {
       onloadStub.resetHistory();

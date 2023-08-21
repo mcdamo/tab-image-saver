@@ -29,7 +29,7 @@
 }
 
 #sidebar {
-	/*overflow-y: auto;*/
+	overflow-y: auto;
 	padding: 1rem;
 	min-width: 200px;
 	border-right: 1px solid var(--color-border);
@@ -46,7 +46,7 @@
 #header {
 	font-size:1.2em;
 	padding-left: 30px;
-	background: url("/img/icons/tab-image-saver-v2@24.png") no-repeat;
+	background: url("../icons/tab-image-saver-v2@24.png") no-repeat;
 }
 
 .header2 {
@@ -228,7 +228,6 @@ fieldset .wrap > * {
 #rulesetSelect {
 	margin-top: 1rem;
 	flex-grow: 2;
-	overflow-y: auto;
 }
 
 #rulesetSelect .button {
@@ -279,13 +278,13 @@ fieldset .wrap > * {
 	padding-left: 2rem;
 	background-position: left;
 	background-repeat: no-repeat;
-	background-image: url(/img/trash-alt-solid.svg);
+	background-image: url(../img/trash-alt-solid.svg);
 }
 
 .drag-icon {
 	display: inline-block;
 	filter: invert() brightness(0.5) sepia(1) hue-rotate(180deg) saturate(16); /* make svg blue */
-	background-image: url(/img/grip-lines-solid.svg);
+	background-image: url(../img/grip-lines-solid.svg);
 	background-size: contain;
 	height: 100%;
 	background-position: left;
@@ -297,23 +296,23 @@ fieldset .wrap > * {
 }
 
 .add-icon {
-	background-image: url('/img/plus-solid.svg');
+	background-image: url('../img/plus-solid.svg');
 }
 
 .export-icon {
-	background-image: url('/img/download-solid.svg');
+	background-image: url('../img/download-solid.svg');
 }
 
 .import-icon {
-	background-image: url('/img/upload-solid.svg');
+	background-image: url('../img/upload-solid.svg');
 }
 
 .defaults-icon {
-	background-image: url('/img/history-solid.svg');
+	background-image: url('../img/history-solid.svg');
 }
 
 .update-icon {
-	background-image: url('/img/tools-solid.svg');
+	background-image: url('../img/tools-solid.svg');
 }
 
 .button.button-important {

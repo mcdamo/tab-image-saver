@@ -90,6 +90,23 @@
       return true;
     },
 
+    // fill src from responsive image
+    responsiveSrc: (img) => {
+      if (img.srcset && !img.src) {
+        let size = 0;
+        let src = "";
+        let srcsetArr = img.srcset.split(",");
+        for (const srcset of srcsetArr) {
+          let srcArr = srcset.trim().split(" ");
+          if (srcArr[1].replace("w", "") > size) {
+            src = srcArr[0];
+          }
+        }
+        img.src = src;
+      }
+      return img;
+    },
+
     // run chosen filter and return array of images
     getImages: async () => {
       console.log(`getImages ${App.options.minWidth}x${App.options.minHeight}`);
@@ -112,6 +129,7 @@
             if (img === false) {
               continue;
             }
+            img = App.responsiveSrc(img);
             if (App.validImage(img)) {
               images.push(img);
             }
@@ -153,7 +171,7 @@
             img.parentNode.replaceChild(wrapper, img);
           }
         }
-        let obj = { src: img.src };
+        let obj = { src: img.src, srcset: img.srcset };
         if (!direct) {
           obj.alt = img.alt;
         }

@@ -24,15 +24,15 @@ const Messaging = {
   [MESSAGE_TYPE.LEGACY_TEMPLATE_UPDATE]: async (body, sender) =>
     await App.legacyTemplateUpdate(),
 
-  //[MESSAGE_TYPE.OPTIONS_ACTION]: (request, sender) => App.getAction(),
+  [MESSAGE_TYPE.OPTIONS_ACTION]: (request, sender) => App.getAction(),
 
   [MESSAGE_TYPE.OPTIONS_OPTION_SAVE]: async ({ name, value }, sender) =>
     await Options.saveOption(name, value),
 
-  [MESSAGE_TYPE.OPTIONS_RULESET_OPTION_SAVE]: async (
+  [MESSAGE_TYPE.OPTIONS_RULESET_OPTION_SAVE]: (
     { name, value, rulesetId },
     sender
-  ) => await Options.saveRulesetOption(name, value, rulesetId),
+  ) => Options.saveRulesetOption(name, value, rulesetId),
 
   [MESSAGE_TYPE.OPTIONS_RULESET_CREATE]: async (body, sender) =>
     await Options.createRuleset(),
@@ -89,8 +89,14 @@ const Messaging = {
     App.handleCommandDownloads();
   },
 
-  [MESSAGE_TYPE.COMMAND_SIDEBAR]: (body, sender) => {
-    App.handleCommandSidebar();
+  [MESSAGE_TYPE.OPTIONS_TEST_PATHRULE]: async (body, sender) => {
+    let result = {};
+    try {
+      result.result = await App.createFilename(body);
+    } catch (err) {
+      result.error = err.message;
+    }
+    return result;
   },
 
   handleMessage: async (request, sender, sendResponse) => {
