@@ -94,6 +94,13 @@ Using `replace()`, if `alt` variable contains a pipe symbol `|` then it and any 
 ${alt.replace(/\s*\|.*/, '')}
 ```
 
+#### Path sanitization helpers
+
+Path sanitization helper methods will quickly remove most problematic characters from a string.
+
+   - `sanitizeFile("string", "_")` removes all slashes and replaces illegal characters with underscores to create a valid filename.
+   - `sanitizePath("string", "_")` replaces illegal characters with underscores and retains slashes to allow multi-level folders.
+
 ## Rulesets
 Rulesets can apply rules and options to a specific _domain_ or _url_ of the **tab** page.
 

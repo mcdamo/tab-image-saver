@@ -97,6 +97,7 @@ const Global = {
   // replace all invalid characters and slashes
   sanitizeFilename: (filename, str = "_") =>
     filename
+      .replace(/\u200b/g, "") // remove zero-width spaces
       .replace(/[*"/\\:<>|?]/g, str) // replace invalid characters
       .replace(/^[\s]+/, "") // strip leading spaces
       .replace(/[.\s]+$/, ""), // strip trailing spaces and period
@@ -104,6 +105,7 @@ const Global = {
   // replace invalid characters and strip leading/trailing slashes
   sanitizePath: (path, str = "_") =>
     path
+      .replace(/\u200b/g, "") // remove zero-width spaces
       .replace(/[*":<>|?]/g, str) // replace invalid characters
       .replace(/[/\\]+/g, "/") // replace backslash with forward slash
       .replace(/^[/]/, "") // strip leading slash

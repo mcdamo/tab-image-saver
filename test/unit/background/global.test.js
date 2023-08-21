@@ -2,7 +2,7 @@
 /* globals expect */
 import Global from "background/global";
 
-describe.only("global.js", function () {
+describe("global.js", function () {
   describe("allPromises", function () {
     let { pAll, stub, stub2 } = {};
     before(function () {
