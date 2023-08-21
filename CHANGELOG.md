@@ -1,3 +1,9 @@
+v4.3.0
+======
+ - Added support for responsive images using srcset
+ - Added support for ${name} to match paths with no file-extension
+ - Added path sanitization helpers
+
 v4.2.2
 ======
  - Fixed processing of Rulesets by user ordering
