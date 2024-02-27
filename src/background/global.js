@@ -79,7 +79,7 @@ const Global = {
   getFilename: (path) => Global.getBasename(path).replace(/:.*$/, ""), // strip twitter-style tags ":large"
 
   // sanitize filename, remove extension
-  getFilePart: (path) => Global.getFilename(path).replace(/\.[^.]+$/, ""), // strip extension
+  getFilePart: (path) => Global.getFilename(path).replace(/\.[^.]*$/, ""), // strip extension
 
   getFileExt: (path) => {
     const m = Global.getFilename(path).match(/\.([^./]+)$/);

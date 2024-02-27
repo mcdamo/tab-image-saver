@@ -96,6 +96,9 @@ describe("global.js", function () {
         "file.ext"
       );
     });
+    it("should return filename with trailing period", function () {
+      expect(Global.getFilename("/path/to/file.:large")).to.equal("file.");
+    });
   });
 
   describe("getFilePart", function () {
@@ -105,6 +108,9 @@ describe("global.js", function () {
     it("should return filename that does not have extension", function () {
       expect(Global.getFilePart("/path/to/file:large")).to.equal("file");
     });
+    it("should return filename with trailing period removed", function () {
+      expect(Global.getFilePart("/path/to/file.:large")).to.equal("file");
+    });
   });
 
   describe("getFileExt", function () {
@@ -113,6 +119,9 @@ describe("global.js", function () {
     });
     it("should return empty string if no extension", function () {
       expect(Global.getFileExt("/path/to/file:large")).to.equal("");
+    });
+    it("should return empty string trailing period", function () {
+      expect(Global.getFileExt("/path/to/file.:large")).to.equal("");
     });
   });
 
