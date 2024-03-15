@@ -1,6 +1,7 @@
 import Global from "./global";
 
 const Downloads = {
+  useFetch: false, // background fetch() can no longer use content cache, bypass for now
   dlMap: new Map(), // shared by all instances
 
   // details: { tabId, windowId, callback }
@@ -53,6 +54,7 @@ const Downloads = {
     }
     await Downloads.removeDownload(dlid, context.eraseHistory);
     const fn = context.error || ((x) => x);
+    context.download = download; // append 'download' response
     await fn(context);
     return;
   },
@@ -112,6 +114,9 @@ const Downloads = {
   },
 
   fetchDownload: async (download, context) => {
+    if (!Downloads.useFetch) {
+      return Downloads.saveDownload(download, context);
+    }
     const fn = context.error || ((x) => x);
     try {
       console.debug("fetchDownload referrer:", download.referrer);
@@ -149,6 +154,7 @@ const Downloads = {
         filename: download.path,
         conflictAction: download.conflictAction,
         incognito: download.incognito,
+        headers: [{ name: "Referer", value: download.referrer }],
       };
       const dlid = await browser.downloads.download(dlOpts);
       console.log(

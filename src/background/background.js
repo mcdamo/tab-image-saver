@@ -483,13 +483,16 @@ const App = {
       tabUrl,
       index,
       response, // if response returns HTTP error
-      error, // if fetch throws error
+      error, // if fetch or download throws error
+      download, // if download returns response object
     } = context;
     let message;
     if (response) {
       message = `${response.status}: ${response.statusText}`;
     } else if (error) {
       message = error.message;
+    } else if (download) {
+      message = download.error;
     }
     console.debug("handleDownloadFailed", context);
     // context may contain

@@ -209,24 +209,37 @@ describe("downloads.js", function () {
   });
 
   describe("fetchDownload", function () {
-    let { responseFail, responseOk, server, stubDownload, stubError, url } = {};
+    let {
+      tabsOrig,
+      responseFail,
+      responseOk,
+      server,
+      stubDownload,
+      stubError,
+      useFetch,
+    } = {};
     before(function () {
+      tabsOrig = browser.tabs;
       stubDownload = sinon.stub(Downloads, "saveDownload").resolves(true);
       stubError = sinon.stub();
       responseOk = new window.Response("", { status: 200 });
       responseFail = new window.Response("", { status: 400 });
       server = sinon.stub(window, "fetch");
+      useFetch = Downloads.useFetch;
+      Downloads.useFetch = true;
     });
     beforeEach(function () {
       stubDownload.resetHistory();
       stubError.resetHistory();
     });
     after(function () {
+      browser.tabs = tabsOrig;
       server.restore();
       stubDownload.restore();
+      Downloads.useFetch = useFetch;
     });
     it("should call saveDownload if ok", async function () {
-      server.returns(Promise.resolve(responseOk));
+      server.resolves(responseOk);
       expect(
         await Downloads.fetchDownload({ url: "/test" }, { error: stubError })
       ).to.equal(true);
