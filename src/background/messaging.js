@@ -99,13 +99,15 @@ const Messaging = {
     return result;
   },
 
-  handleMessage: async (request, sender, sendResponse) => {
+  wrapResponse: async (request, sender) => ({
+    type: request.type,
+    body: await Messaging[request.type](request.body, sender),
+  }),
+
+  handleMessage: (request, sender, sendResponse) => {
     let msg;
     try {
-      msg = {
-        type: request.type,
-        body: await Messaging[request.type](request.body, sender),
-      };
+      sendResponse(Messaging.wrapResponse(request, sender));
     } catch (err) {
       if (!(request.type in Messaging)) {
         console.error("Unexpected message", request); /* RemoveLogging:skip */
@@ -114,9 +116,8 @@ const Messaging = {
         type: MESSAGE_TYPE.ERROR,
         body: { error: err.message },
       };
+      sendResponse(msg);
     }
-    // strip unserializable objects to prevent console warnings
-    return JSON.parse(JSON.stringify(msg));
   },
 
   init: () => {

@@ -399,42 +399,40 @@ describe("global.js", function () {
   });
 
   describe("getHeaders + getHeaderFilename", function () {
-    let { headers, server, url } = {};
+    let { tabsOrig, headers, server, url } = {};
     before(function () {
       headers = {
         "Content-Type": "image/jpeg",
         "Content-Disposition": "filename=file%20name.ext;",
       };
       url = "/test";
+      tabsOrig = browser.tabs;
       server = sinon.stub(window, "fetch");
     });
     beforeEach(function () {
-      server.returns(
-        Promise.resolve(
-          new window.Response("", {
-            status: 200,
-            headers,
-          })
-        )
+      server.resolves(
+        new window.Response("", {
+          status: 200,
+          headers,
+        })
       );
     });
     after(function () {
+      browser.tabs = tabsOrig;
       server.restore();
     });
 
     describe("getHeaders", function () {
       it("should return the requested headers", async function () {
-        let p = Global.getHeaders(url, Object.keys(headers));
+        let p = Global.getHeaders(url, Object.keys(headers), { tabId: 1 });
         await expect(p).to.eventually.become(headers);
       });
       it("should throw if server error", async function () {
-        server.returns(
-          Promise.resolve(
-            new window.Response("", {
-              status: 400,
-              headers,
-            })
-          )
+        server.resolves(
+          new window.Response("", {
+            status: 400,
+            headers,
+          })
         );
         let p = Global.getHeaders(url, Object.keys(headers));
         await expect(p).to.eventually.be.rejected;
@@ -451,7 +449,7 @@ describe("global.js", function () {
 
     describe("getHeaderFilename", function () {
       it("should return jpg headers", async function () {
-        let p = Global.getHeaderFilename(url);
+        let p = Global.getHeaderFilename(url, {});
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({
@@ -460,76 +458,66 @@ describe("global.js", function () {
         });
       });
       it("should return gif headers", async function () {
-        server.returns(
-          Promise.resolve(
-            new window.Response("", {
-              status: 200,
-              headers: { "Content-Type": "image/gif" },
-            })
-          )
+        server.resolves(
+          new window.Response("", {
+            status: 200,
+            headers: { "Content-Type": "image/gif" },
+          })
         );
-        let p = Global.getHeaderFilename(url);
+        let p = Global.getHeaderFilename(url, {});
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ mimeExt: "gif" });
       });
       it("should return png headers", async function () {
-        server.returns(
-          Promise.resolve(
-            new window.Response("", {
-              status: 200,
-              headers: { "Content-Type": "image/png" },
-            })
-          )
+        server.resolves(
+          new window.Response("", {
+            status: 200,
+            headers: { "Content-Type": "image/png" },
+          })
         );
-        let p = Global.getHeaderFilename(url);
+        let p = Global.getHeaderFilename(url, {});
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ mimeExt: "png" });
       });
       it("should return svg headers", async function () {
-        server.returns(
-          Promise.resolve(
-            new window.Response("", {
-              status: 200,
-              headers: { "Content-Type": "image/svg+xml" },
-            })
-          )
+        server.resolves(
+          new window.Response("", {
+            status: 200,
+            headers: { "Content-Type": "image/svg+xml" },
+          })
         );
-        let p = Global.getHeaderFilename(url);
+        let p = Global.getHeaderFilename(url, {});
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ mimeExt: "svg" });
       });
       it("should handle quotes in filename", async function () {
-        server.returns(
-          Promise.resolve(
-            new window.Response("", {
-              status: 200,
-              headers: {
-                "Content-Disposition": 'filename="new%20file.jpg"; filename*=',
-              },
-            })
-          )
+        server.resolves(
+          new window.Response("", {
+            status: 200,
+            headers: {
+              "Content-Disposition": 'filename="new%20file.jpg"; filename*=',
+            },
+          })
         );
-        let p = Global.getHeaderFilename(url);
+        let p = Global.getHeaderFilename(url, {});
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ filename: "new file.jpg" });
       });
       it("should handle RFC 5987 filename", async function () {
-        server.returns(
-          Promise.resolve(
-            new window.Response("", {
-              status: 200,
-              headers: {
-                "Content-Disposition":
-                  "filename=\"new%20file.jpg\"; filename*=UTF-8''%E3%82%8B%E3%82%8A.jpg",
-              },
-            })
-          )
+        server.resolves(
+          new window.Response("", {
+            status: 200,
+            headers: {
+              "Content-Disposition":
+                "filename=\"new%20file.jpg\"; filename*=UTF-8''%E3%82%8B%E3%82%8A.jpg",
+            },
+          })
         );
-        let p = Global.getHeaderFilename(url);
+        let p = Global.getHeaderFilename(url, {});
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ filename: "るり.jpg" });

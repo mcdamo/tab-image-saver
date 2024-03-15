@@ -161,7 +161,9 @@ const Global = {
       async _fetchHeader() {
         if (!this._xhrLoaded) {
           try {
-            this._xhrHdr = Global.getHeaderFilename(this._image_src); // async
+            this._xhrHdr = Global.getHeaderFilename(this._image_src, {
+              tabId: tab.id,
+            }); // async
             this._xhrLoaded = true;
           } catch (err) {
             this._errors.push(err);
@@ -248,12 +250,13 @@ const Global = {
   // try to get filename from XHR request
   // returns {filename: filename} or {ext: ext}
   // throws Error if HTTP ERROR
-  getHeaderFilename: async (url) => {
+  getHeaderFilename: async (url, context) => {
     let obj = {};
-    let headers = await Global.getHeaders(url, [
-      "Content-Disposition",
-      "Content-Type",
-    ]);
+    let headers = await Global.getHeaders(
+      url,
+      ["Content-Disposition", "Content-Type"],
+      context
+    );
     const mime = headers["Content-Type"];
     if (mime && mime.indexOf("image/") === 0) {
       let ext = mime.substr(6);
