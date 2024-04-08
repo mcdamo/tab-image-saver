@@ -12,7 +12,7 @@ const Downloads = {
   removeDownload: async (dlid, eraseHistory) => {
     Downloads.dlMap.delete(dlid);
     if (eraseHistory) {
-      console.debug("removeDownload::eraseHistory");
+      console.debug("removeDownload::eraseHistory", dlid);
       await browser.downloads.erase({ id: dlid });
     }
   },
@@ -34,12 +34,17 @@ const Downloads = {
     Downloads.downloadsHaveProp("windowId", windowId),
 
   // call when download ends to cleanup and erase history
-  downloadEnded: async (download) => {
-    const dlid = download.id;
+  downloadEnded: async (delta) => {
+    const dlid = delta.id;
     const context = Downloads.getDownload(dlid);
     if (!context) {
       return; // multiple triggers may fire for one download
     }
+    const downloads = await browser.downloads.search({ id: dlid });
+    if (downloads.length === 0) {
+      return;
+    }
+    const download = downloads[0];
     console.log(`Download(${dlid}) ${download.state}:`, download.filename);
     console.debug("Download status", download);
     if (
@@ -61,14 +66,12 @@ const Downloads = {
 
   // handle downloads changed events
   // note: catches all changes to Downloads, not just from this webext
-  handleDownloadChanged: async (delta) => {
+  handleDownloadChanged: (delta) => {
     console.debug("handleDownloadChanged", delta);
-    let dlid = delta.id;
-    // if (delta.state && delta.state.current !== "in_progress") {
-    let downloads = await browser.downloads.search({ id: dlid });
-    for (let download of downloads) {
-      await Downloads.downloadEnded(download); // await?
+    if (delta.state && delta.state.current !== "in_progress") {
+      Downloads.downloadEnded(delta);
     }
+    return true;
   },
 
   removeWindowDownloads: async (windowId) => {

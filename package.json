@@ -127,7 +127,7 @@
     "virtualenv-postinstall": "virtualenv-postinstall",
     "watch:lint": "esw -w --ext=.js,.json src",
     "watch:karma": "karma start --auto-watch --no-single-run",
-    "web-ext": "npx web-ext -s ./dev run",
+    "web-ext": "npx web-ext --pref privacy.partition.network_state=false -s ./dev run",
     "firefox-launch": "node scripts/dev.js --browser=firefox"
   },
   "dependencies": {

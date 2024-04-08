@@ -101,26 +101,26 @@ const App = {
   isUniqueUrl: (url, windowId) => !App.getRuntime(windowId).urls.has(url),
 
   // download queue for window
-  addDownload: (dlid, context, tabId, windowId) => {
+  addDownload: (dlidx, context, tabId, windowId) => {
     if (!App.getRuntime(windowId).dlMap.has(tabId)) {
       let m = new Map();
-      m.set(dlid, context);
+      m.set(dlidx, context);
       App.getRuntime(windowId).dlMap.set(tabId, m);
     } else {
-      App.getRuntime(windowId).dlMap.get(tabId).set(dlid, context);
+      App.getRuntime(windowId).dlMap.get(tabId).set(dlidx, context);
     }
-    console.debug("App.addDownload", dlid);
+    console.debug("App.addDownload", dlidx);
   },
 
-  getDownload: (dlid, tabId, windowId) => {
+  getDownload: (dlidx, tabId, windowId) => {
     if (App.getRuntime(windowId).dlMap.has(tabId)) {
-      return App.getRuntime(windowId).dlMap.get(tabId).get(dlid);
+      return App.getRuntime(windowId).dlMap.get(tabId).get(dlidx);
     }
     return undefined;
   },
 
-  removeDownload: (dlid, tabId, windowId) => {
-    console.debug("App.removeDownload", dlid, tabId);
+  removeDownload: (dlidx, tabId, windowId) => {
+    console.debug("App.removeDownload", dlidx, tabId);
     /*
     if (
       !App.getRuntime(windowId).dlMap.has(tabId) ||
@@ -135,7 +135,7 @@ const App = {
       return;
     }
     */
-    App.getRuntime(windowId).dlMap.get(tabId).delete(dlid);
+    App.getRuntime(windowId).dlMap.get(tabId).delete(dlidx);
     if (App.getRuntime(windowId).dlMap.get(tabId).size === 0) {
       App.getRuntime(windowId).dlMap.delete(tabId);
     }
