@@ -1,5 +1,5 @@
 import Constants from "./constants";
-import Global from "./global";
+import Utils from "./utils";
 import Commands from "./commands";
 import Common from "./common";
 
@@ -58,8 +58,8 @@ const Options = {
     },
     downloadPath: {
       type: T.VALUE,
-      onload: { function: (v) => Global.sanitizePath(v) }, // App
-      onsave: { function: (v) => Global.sanitizePath(v) }, // UI
+      onload: { function: (v) => Utils.sanitizePath(v) }, // App
+      onsave: { function: (v) => Utils.sanitizePath(v) }, // UI
       default: "",
     },
     downloadPrivate: {
@@ -248,8 +248,8 @@ const Options = {
     },
     downloadPath: {
       type: T.VALUE,
-      onload: { function: (v) => Global.sanitizePath(v) }, // App
-      onsave: { function: (v) => Global.sanitizePath(v) }, // UI
+      onload: { function: (v) => Utils.sanitizePath(v) }, // App
+      onsave: { function: (v) => Utils.sanitizePath(v) }, // UI
       default: "",
     },
     downloadPrivate: {
@@ -647,7 +647,7 @@ const Options = {
     const options = { [name]: newValue };
     await browser.storage.local.set(options);
     await Options.setOptions(options); // this runs onload functions
-    // update inherited ruleset cache when any Global option is changed
+    // update inherited ruleset cache when any Utils option is changed
     Options.setRulesetsInherited();
     return newValue;
   },
@@ -696,7 +696,7 @@ const Options = {
     const rulesetIndex = Options.OPTIONS.rulesetIndex;
     // find next unused key
     const ids = rulesetIndex.map((o) => o.id);
-    const id = Global.findNextSequence(ids);
+    const id = Utils.findNextSequence(ids);
     const rulesetKey = Options.getRulesetKeyFromId(id);
     // generate name
     const rulesetName = browser.i18n.getMessage(

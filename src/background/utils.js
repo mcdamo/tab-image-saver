@@ -1,7 +1,7 @@
 // independent functions
 import Expressions from "./expressions";
 
-const Global = {
+const Utils = {
   // wait for all promises to resolve
   // promiseReject default is to silently catch promise rejections
   allPromises: (promises, allThen, allError, promiseReject = undefined) => {
@@ -27,7 +27,7 @@ const Global = {
     let remain = ms;
     while (remain > 0) {
       let start = new Date();
-      await Global.sleep(chunk);
+      await Utils.sleep(chunk);
       let dur = new Date() - start;
       if (callback !== undefined) {
         if (callback(ms, remain)) {
@@ -40,8 +40,8 @@ const Global = {
   },
 
   template: async (string, obj) => {
-    obj.sanitizePath = Global.sanitizePath;
-    obj.sanitizeFilename = Global.sanitizeFilename;
+    obj.sanitizePath = Utils.sanitizePath;
+    obj.sanitizeFilename = Utils.sanitizeFilename;
     // convert template to expression
     // wrap expressions in parenthesis for quirk of parser
     const ret = `"${string
@@ -76,13 +76,13 @@ const Global = {
   getBasename: (path) => path.replace(/^.*\//, ""), // strip everything before last slash
 
   // sanitized filename
-  getFilename: (path) => Global.getBasename(path).replace(/:.*$/, ""), // strip twitter-style tags ":large"
+  getFilename: (path) => Utils.getBasename(path).replace(/:.*$/, ""), // strip twitter-style tags ":large"
 
   // sanitize filename, remove extension
-  getFilePart: (path) => Global.getFilename(path).replace(/\.[^.]*$/, ""), // strip extension
+  getFilePart: (path) => Utils.getFilename(path).replace(/\.[^.]*$/, ""), // strip extension
 
   getFileExt: (path) => {
-    const m = Global.getFilename(path).match(/\.([^./]+)$/);
+    const m = Utils.getFilename(path).match(/\.([^./]+)$/);
     if (m && m.length > 0) {
       return m[1];
     }
@@ -126,9 +126,9 @@ const Global = {
     !/[*":<>|?]/.test(path), // does not contain invalid characters
 
   isValidFilename: (path) =>
-    Global.isValidPath(path) &&
-    Global.getFilePart(path).length > 0 && // filename part
-    Global.getFileExt(path).length > 0, // file extension
+    Utils.isValidPath(path) &&
+    Utils.getFilePart(path).length > 0 && // filename part
+    Utils.getFileExt(path).length > 0, // file extension
 
   // find the first missing integer from a sequence beginning at zero
   findNextSequence: (numericArray) => {
@@ -144,4 +144,4 @@ const Global = {
   isDataUrl: (url) => url.indexOf("data:image/") === 0,
 };
 
-export default Global;
+export default Utils;

@@ -1,4 +1,4 @@
-import Global from "./global";
+import Utils from "./utils";
 
 const Downloads = {
   useContentFetch: true, // TODO make an option
@@ -105,7 +105,7 @@ const Downloads = {
         promises.push(canceling);
       }
     }
-    return Global.allPromises(
+    return Utils.allPromises(
       promises,
       () => {
         console.log("Cancelled all downloads");
@@ -288,10 +288,10 @@ const Downloads = {
 
   getRuleParams: (props) => {
     const { tab, image, index } = props;
-    const isDataUrl = Global.isDataUrl(image.src);
-    const parse = Global.parseURL(image.src); // URI components will be encoded
+    const isDataUrl = Utils.isDataUrl(image.src);
+    const parse = Utils.parseURL(image.src); // URI components will be encoded
     const path = parse ? decodeURI(parse.pathname) : null;
-    const tabParse = Global.parseURL(tab.url);
+    const tabParse = Utils.parseURL(tab.url);
     const tabPath = tabParse ? decodeURI(tabParse.pathname) : null;
     // public properties should be lowercase
     let RuleParams = class {
@@ -330,14 +330,14 @@ const Downloads = {
       async xname() {
         const _xhrHdr = await this._fetchHeader();
         if (_xhrHdr.filename) {
-          return Global.getFilePart(_xhrHdr.filename);
+          return Utils.getFilePart(_xhrHdr.filename);
         }
         return "";
       }
       async xext() {
         const _xhrHdr = await this._fetchHeader();
         if (_xhrHdr.filename) {
-          return Global.getFileExt(_xhrHdr.filename);
+          return Utils.getFileExt(_xhrHdr.filename);
         }
         return "";
       }
@@ -351,9 +351,9 @@ const Downloads = {
     };
     const obj = new RuleParams(image.src);
     if (path) {
-      obj.ext = Global.getFileExt(path);
-      obj.name = Global.getFilePart(path);
-      obj.path = Global.getDirname(path);
+      obj.ext = Utils.getFileExt(path);
+      obj.name = Utils.getFilePart(path);
+      obj.path = Utils.getDirname(path);
     }
     if (isDataUrl) {
       // inherit the hostname from the tab
@@ -369,9 +369,9 @@ const Downloads = {
       obj.tabhost = tabParse.hostname;
     }
     if (tabPath) {
-      obj.tabpath = Global.getDirname(tabPath);
-      obj.tabfile = Global.getFilePart(tabPath);
-      obj.tabext = Global.getFileExt(tabPath);
+      obj.tabpath = Utils.getDirname(tabPath);
+      obj.tabfile = Utils.getFilePart(tabPath);
+      obj.tabext = Utils.getFileExt(tabPath);
     }
     if (image.alt) {
       obj.alt = image.alt;

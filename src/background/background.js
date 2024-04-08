@@ -1,6 +1,6 @@
-/* globals Constants Downloads Options Global Version */
+/* globals Constants Downloads Options Utils Version */
 
-import Global from "./global";
+import Utils from "./utils";
 import Constants from "./constants";
 import Version from "./version";
 import Options from "./options";
@@ -524,15 +524,15 @@ const App = {
     const { image, rules } = props;
     const obj = Downloads.getRuleParams(props);
     for (const rule of rules) {
-      const filename = Global.sanitizePath(
-        (await Global.template(rule, obj)).trim()
+      const filename = Utils.sanitizePath(
+        (await Utils.template(rule, obj)).trim()
       );
       console.log(
-        `rule: ${rule}, filename: ${filename}, valid: ${Global.isValidPath(
+        `rule: ${rule}, filename: ${filename}, valid: ${Utils.isValidPath(
           filename
         )}`
       );
-      if (Global.isValidPath(filename)) {
+      if (Utils.isValidPath(filename)) {
         console.log("createFilename", rule, filename); /* RemoveLogging: skip */
         return filename;
       }
@@ -550,10 +550,10 @@ const App = {
     if (filename === null) {
       throw new Error("Unable to generate filename");
     }
-    const path = Global.sanitizePath(
-      Global.pathJoin([param.downloadPath, filename])
+    const path = Utils.sanitizePath(
+      Utils.pathJoin([param.downloadPath, filename])
     );
-    if (!Global.isValidFilename(path)) {
+    if (!Utils.isValidFilename(path)) {
       throw new Error(`Invalid filename generated: ${path}`);
     }
     return path;
@@ -571,7 +571,7 @@ const App = {
         )} >= ${maxDownloadNum}`
       );
       if (
-        !(await Global.sleepCallback(100, (ms, remain) => {
+        !(await Utils.sleepCallback(100, (ms, remain) => {
           App.setBadgeLoading(windowId);
           return App.isCancelled(windowId);
         }))
@@ -752,7 +752,7 @@ const App = {
       return true;
     }
     const promiseDownloads = await App.fetchDownloads({ windowId, downloads });
-    return await Global.allPromises(
+    return await Utils.allPromises(
       promiseDownloads,
       (downloads) => {
         console.debug("downloadTab promises", downloads);
@@ -780,7 +780,7 @@ const App = {
     }
     for (const image of images) {
       const url = image.src;
-      if (Global.isDataUrl(url)) {
+      if (Utils.isDataUrl(url)) {
         // skip testing for unique
         App.getRuntime(windowId).imagesMatched++;
         result.push(image);
@@ -813,7 +813,7 @@ const App = {
     try {
       console.debug(`Executing Tab(${tab.id})`);
       let result;
-      if (Global.isDataUrl(tab.url)) {
+      if (Utils.isDataUrl(tab.url)) {
         // cannot executeScript in data-url tab, so manually craft the result response
         console.debug("executeTab: using data-url workaround");
         const images = [];
@@ -876,7 +876,7 @@ const App = {
     for (const tab of tabs) {
       promiseTabs.push(execute({ tab, windowId }));
     }
-    return await Global.allPromises(
+    return await Utils.allPromises(
       promiseTabs,
       async (tabResults) => await callback({ response: tabResults, windowId }),
       (err) => {
@@ -953,7 +953,7 @@ const App = {
       // don't sleep in the first loop
       if (
         loop > 0 &&
-        !(await Global.sleepCallback(1000, (ms, remain) => {
+        !(await Utils.sleepCallback(1000, (ms, remain) => {
           App.setBadgeLoading(windowId);
           return App.isCancelled(windowId);
         }))
@@ -976,7 +976,7 @@ const App = {
     }
     if (sleepMore) {
       if (
-        !(await Global.sleepCallback(5000, (ms, remain) => {
+        !(await Utils.sleepCallback(5000, (ms, remain) => {
           const percent = ((ms - remain) / ms) * 100;
           App.setBadgeLoading(windowId, percent);
           return App.isCancelled(windowId);
@@ -1020,7 +1020,7 @@ const App = {
       });
       promiseTabs.push(ret);
     }
-    return await Global.allPromises(
+    return await Utils.allPromises(
       promiseTabs,
       (tabResults) => {
         console.debug("waitAndExecuteTabs:tabResults", tabResults);
@@ -1041,7 +1041,7 @@ const App = {
     // filter tabs without URLs
     return tabs.filter(
       (tab) =>
-        /^(https?|ftps?):\/\/.+/.test(tab.url) || Global.isDataUrl(tab.url)
+        /^(https?|ftps?):\/\/.+/.test(tab.url) || Utils.isDataUrl(tab.url)
     );
   },
 

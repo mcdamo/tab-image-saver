@@ -367,14 +367,12 @@ describe("downloads.js", function () {
         let p = Downloads.fetchHeaders(url, Object.keys(headers));
         await expect(p).to.eventually.be.rejected;
       });
-      /*
-      // getHeaders now re-throws exceptions
-      it("should cleanly handle fetch exception", async () => {
-        server.returns(Promise.reject());
-        var p = Global.getHeaders(url, Object.keys(headers));
-        await expect(p).to.eventually.become(false);
-      });
-      */
+      // // fetchHeaders now re-throws exceptions
+      // it("should cleanly handle fetch exception", async () => {
+      //   server.returns(Promise.reject());
+      //   var p = Utils.fetchHeaders(url, Object.keys(headers));
+      //   await expect(p).to.eventually.become(false);
+      // });
     });
 
     describe("getHeaderFilename", function () {

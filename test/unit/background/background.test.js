@@ -2,7 +2,8 @@
 /* globals expect */
 import App, { getWindowId } from "background/background";
 import Constants from "background/constants";
-import Global from "background/global";
+import Downloads from "background/downloads";
+import Utils from "background/utils";
 import Version from "background/version";
 
 describe("background.js", function () {
@@ -229,7 +230,7 @@ describe("background.js", function () {
     let stub;
     before(function () {
       stub = sinon
-        .stub(Global, "getHeaderFilename")
+        .stub(Downloads, "getHeaderFilename")
         .resolves({ filename: "xhr name.xhrext", mimeExt: "xm" });
     });
 
@@ -571,7 +572,7 @@ describe("background.js", function () {
         .onCall(1)
         .resolves({ id: tabs[idx].id, status: "complete" });
       //browser.tabs.update
-      sleepStub = sinon.stub(Global, "sleepCallback");
+      sleepStub = sinon.stub(Utils, "sleepCallback");
       sleepStub.resolves(true);
       cancelStub = sinon.stub(App, "isCancelled").returns(false);
     });
