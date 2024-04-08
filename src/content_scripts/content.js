@@ -230,9 +230,116 @@
       return false;
     },
 
+    fetchHeaders: async ({ url, options }) => {
+      const r = await fetch(url, {
+        method: "HEAD",
+        mode: "no-cors",
+        credentials: "same-origin",
+        cache: "force-cache",
+        referrerPolicy: "no-referrer-when-downgrade",
+        ...options,
+      });
+      if (r.ok) {
+        return {
+          ok: r.ok,
+          headers: [...r.headers].reduce(
+            (acc, header) => ({ ...acc, [header[0]]: header[1] }),
+            {}
+          ),
+        };
+      }
+      // HTTP error
+      return {
+        ok: r.ok,
+        status: r.status,
+        statusText: r.statusText,
+      };
+    },
+
+    fetchDownload: async ({ url, options }) => {
+      const r = await fetch(url, {
+        mode: "no-cors",
+        credentials: "same-origin",
+        cache: "force-cache",
+        referrerPolicy: "no-referrer-when-downgrade",
+        ...options,
+      });
+      if (r.ok) {
+        const blob = await r.blob();
+        return { ok: r.ok, blob };
+      }
+      // HTTP error
+      return {
+        ok: r.ok,
+        status: r.status,
+        statusText: r.statusText,
+      };
+    },
+
+    unload: () => {
+      if (browser.runtime.onMessage.hasListener(App.handleMessage)) {
+        console.debug("deleting message listener");
+        browser.runtime.onMessage.removeListener(App.handleMessage);
+      }
+      return;
+    },
+
+    FETCH_HEADERS: async (body, sender) => {
+      let result = {};
+      try {
+        result.result = await App.fetchHeaders(body);
+      } catch (err) {
+        result.error = err.message;
+      }
+      return result;
+    },
+
+    FETCH_DOWNLOAD: async (body, sender) => {
+      let result = {};
+      try {
+        result.result = await App.fetchDownload(body);
+      } catch (err) {
+        result.error = err.message;
+      }
+      return result;
+    },
+
+    UNLOAD: (body, sender) => {
+      let result = {};
+      try {
+        result.result = App.unload(body);
+      } catch (err) {
+        result.error = err.message;
+      }
+      return result;
+    },
+
+    wrapResponse: async (request, sender) => ({
+      type: request.type,
+      body: await App[request.type](request.body, sender),
+    }),
+
+    handleMessage: (request, sender, sendResponse) => {
+      let msg;
+      try {
+        sendResponse(App.wrapResponse(request, sender));
+      } catch (err) {
+        if (!(request.type in App)) {
+          console.error("Unexpected message", request); /* RemoveLogging:skip */
+        }
+        msg = {
+          type: "ERROR",
+          body: { error: err.message },
+        };
+        sendResponse(msg);
+      }
+    },
+
     init: async () => {
       App.runtime = { cancel: false };
       if (await App.loadOptions()) {
+        browser.runtime.onMessage.addListener(App.handleMessage);
+
         // console.log(document.readyState);
         return await App.getImages();
       }

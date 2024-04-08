@@ -137,6 +137,7 @@ const App = {
     */
     App.getRuntime(windowId).dlMap.get(tabId).delete(dlidx);
     if (App.getRuntime(windowId).dlMap.get(tabId).size === 0) {
+      App.unloadTab(tabId);
       App.getRuntime(windowId).dlMap.delete(tabId);
     }
   },
@@ -407,6 +408,11 @@ const App = {
         ); /* RemoveLogging:skip */
       }
     }
+    // unload content script from tabs
+    for (const tabId of runtime.dlMap.keys()) {
+      App.unloadTab(tabId);
+    }
+
     App.notifyFinished(windowId);
     const finishedCallback = runtime.finishedCallback;
     if (finishedCallback) {
@@ -456,10 +462,15 @@ const App = {
     //const options = context.options;
     const closeTab = context.closeTab;
     console.debug("handleDownloadComplete", context);
-    App.removeDownload(index, tabId, windowId);
-    App.getRuntime(windowId).imagesSaved++;
-    App.getRuntime(windowId).imagesDownloading--;
-    App.setBadgeSaving(windowId);
+    try {
+      App.removeDownload(index, tabId, windowId);
+      App.getRuntime(windowId).imagesSaved++;
+      App.getRuntime(windowId).imagesDownloading--;
+      App.setBadgeSaving(windowId);
+    } catch (err) {
+      // if downloads finish _after_ runtime is cancelled
+      console.warn("handleDownloadComplete: ignore errors", err);
+    }
     if (closeTab) {
       if (App.hasTabDownloads(tabId, windowId) === false) {
         try {
@@ -511,7 +522,7 @@ const App = {
   // return null if failed
   createFilename: async (props) => {
     const { image, rules } = props;
-    const obj = Global.getRuleParams(props);
+    const obj = Downloads.getRuleParams(props);
     for (const rule of rules) {
       const filename = Global.sanitizePath(
         (await Global.template(rule, obj)).trim()
@@ -1088,6 +1099,12 @@ const App = {
     return tabsWaiting;
   },
 
+  unloadTab: async (tabId) => {
+    console.debug("unloadTab", tabId);
+    browser.tabs.sendMessage(tabId, { type: "UNLOAD" }).catch(console.error);
+    return true;
+  },
+
   getActiveTab: async (windowId) => {
     const ret = await browser.tabs.query({ windowId, active: true });
     if (!ret) {
@@ -1121,6 +1138,9 @@ const App = {
     ) {
       // show options on first install
       App.handleCommandOptions();
+      if (temporary) {
+        Options.OPTIONS.downloadPath = "tab-image-saver";
+      }
     }
   },
 
