@@ -259,6 +259,22 @@
     "description": "Option label for minimum image height",
     "message": "Min Height (px):"
   },
+  "options_download_method_label": {
+    "description": "Option label for download method",
+    "message": "Download method:"
+  },
+  "options_download_method_label_content_fetch": {
+    "description": "Option label for content-fetch option",
+    "message": "Content-fetch"
+  },
+  "options_download_method_label_download": {
+    "description": "Option label for download option",
+    "message": "Download"
+  },
+  "options_download_method_label_fetch": {
+    "description": "Option label for fetch option",
+    "message": "Fetch"
+  },
   "options_image_regex_label": {
     "description": "Option label for image regex",
     "message": "Image URL regex match:"

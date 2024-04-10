@@ -257,16 +257,19 @@
     },
 
     fetchDownload: async ({ url, options }) => {
-      const r = await fetch(url, {
+      const start = new Date();
+      const o = {
         mode: "no-cors",
         credentials: "same-origin",
         cache: "force-cache",
         referrerPolicy: "no-referrer-when-downgrade",
         ...options,
-      });
+      };
+      const r = await fetch(url, o);
+      const finish = new Date();
       if (r.ok) {
         const blob = await r.blob();
-        return { ok: r.ok, blob };
+        return { ok: r.ok, blob, ms: finish.getTime() - start.getTime() };
       }
       // HTTP error
       return {

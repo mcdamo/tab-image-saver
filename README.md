@@ -123,6 +123,15 @@ The following examples are for `https://example.com/page.html`
 | /page.html | Yes |
 | #//example\.[^/]{3}/# | Yes |
 
+## Download method
+
+The download method does not need to be changed unless you are using the cache workaround or having issues with downloads.
+
+| Method | Advantages | Disadvantages |
+|--------|------------|---------------|
+| **Fetch** | fast cancellation | does not use cache (*since FF 123.0*) |
+| **Content-fetch** (default) | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used) | slowest |
+| **Download** | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used); fastest | *Clear download history* does not work |
 
 ## FAQ
 

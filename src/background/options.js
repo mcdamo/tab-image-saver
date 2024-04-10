@@ -49,6 +49,11 @@ const Options = {
       type: T.BOOL,
       default: false,
     },
+    downloadMethod: {
+      type: T.RADIO,
+      default: Constants.DOWNLOAD_METHOD.CONTENT_FETCH,
+      values: Object.values(Constants.DOWNLOAD_METHOD),
+    },
     downloadNum: {
       type: T.VALUE,
       default: 6,

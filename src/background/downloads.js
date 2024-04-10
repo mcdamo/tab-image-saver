@@ -1,7 +1,7 @@
+import Constants from "./constants";
 import Utils from "./utils";
 
 const Downloads = {
-  useContentFetch: true, // TODO make an option
   dlMap: new Map(), // shared by all instances
 
   // details: { tabId, windowId, callback }
@@ -117,16 +117,25 @@ const Downloads = {
   },
 
   fetchDownload: async (download, context) => {
+    console.debug(`fetchDownload via ${download.downloadMethod}`);
+    if (download.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD) {
+      return Downloads.saveDownload(download, context);
+    }
     const fn = context.error || ((x) => x);
     try {
       console.debug("fetchDownload referrer:", download.referrer);
       let response;
-      if (Downloads.useContentFetch) {
+      if (download.downloadMethod === Constants.DOWNLOAD_METHOD.CONTENT_FETCH) {
         // content fetch
         const MESSAGE_TYPE = "FETCH_DOWNLOAD";
         const msg = await browser.tabs.sendMessage(context.tabId, {
           type: MESSAGE_TYPE,
-          body: { url: download.url, options: { referrer: download.referrer } },
+          body: {
+            url: download.url,
+            options: {
+              referrer: download.referrer,
+            },
+          },
         });
         if (msg.type !== MESSAGE_TYPE || msg.body.error) {
           throw Error(msg.body.error || msg);
@@ -134,22 +143,29 @@ const Downloads = {
         response = msg.body.result;
       } else {
         // background fetch
+        const start = new Date();
         response = await fetch(download.url, {
           mode: "cors",
           credentials: "same-origin",
           cache: "force-cache",
           referrer: download.referrer,
           referrerPolicy: "no-referrer-when-downgrade",
-          signal: download.signal,
+          signal: download.abortSignal,
         });
+        const finish = new Date();
+        response.ms = finish.getTime() - start.getTime();
       }
       console.debug("fetchDownload response:", response);
       if (response.ok) {
-        console.log(`fetchDownload from Tab(${context.tabId}):`, download.path);
+        console.log(
+          `fetchDownload from Tab(${context.tabId}) ${response.ms / 1000}s:`,
+          download.path
+        );
         let myDownload = download;
-        const myBlob = Downloads.useContentFetch
-          ? response.blob
-          : await response.blob();
+        const myBlob =
+          download.downloadMethod === Constants.DOWNLOAD_METHOD.CONTENT_FETCH
+            ? response.blob
+            : await response.blob();
         myDownload.url = URL.createObjectURL(myBlob);
         return Downloads.saveDownload(myDownload, context);
       }
@@ -172,6 +188,7 @@ const Downloads = {
         conflictAction: download.conflictAction,
         incognito: download.incognito,
         headers: [{ name: "Referer", value: download.referrer }],
+        cookieStoreId: download.cookieStoreId,
       };
       const dlid = await browser.downloads.download(dlOpts);
       console.log(
@@ -196,7 +213,7 @@ const Downloads = {
   fetchHeaders: async (url, keys, context) => {
     console.debug("fetchHeaders", context);
     let response;
-    if (Downloads.useContentFetch) {
+    if (context.downloadMethod !== Constants.DOWNLOAD_METHOD.FETCH) {
       // content fetch
       const MESSAGE_TYPE = "FETCH_HEADERS";
       const msg = await browser.tabs.sendMessage(context.tabId, {
@@ -287,7 +304,7 @@ const Downloads = {
   },
 
   getRuleParams: (props) => {
-    const { tab, image, index } = props;
+    const { tab, image, index, downloadMethod = undefined } = props;
     const isDataUrl = Utils.isDataUrl(image.src);
     const parse = Utils.parseURL(image.src); // URI components will be encoded
     const path = parse ? decodeURI(parse.pathname) : null;
@@ -319,6 +336,7 @@ const Downloads = {
           try {
             this._xhrHdr = Downloads.getHeaderFilename(this._image_src, {
               tabId: tab.id,
+              downloadMethod,
             }); // async
             this._xhrLoaded = true;
           } catch (err) {

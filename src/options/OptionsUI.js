@@ -1201,6 +1201,41 @@ class OptionsUI extends Component {
             checked: options.ignoreDiscardedTab,
             disabled,
           })}
+        {!isRuleset && (
+          <fieldset>
+            <label className="text">
+              __MSG_options_download_method_label__{" "}
+              <a
+                target="_blank"
+                href="https://github.com/mcdamo/tab-image-saver/#download-method"
+              >
+                __MSG_options_learn_more__
+              </a>
+            </label>
+            {this.renderRadio({
+              name: "downloadMethod",
+              label: "__MSG_options_download_method_label_fetch__",
+              value: Constants.DOWNLOAD_METHOD.FETCH,
+              checked:
+                options.downloadMethod === Constants.DOWNLOAD_METHOD.FETCH,
+            })}
+            {this.renderRadio({
+              name: "downloadMethod",
+              label: "__MSG_options_download_method_label_content_fetch__",
+              value: Constants.DOWNLOAD_METHOD.CONTENT_FETCH,
+              checked:
+                options.downloadMethod ===
+                Constants.DOWNLOAD_METHOD.CONTENT_FETCH,
+            })}
+            {this.renderRadio({
+              name: "downloadMethod",
+              label: "__MSG_options_download_method_label_download__",
+              value: Constants.DOWNLOAD_METHOD.DOWNLOAD,
+              checked:
+                options.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD,
+            })}
+          </fieldset>
+        )}
       </fieldset>
     );
   }

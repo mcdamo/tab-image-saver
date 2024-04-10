@@ -32,11 +32,12 @@
       }
     },
     "permissions": [
-      "tabs",
-      "storage",
-      "notifications",
+      "cookies",
       "downloads",
       "menus",
+      "notifications",
+      "storage",
+      "tabs",
       "<all_urls>"
     ],
     "icons": {

@@ -31,6 +31,13 @@ const Constants = {
     // PROMPT: "prompt"
   },
 
+  // options.downloadMethod
+  DOWNLOAD_METHOD: {
+    FETCH: "fetch",
+    CONTENT_FETCH: "contentFetch",
+    DOWNLOAD: "download",
+  },
+
   // options.filter
   FILTER: {
     MAX: "max",

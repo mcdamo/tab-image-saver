@@ -1,8 +1,10 @@
 "use strict";
 /* globals expect */
 import Downloads from "background/downloads";
+import Constants from "background/constants";
 
 describe("downloads.js", function () {
+  const downloadMethod = Constants.DOWNLOAD_METHOD.FETCH; // background fetch
   describe("addDownload + getDownload + removeDownload", function () {
     it("should add download to map", function () {
       let dl = { id: 42, context: "value" };
@@ -239,7 +241,6 @@ describe("downloads.js", function () {
       server,
       stubDownload,
       stubError,
-      useContentFetch,
     } = {};
     before(function () {
       tabsOrig = browser.tabs;
@@ -248,8 +249,6 @@ describe("downloads.js", function () {
       responseOk = new window.Response("", { status: 200 });
       responseFail = new window.Response("", { status: 400 });
       server = sinon.stub(window, "fetch");
-      useContentFetch = Downloads.useContentFetch;
-      Downloads.useContentFetch = false;
     });
     beforeEach(function () {
       stubDownload.resetHistory();
@@ -259,7 +258,6 @@ describe("downloads.js", function () {
       browser.tabs = tabsOrig;
       server.restore();
       stubDownload.restore();
-      Downloads.useContentFetch = useContentFetch;
     });
     it("should call saveDownload if ok", async function () {
       server.resolves(responseOk);
@@ -326,7 +324,7 @@ describe("downloads.js", function () {
   });
 
   describe("fetchHeaders + getHeaderFilename", function () {
-    let { tabsOrig, headers, server, url, useContentFetch } = {};
+    let { tabsOrig, headers, server, url } = {};
     before(function () {
       headers = {
         "Content-Type": "image/jpeg",
@@ -335,8 +333,6 @@ describe("downloads.js", function () {
       url = "/test";
       tabsOrig = browser.tabs;
       server = sinon.stub(window, "fetch");
-      useContentFetch = Downloads.useContentFetch;
-      Downloads.useContentFetch = false;
     });
     beforeEach(function () {
       server.resolves(
@@ -349,12 +345,14 @@ describe("downloads.js", function () {
     after(function () {
       browser.tabs = tabsOrig;
       server.restore();
-      Downloads.useContentFetch = useContentFetch;
     });
 
     describe("fetchHeaders", function () {
       it("should return the requested headers", async function () {
-        let p = Downloads.fetchHeaders(url, Object.keys(headers), { tabId: 1 });
+        let p = Downloads.fetchHeaders(url, Object.keys(headers), {
+          tabId: 1,
+          downloadMethod,
+        });
         await expect(p).to.eventually.become(headers);
       });
       it("should throw if server error", async function () {
@@ -364,7 +362,9 @@ describe("downloads.js", function () {
             headers,
           })
         );
-        let p = Downloads.fetchHeaders(url, Object.keys(headers));
+        let p = Downloads.fetchHeaders(url, Object.keys(headers), {
+          downloadMethod,
+        });
         await expect(p).to.eventually.be.rejected;
       });
       // // fetchHeaders now re-throws exceptions
@@ -377,7 +377,7 @@ describe("downloads.js", function () {
 
     describe("getHeaderFilename", function () {
       it("should return jpg headers", async function () {
-        let p = Downloads.getHeaderFilename(url, {});
+        let p = Downloads.getHeaderFilename(url, { downloadMethod });
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({
@@ -392,7 +392,7 @@ describe("downloads.js", function () {
             headers: { "Content-Type": "image/gif" },
           })
         );
-        let p = Downloads.getHeaderFilename(url, {});
+        let p = Downloads.getHeaderFilename(url, { downloadMethod });
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ mimeExt: "gif" });
@@ -404,7 +404,7 @@ describe("downloads.js", function () {
             headers: { "Content-Type": "image/png" },
           })
         );
-        let p = Downloads.getHeaderFilename(url, {});
+        let p = Downloads.getHeaderFilename(url, { downloadMethod });
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ mimeExt: "png" });
@@ -416,7 +416,7 @@ describe("downloads.js", function () {
             headers: { "Content-Type": "image/svg+xml" },
           })
         );
-        let p = Downloads.getHeaderFilename(url, {});
+        let p = Downloads.getHeaderFilename(url, { downloadMethod });
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ mimeExt: "svg" });
@@ -430,7 +430,7 @@ describe("downloads.js", function () {
             },
           })
         );
-        let p = Downloads.getHeaderFilename(url, {});
+        let p = Downloads.getHeaderFilename(url, { downloadMethod });
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ filename: "new file.jpg" });
@@ -445,7 +445,7 @@ describe("downloads.js", function () {
             },
           })
         );
-        let p = Downloads.getHeaderFilename(url, {});
+        let p = Downloads.getHeaderFilename(url, { downloadMethod });
         //expect(requests.length).to.equal(1);
         //requests[0].respond(200, headers, "");
         await expect(p).to.eventually.become({ filename: "るり.jpg" });

@@ -624,6 +624,7 @@ const App = {
       }
       const tab = result.tab;
       const tabId = tab.id;
+      const cookieStoreId = tab.cookieStoreId;
       const images = result.images;
       const options = result.options;
       let index = App.getDownloadsIndexStart({ options, windowId });
@@ -635,6 +636,7 @@ const App = {
             index,
             downloadPath: options.downloadPath,
             rules: options.pathRules,
+            downloadMethod: options.downloadMethod,
           });
           if (options.action !== Constants.ACTION.TEST) {
             App.addDownload(index, {}, tabId, windowId);
@@ -645,6 +647,7 @@ const App = {
               index,
               tabId,
               tabUrl: tab.url,
+              cookieStoreId,
               options,
             });
           } else {
@@ -699,7 +702,9 @@ const App = {
               conflictAction: download.options.conflictAction,
               incognito: download.options.downloadPrivate, // min_ver FF57
               referrer: download.referrer,
-              signal: App.getRuntime(windowId).abortControl.signal,
+              abortSignal: App.getRuntime(windowId).abortControl.signal,
+              downloadMethod: download.options.downloadMethod,
+              cookieStoreId: download.cookieStoreId,
             },
             {
               tabId,
@@ -850,6 +855,7 @@ const App = {
             id: tab.id,
             title: tab.title,
             url: tab.url,
+            cookieStoreId: tab.cookieStoreId,
           },
           images,
           options: result[0].options,
