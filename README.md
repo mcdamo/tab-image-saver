@@ -129,9 +129,9 @@ The download method does not need to be changed unless you are using the cache w
 
 | Method | Advantages | Disadvantages |
 |--------|------------|---------------|
-| **Fetch** | fast cancellation | does not use cache (*since FF 123.0*) |
+| **Fetch** | fast cancellation | does not use cache [#91](https://github.com/mcdamo/tab-image-saver/issues/91) |
 | **Content-fetch** (default) | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used) | slowest |
-| **Download** | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used); fastest | *Clear download history* does not work |
+| **Download** | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used); fastest | *Clear download history* does not work [#93](https://github.com/mcdamo/tab-image-saver/issues/93) |
 
 ## FAQ
 
