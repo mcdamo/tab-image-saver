@@ -1181,19 +1181,6 @@ class OptionsUI extends Component {
             <span className="note">__MSG_options_download_async_note__</span>
           </Fragment>
         )}
-        {this.renderCheckbox({
-          name: "downloadPrivate",
-          disabled: disabled || !allowDownloadPrivate,
-          label: "__MSG_options_download_private__",
-          checked: options.downloadPrivate,
-        })}
-        <span className="note">__MSG_options_download_private_note__</span>
-        {!allowDownloadPrivate && (
-          <span className="note error">
-            <br />
-            __MSG_options_allow_download_private_error__
-          </span>
-        )}
         {!isRuleset &&
           this.renderCheckbox({
             name: "ignoreDiscardedTab",
@@ -1235,6 +1222,22 @@ class OptionsUI extends Component {
                 options.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD,
             })}
           </fieldset>
+        )}
+        {this.renderCheckbox({
+          name: "downloadPrivate",
+          disabled:
+            disabled ||
+            !allowDownloadPrivate ||
+            options.downloadMethod !== Constants.DOWNLOAD_METHOD.DOWNLOAD,
+          label: "__MSG_options_download_private__",
+          checked: options.downloadPrivate,
+        })}
+        <span className="note">__MSG_options_download_private_note__</span>
+        {!allowDownloadPrivate && (
+          <span className="note error">
+            <br />
+            __MSG_options_allow_download_private_error__
+          </span>
         )}
       </fieldset>
     );

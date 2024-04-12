@@ -285,7 +285,7 @@ describe("downloads.js", function () {
   });
 
   describe("saveDownload", function () {
-    let { downloads, stubDownload, stubError } = {};
+    let { downloads, stubDownload, stubError, dlOpts } = {};
     before(function () {
       stubDownload = sinon.stub();
       downloads = browser.downloads;
@@ -293,9 +293,19 @@ describe("downloads.js", function () {
         download: stubDownload,
       };
       stubError = sinon.stub();
+      dlOpts = {
+        conflictAction: undefined,
+        cookieStoreId: null,
+        filename: undefined,
+        headers: [{ name: "Referer", value: undefined }],
+        incognito: false,
+        saveAs: false,
+        url: undefined,
+      };
     });
     beforeEach(function () {
       stubError.resetHistory();
+      stubDownload.resetHistory();
     });
     after(function () {
       //stubDownload.restore();
@@ -320,6 +330,106 @@ describe("downloads.js", function () {
       expect(await Downloads.saveDownload({ url: "/fail" }, {})).to.equal(
         false
       );
+    });
+    it("should not use incognito for fetch", async function () {
+      stubDownload.resolves(5);
+      expect(
+        await Downloads.saveDownload(
+          {
+            downloadMethod: Constants.DOWNLOAD_METHOD.FETCH,
+            incognito: true,
+          },
+          {}
+        )
+      ).to.equal(5);
+      expect(stubDownload).to.be.calledOnceWith({
+        ...dlOpts,
+        incognito: false,
+      });
+    });
+    it("should not use incognito for contentFetch", async function () {
+      stubDownload.resolves(5);
+      expect(
+        await Downloads.saveDownload(
+          {
+            downloadMethod: Constants.DOWNLOAD_METHOD.CONTENT_FETCH,
+            incognito: true,
+          },
+          {}
+        )
+      ).to.equal(5);
+      expect(stubDownload).to.be.calledOnceWith({
+        ...dlOpts,
+        incognito: false,
+      });
+    });
+    it("should not use cookieStoreId for incognito window", async function () {
+      stubDownload.resolves(5);
+      expect(
+        await Downloads.saveDownload(
+          {
+            downloadMethod: Constants.DOWNLOAD_METHOD.DOWNLOAD,
+          },
+          {
+            tab: { incognito: true, cookieStoreId: "default" },
+          }
+        )
+      ).to.equal(5);
+      expect(stubDownload).to.be.calledOnceWith({
+        ...dlOpts,
+        incognito: true,
+        cookieStoreId: null,
+      });
+    });
+    it("should not use cookieStoreId for incognito downloads", async function () {
+      stubDownload.resolves(5);
+      expect(
+        await Downloads.saveDownload(
+          {
+            downloadMethod: Constants.DOWNLOAD_METHOD.DOWNLOAD,
+            incognito: true,
+          },
+          {
+            tab: { cookieStoreId: "default" },
+          }
+        )
+      ).to.equal(5);
+      expect(stubDownload).to.be.calledOnceWith({
+        ...dlOpts,
+        incognito: true,
+      });
+    });
+    it("should not use cookieStoreId for fetch", async function () {
+      stubDownload.resolves(5);
+      expect(
+        await Downloads.saveDownload(
+          {
+            downloadMethod: Constants.DOWNLOAD_METHOD.FETCH,
+          },
+          {
+            tab: { cookieStoreId: "default" },
+          }
+        )
+      ).to.equal(5);
+      expect(stubDownload).to.be.calledOnceWith({
+        ...dlOpts,
+      });
+    });
+    it("should not use cookieStoreId for contentFetch", async function () {
+      stubDownload.resolves(5);
+      expect(
+        await Downloads.saveDownload(
+          {
+            downloadMethod: Constants.DOWNLOAD_METHOD.CONTENT_FETCH,
+          },
+          {
+            tab: { cookieStoreId: "default" },
+          }
+        )
+      ).to.equal(5);
+      expect(stubDownload).to.be.calledOnceWith({
+        ...dlOpts,
+      });
     });
   });
 

@@ -71,6 +71,8 @@ const App = {
       ...props,
       imagesFailed,
       pathsFailed,
+      abortControl: undefined, // unserializable
+      abortSignal: undefined, // unserializable
     };
   },
 
@@ -457,7 +459,7 @@ const App = {
 
   handleDownloadComplete: async (context) => {
     const windowId = context.windowId;
-    const tabId = context.tabId;
+    const tabId = context.tab.id;
     const index = context.index;
     //const options = context.options;
     const closeTab = context.closeTab;
@@ -490,8 +492,7 @@ const App = {
   handleDownloadFailed: async (context) => {
     const {
       windowId,
-      tabId,
-      tabUrl,
+      tab,
       index,
       response, // if response returns HTTP error
       error, // if fetch or download throws error
@@ -505,11 +506,11 @@ const App = {
     } else if (download) {
       message = download.error;
     }
-    console.debug("handleDownloadFailed", context);
+    console.debug("handleDownloadFailed:", message, context);
     // context may contain
-    App.removeDownload(index, tabId, windowId);
+    App.removeDownload(index, tab.id, windowId);
     App.getRuntime(windowId).imagesFailed.set(context.url, {
-      tabUrl,
+      tabUrl: tab.url,
       path: context.path,
       message,
     });
@@ -624,7 +625,6 @@ const App = {
       }
       const tab = result.tab;
       const tabId = tab.id;
-      const cookieStoreId = tab.cookieStoreId;
       const images = result.images;
       const options = result.options;
       let index = App.getDownloadsIndexStart({ options, windowId });
@@ -645,9 +645,7 @@ const App = {
               path,
               referrer: tab.url,
               index,
-              tabId,
-              tabUrl: tab.url,
-              cookieStoreId,
+              tab,
               options,
             });
           } else {
@@ -692,7 +690,7 @@ const App = {
       try {
         await App.throttleDownloads(windowId);
         let index = download.index;
-        let tabId = download.tabId;
+        let tab = download.tab;
         App.getRuntime(windowId).imagesDownloading++;
         promiseDownloads.push(
           Downloads.fetchDownload(
@@ -704,14 +702,13 @@ const App = {
               referrer: download.referrer,
               abortSignal: App.getRuntime(windowId).abortControl.signal,
               downloadMethod: download.options.downloadMethod,
-              cookieStoreId: download.cookieStoreId,
+              cookieStoreId: download.tab.cookieStoreId,
             },
             {
-              tabId,
+              tab,
               windowId,
               index,
               closeTab: download.options.closeTab,
-              tabUrl: download.tabUrl,
               url: download.url,
               path: download.path,
               eraseHistory: download.options.removeEnded,
@@ -856,6 +853,7 @@ const App = {
             title: tab.title,
             url: tab.url,
             cookieStoreId: tab.cookieStoreId,
+            incognito: tab.incognito,
           },
           images,
           options: result[0].options,

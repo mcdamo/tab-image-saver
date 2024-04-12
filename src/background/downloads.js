@@ -128,7 +128,7 @@ const Downloads = {
       if (download.downloadMethod === Constants.DOWNLOAD_METHOD.CONTENT_FETCH) {
         // content fetch
         const MESSAGE_TYPE = "FETCH_DOWNLOAD";
-        const msg = await browser.tabs.sendMessage(context.tabId, {
+        const msg = await browser.tabs.sendMessage(context.tab.id, {
           type: MESSAGE_TYPE,
           body: {
             url: download.url,
@@ -158,7 +158,7 @@ const Downloads = {
       console.debug("fetchDownload response:", response);
       if (response.ok) {
         console.log(
-          `fetchDownload from Tab(${context.tabId}) ${response.ms / 1000}s:`,
+          `fetchDownload from Tab(${context.tab?.id}) ${response.ms / 1000}s:`,
           download.path
         );
         let myDownload = download;
@@ -181,18 +181,22 @@ const Downloads = {
   // start the download
   saveDownload: async (download, context) => {
     try {
+      const incognito= download.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD && ((context.tab && context.tab.incognito) || download.incognito);
       const dlOpts = {
         saveAs: false, // required from FF58, min_ver FF52
         url: download.url,
         filename: download.path,
         conflictAction: download.conflictAction,
-        incognito: download.incognito,
+        incognito,
         headers: [{ name: "Referer", value: download.referrer }],
-        cookieStoreId: download.cookieStoreId,
+        cookieStoreId:!incognito &&
+          download.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD
+            ? context.tab.cookieStoreId
+            : null,
       };
       const dlid = await browser.downloads.download(dlOpts);
       console.log(
-        `saveDownload(${dlid}) from Tab(${context.tabId}):`,
+        `saveDownload(${dlid}) from Tab(${context.tab?.id}):`,
         download.path
       );
       URL.revokeObjectURL(download.url);
@@ -211,7 +215,7 @@ const Downloads = {
   // keys is array of headers to return as Promise
   // throw Errors such as HTTP NOT FOUND
   fetchHeaders: async (url, keys, context) => {
-    console.debug("fetchHeaders", context);
+    console.debug("fetchHeaders", url, keys, context);
     let response;
     if (context.downloadMethod !== Constants.DOWNLOAD_METHOD.FETCH) {
       // content fetch
