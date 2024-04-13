@@ -331,6 +331,21 @@ describe("downloads.js", function () {
         false
       );
     });
+    it("should use incognito if from a private window", async function () {
+      stubDownload.resolves(5);
+      expect(
+        await Downloads.saveDownload(
+          {
+            downloadMethod: Constants.DOWNLOAD_METHOD.DOWNLOAD,
+          },
+          { tab: { incognito: true } }
+        )
+      ).to.equal(5);
+      expect(stubDownload).to.be.calledOnceWith({
+        ...dlOpts,
+        incognito: true,
+      });
+    });
     it("should not use incognito for fetch", async function () {
       stubDownload.resolves(5);
       expect(
