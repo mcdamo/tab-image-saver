@@ -495,14 +495,14 @@ const App = {
       tab,
       index,
       response, // if response returns HTTP error
-      error, // if fetch or download throws error
+      exception, // if fetch or download throws error
       download, // if download returns response object
     } = context;
     let message;
     if (response) {
       message = `${response.status}: ${response.statusText}`;
-    } else if (error) {
-      message = error.message;
+    } else if (exception) {
+      message = exception.message;
     } else if (download) {
       message = download.error;
     }

@@ -47,6 +47,7 @@ const Downloads = {
     const download = downloads[0];
     console.log(`Download(${dlid}) ${download.state}:`, download.filename);
     console.debug("Download status", download);
+    URL.revokeObjectURL(download.url); // cleanup memory
     if (
       download.state === "complete" &&
       download.fileSize > 0 && // totalBytes may be undefined
@@ -173,7 +174,7 @@ const Downloads = {
       fn({ ...context, response });
     } catch (err) {
       console.error("fetchDownload", err);
-      fn({ ...context, error: err });
+      fn({ ...context, exception: err });
     }
     return false;
   },
@@ -199,14 +200,13 @@ const Downloads = {
         `saveDownload(${dlid}) from Tab(${context.tab?.id}):`,
         download.path
       );
-      URL.revokeObjectURL(download.url);
       Downloads.addDownload(dlid, context);
       return dlid;
     } catch (err) {
       // catch errors related to Access Denied eg. illegal filenames
       console.error("Download failed", err, download); /* RemoveLogging:skip */
       const fn = context.error || ((x) => x);
-      await fn({ ...context, error: err });
+      await fn({ ...context, exception: err });
       return false;
     }
   },
