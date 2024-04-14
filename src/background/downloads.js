@@ -118,6 +118,9 @@ const Downloads = {
   },
 
   fetchDownload: async (download, context) => {
+    if (Utils.isDataUrl(download.url)) {
+      download.downloadMethod = Constants.DOWNLOAD_METHOD.FETCH;
+    }
     console.debug(`fetchDownload via ${download.downloadMethod}`);
     if (download.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD) {
       return Downloads.saveDownload(download, context);
@@ -168,6 +171,7 @@ const Downloads = {
             ? response.blob
             : await response.blob();
         myDownload.url = URL.createObjectURL(myBlob);
+        myDownload.isObjectURL = true;
         return Downloads.saveDownload(myDownload, context);
       }
       console.error(`HTTP error, status = ${response.status}`, response);
@@ -182,19 +186,25 @@ const Downloads = {
   // start the download
   saveDownload: async (download, context) => {
     try {
-      const incognito= download.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD && ((context.tab && context.tab.incognito) || download.incognito);
-      const dlOpts = {
+      let dlOpts = {
         saveAs: false, // required from FF58, min_ver FF52
         url: download.url,
         filename: download.path,
         conflictAction: download.conflictAction,
-        incognito,
-        headers: [{ name: "Referer", value: download.referrer }],
-        cookieStoreId:!incognito &&
-          download.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD
-            ? context.tab.cookieStoreId
-            : null,
       };
+      if (
+        !download.isObjectURL &&
+        download.downloadMethod === Constants.DOWNLOAD_METHOD.DOWNLOAD
+      ) {
+        const incognito =
+          (context.tab && context.tab.incognito) || download.incognito;
+        dlOpts = {
+          ...dlOpts,
+          incognito,
+          headers: [{ name: "Referer", value: download.referrer }],
+          ...(!incognito && { cookieStoreId: context.tab.cookieStoreId }),
+        };
+      }
       const dlid = await browser.downloads.download(dlOpts);
       console.log(
         `saveDownload(${dlid}) from Tab(${context.tab?.id}):`,

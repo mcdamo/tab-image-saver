@@ -285,7 +285,7 @@ describe("downloads.js", function () {
   });
 
   describe("saveDownload", function () {
-    let { downloads, stubDownload, stubError, dlOpts } = {};
+    let { downloads, stubDownload, stubError, dlOpts, dlHeaders } = {};
     before(function () {
       stubDownload = sinon.stub();
       downloads = browser.downloads;
@@ -295,20 +295,17 @@ describe("downloads.js", function () {
       stubError = sinon.stub();
       dlOpts = {
         conflictAction: undefined,
-        cookieStoreId: null,
         filename: undefined,
-        headers: [{ name: "Referer", value: undefined }],
-        incognito: false,
         saveAs: false,
         url: undefined,
       };
+      dlHeaders = [{ name: "Referer", value: undefined }];
     });
     beforeEach(function () {
       stubError.resetHistory();
       stubDownload.resetHistory();
     });
     after(function () {
-      //stubDownload.restore();
       browser.downloads = downloads;
     });
     it("should call download and return id", async function () {
@@ -343,6 +340,7 @@ describe("downloads.js", function () {
       ).to.equal(5);
       expect(stubDownload).to.be.calledOnceWith({
         ...dlOpts,
+        headers: dlHeaders,
         incognito: true,
       });
     });
@@ -359,7 +357,6 @@ describe("downloads.js", function () {
       ).to.equal(5);
       expect(stubDownload).to.be.calledOnceWith({
         ...dlOpts,
-        incognito: false,
       });
     });
     it("should not use incognito for contentFetch", async function () {
@@ -375,7 +372,6 @@ describe("downloads.js", function () {
       ).to.equal(5);
       expect(stubDownload).to.be.calledOnceWith({
         ...dlOpts,
-        incognito: false,
       });
     });
     it("should not use cookieStoreId for incognito window", async function () {
@@ -392,8 +388,8 @@ describe("downloads.js", function () {
       ).to.equal(5);
       expect(stubDownload).to.be.calledOnceWith({
         ...dlOpts,
+        headers: dlHeaders,
         incognito: true,
-        cookieStoreId: null,
       });
     });
     it("should not use cookieStoreId for incognito downloads", async function () {
@@ -411,6 +407,7 @@ describe("downloads.js", function () {
       ).to.equal(5);
       expect(stubDownload).to.be.calledOnceWith({
         ...dlOpts,
+        headers: dlHeaders,
         incognito: true,
       });
     });
