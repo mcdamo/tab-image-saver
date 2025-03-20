@@ -4,7 +4,7 @@ module.exports = {
   // When adding items to this file please check for effects on sub-directories.
   parserOptions: {
     ecmaFeatures: { jsx: true },
-    ecmaVersion: 2018,
+    ecmaVersion: 2020,
     sourceType: "module",
   },
   env: {
