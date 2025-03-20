@@ -12,8 +12,6 @@ global.expect = chai.expect;
 
 // create mock browser
 let browser = require("sinon-chrome/webextensions");
-// const browserFake = require("webextensions-api-fake");
-// const browser = browserFake();
 
 /*
 browser.windows = {
