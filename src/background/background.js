@@ -526,7 +526,9 @@ const App = {
     const obj = Downloads.getRuleParams(props);
     for (const rule of rules) {
       const filename = Utils.sanitizePath(
-        (await Utils.template(rule, obj)).trim()
+        (
+          await Utils.template(Utils.pathJoin([props.downloadPath, rule]), obj)
+        ).trim()
       );
       console.log(
         `rule: ${rule}, filename: ${filename}, valid: ${Utils.isValidPath(
@@ -551,9 +553,7 @@ const App = {
     if (filename === null) {
       throw new Error("Unable to generate filename");
     }
-    const path = Utils.sanitizePath(
-      Utils.pathJoin([param.downloadPath, filename])
-    );
+    const path = Utils.sanitizePath(filename);
     if (!Utils.isValidFilename(path)) {
       throw new Error(`Invalid filename generated: ${path}`);
     }

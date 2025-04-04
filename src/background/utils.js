@@ -114,8 +114,11 @@ const Utils = {
 
   pathJoin: (parts, sep) => {
     const separator = sep || "/";
-    const replace = new RegExp(`${separator}{1,}`, "g");
-    return parts.join(separator).replace(replace, separator);
+    //const replace = new RegExp(`${separator}{1,}`, "g");
+    return parts
+      .filter((part) => part !== undefined && part !== "")
+      .join(separator);
+    //.replace(replace, separator);
   },
 
   isValidPath: (path) =>

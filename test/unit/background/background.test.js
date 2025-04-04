@@ -272,6 +272,46 @@ describe("background.js", function () {
       }
     });
 
+    it("should replace string using template in downloadPath", async function () {
+      let tab = {
+        id: 6,
+        title: "tab title - site name",
+        url: "http://my.tab.url/path/to/page.html",
+      };
+      let img = {
+        src: "http://domain.tld/path/part/file.ext?query",
+        alt: "alt string",
+      };
+      let rules = {
+        "${alt}.jpg": "alt string.jpg",
+        "${name},${ext}": "file,ext",
+        "${xName},${xExt},${xMimeExt}": "xhr name,xhrext,xm",
+        "${index.padStart(4,0)}": "0042",
+        "${host}": "domain.tld",
+        "${hostname}": "domain.tld",
+        "${path}": "path/part",
+        "${tabtitle}": "tab title - site name",
+        "${tabhost},${tabpath},${tabfile},${tabext}":
+          "my.tab.url,path/to,page,html",
+        // no longer a valid replacement
+        // " ${undef} ": "undef", // strip whitespace and return literal
+      };
+      //Object.entries(rules).forEach(async ([test, result]) => {
+      for (const test in rules) {
+        const result = rules[test];
+        await expect(
+          App.createFilename({
+            tab,
+            image: img,
+            index: 42,
+            downloadPath: test,
+            rules: [""],
+          }),
+          `Rule: ${test}`
+        ).to.eventually.become(result);
+      }
+    });
+
     it("should support regex using template", async function () {
       let tab = {
         id: 6,
@@ -295,6 +335,40 @@ describe("background.js", function () {
         const result = rules[test];
         await expect(
           App.createFilename({ tab, image: img, index: 42, rules: [test] }),
+          `Rule: ${test}`
+        ).to.eventually.become(result);
+      }
+    });
+
+    it("should support regex using template in downloadPath", async function () {
+      let tab = {
+        id: 6,
+        title: "tab title \\|/ site name",
+        url: "http://my.tab.url/path/to/page.html",
+      };
+      let img = {
+        src: "http://domain.tld/path/part/file.ext?query",
+        alt: "alt string",
+      };
+      let rules = {
+        '${alt.replace(/\\s/g, "_")}.jpg': "alt_string.jpg",
+        "${tabtitle}": "tab title/_/site name", // automatic sanitization
+        '${tabtitle.replace(/[\\/]/g, "#")}': "tab title/_# site name", // automatic sanitization
+        '${tabtitle.replace(/[\\\\]/g, "#")}': "tab title #_/site name", // automatic sanitization
+        '${tabtitle.replace(/[\\|\\/]/g, "#")}': "tab title/## site name", // automatic sanitization
+        '${tabtitle.replace(/[\\\\\\|\\/]/g, "#")}': "tab title ### site name",
+      };
+      //Object.entries(rules).forEach(async ([test, result]) => {
+      for (const test in rules) {
+        const result = rules[test];
+        await expect(
+          App.createFilename({
+            tab,
+            image: img,
+            index: 42,
+            downloadPath: test,
+            rules: [""],
+          }),
           `Rule: ${test}`
         ).to.eventually.become(result);
       }
