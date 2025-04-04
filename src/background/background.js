@@ -629,6 +629,7 @@ const App = {
     const tabResults = param.response;
     const windowId = param.windowId;
     let downloads = [];
+    const startDate = App.getRuntime(windowId).startDate;
     for (const result of tabResults) {
       if (result === false) {
         continue;
@@ -647,6 +648,7 @@ const App = {
             downloadPath: options.downloadPath,
             rules: options.pathRules,
             downloadMethod: options.downloadMethod,
+            startDate,
           });
           if (options.action !== Constants.ACTION.TEST) {
             App.addDownload(index, {}, tabId, windowId);

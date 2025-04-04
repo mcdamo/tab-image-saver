@@ -244,6 +244,7 @@ describe("background.js", function () {
         title: "tab title - site name",
         url: "http://my.tab.url/path/to/page.html",
       };
+      let startDate = new Date("1995-12-17T03:24:01");
       let img = {
         src: "http://domain.tld/path/part/file.ext?query",
         alt: "alt string",
@@ -259,6 +260,11 @@ describe("background.js", function () {
         "${tabtitle}": "tab title - site name",
         "${tabhost},${tabpath},${tabfile},${tabext}":
           "my.tab.url,path/to,page,html",
+        // "${date}": "1995-12-17", // locale specific
+        "${year}/${month}/${day}": "1995/12/17",
+        "${time.replace(/:/g, '-')}": "03-24-01",
+        "${hours}_${minutes}_${seconds}": "03_24_01",
+        // "${timestamp}": "819170641", // locale specific
         // no longer a valid replacement
         // " ${undef} ": "undef", // strip whitespace and return literal
       };
@@ -266,7 +272,13 @@ describe("background.js", function () {
       for (const test in rules) {
         const result = rules[test];
         await expect(
-          App.createFilename({ tab, image: img, index: 42, rules: [test] }),
+          App.createFilename({
+            tab,
+            image: img,
+            index: 42,
+            startDate,
+            rules: [test],
+          }),
           `Rule: ${test}`
         ).to.eventually.become(result);
       }

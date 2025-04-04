@@ -5,23 +5,25 @@ Tab Image Saver is a Firefox addon that makes it easy to save images from browse
 Download from [Firefox Addons](https://addons.mozilla.org/firefox/addon/tab-image-saver/).
 
 ## Features
+
 **By default this addon saves the largest image found on the active tab.**
 
 You may control how this functions by changing the addon preferences at in **Firefox > Add-ons > Extensions > Tab Image Saver > Preferences** or right-click the toolbar icon.
 
-   - Multitasking Support - run addon concurrently in separate windows
-   - Keyboard shortcut options
-   - Select from active tab, tabs to the left/right of current tab, or all tabs.
-   - Cancel running operations
-   - Set minimum image size in pixels
-   - Option to only save tabs with images, ignoring tabs with webpages
-   - Filenames renamed automatically
-   - Display badge on icon with runtime information and count of downloads
-   - Close tabs after saving
-   - Hide saved images from download history
-   - Show notification when complete
-    
+- Multitasking Support - run addon concurrently in separate windows
+- Keyboard shortcut options
+- Select from active tab, tabs to the left/right of current tab, or all tabs.
+- Cancel running operations
+- Set minimum image size in pixels
+- Option to only save tabs with images, ignoring tabs with webpages
+- Filenames renamed automatically
+- Display badge on icon with runtime information and count of downloads
+- Close tabs after saving
+- Hide saved images from download history
+- Show notification when complete
+
 ## Path rules
+
 Path rules are a flexible method for setting the image filenames when downloading.
 
 The Path rules syntax is based off [template strings](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals), this will be familiar to anyone who has coded Javascript.
@@ -30,26 +32,52 @@ Path rules are processed top-down: if the first rule does not evaluate to a vali
 
 ### Variables
 
-The following variables are available for use in Path rules
+All the following variables are available for use in _Path rules_ and _Download folder_.
 
-| Variable | Description | Example* |
-|-----|-------------|---------|
-| alt | image's alt content | Caption |
-| name | image's url filename without extension | filename |
-| xName | image's filename from Content-Disposition header | filename |
-| ext  | image's url extension | jpg |
-| xExt | image's extension from Content-Disposition header | jpg |
-| xMimeExt | image's extension from Content-Type header | jpg |
-| host | image's url hostname | example.com |
-| path | image's url path | path/to |
-| index | image number starting at '1', incremented for each image | 1 |
-| tabTitle | tab's page title | (JPEG Image, 500 x 500 pixels) |
-| tabHost | tab's url hostname | example.com |
-| tabPath | tab's url path | path/to |
-| tabFile | tab's url filename without extension | filename |
-| tabExt  | tab's url extension | jpg |
+**Tab** and **Date** variables may also be used in _Image URL regex match_ options.
 
-*Example source:
+#### Image
+
+| Variable | Description                                              | Example\*   |
+| -------- | -------------------------------------------------------- | ----------- |
+| alt      | image's alt content                                      | Caption     |
+| name     | image's url filename without extension                   | filename    |
+| xName    | image's filename from Content-Disposition header         | filename    |
+| ext      | image's url extension                                    | jpg         |
+| xExt     | image's extension from Content-Disposition header        | jpg         |
+| xMimeExt | image's extension from Content-Type header               | jpg         |
+| host     | image's url hostname                                     | example.com |
+| path     | image's url path                                         | path/to     |
+| index    | image number starting at '1', incremented for each image | 1           |
+
+#### Tab
+
+| Variable | Description                          | Example\*                      |
+| -------- | ------------------------------------ | ------------------------------ |
+| tabTitle | tab's page title                     | (JPEG Image, 500 x 500 pixels) |
+| tabHost  | tab's url hostname                   | example.com                    |
+| tabPath  | tab's url path                       | path/to                        |
+| tabFile  | tab's url filename without extension | filename                       |
+| tabExt   | tab's url extension                  | jpg                            |
+
+#### Date
+
+| Variable  | Description                | Example    |
+| --------- | -------------------------- | ---------- |
+| date      | date string in your locale | 1995-12-17 |
+| year      | full year                  | 1995       |
+| month     | month (zero padded)        | 12         |
+| day       | day of month (zero padded) | 17         |
+| time      | time string in your locale | 03:24:01   |
+| hours     | hours (zero padded)        | 03         |
+| minutes   | minutes (zero padded)      | 24         |
+| seconds   | seconds (zero padded)      | 01         |
+| timestamp | unix timestamp in seconds  | 819170641  |
+
+\*Example source:
+
+\*Example source:
+
 ```
 <img src="http://example.com/path/to/filename.jpg" alt="Caption">
 ```
@@ -98,10 +126,11 @@ ${alt.replace(/\s*\|.*/, '')}
 
 Path sanitization helper methods will quickly remove most problematic characters from a string.
 
-   - `sanitizeFile("string", "_")` removes all slashes and replaces illegal characters with underscores to create a valid filename.
-   - `sanitizePath("string", "_")` replaces illegal characters with underscores and retains slashes to allow multi-level folders.
+- `sanitizeFile("string", "_")` removes all slashes and replaces illegal characters with underscores to create a valid filename.
+- `sanitizePath("string", "_")` replaces illegal characters with underscores and retains slashes to allow multi-level folders.
 
 ## Rulesets
+
 Rulesets can apply rules and options to a specific _domain_ or _url_ of the **tab** page.
 
 Rulesets are tested in order from top to bottom. Any pages that are unmatched by a Ruleset will default to the Global settings.
@@ -111,27 +140,28 @@ The standard form of domain rule allows for simple wildcard matching (**\***).
 Domain rules can also be interpreted as a [regular expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) by wrapping in hash characters (**#**).
 
 ### Matching domains
+
 The following examples are for `https://example.com/page.html`
 
-| Domain rule | Match |
-|-------------|-------|
-| example.com/ | Yes |
-| example.co | Yes |
-| example.co/ | No |
-| ample.com/ | Yes |
-| e*e.com/ | Yes |
-| /page.html | Yes |
-| #//example\.[^/]{3}/# | Yes |
+| Domain rule           | Match |
+| --------------------- | ----- |
+| example.com/          | Yes   |
+| example.co            | Yes   |
+| example.co/           | No    |
+| ample.com/            | Yes   |
+| e\*e.com/             | Yes   |
+| /page.html            | Yes   |
+| #//example\.[^/]{3}/# | Yes   |
 
 ## Download method
 
 The download method does not need to be changed unless you are using the cache workaround or having issues with downloads.
 
-| Method | Advantages | Disadvantages |
-|--------|------------|---------------|
-| **Fetch** | fast cancellation | does not use cache [#91](https://github.com/mcdamo/tab-image-saver/issues/91) |
-| **Content-fetch** (default) | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used) | slowest |
-| **Download** | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used); fastest | *Clear download history* does not work [#93](https://github.com/mcdamo/tab-image-saver/issues/93) |
+| Method                      | Advantages                                                                                                                                      | Disadvantages                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Fetch**                   | fast cancellation                                                                                                                               | does not use cache [#91](https://github.com/mcdamo/tab-image-saver/issues/91)                     |
+| **Content-fetch** (default) | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used)          | slowest                                                                                           |
+| **Download**                | [multi-account containers](https://addons.mozilla.org/firefox/addon/multi-account-containers/); [cache-workaround](#cache-is-not-used); fastest | _Clear download history_ does not work [#93](https://github.com/mcdamo/tab-image-saver/issues/93) |
 
 ## FAQ
 
@@ -151,7 +181,7 @@ This security feature can be disabled to improve download performance by editing
 
 If images load in the browser but fail to download this is often caused by Tracking Protection.
 
-In Firefox settings try reducing the protection level from *Strict* or adding a site exception.
+In Firefox settings try reducing the protection level from _Strict_ or adding a site exception.
 
 ## Acknowledgements
 

@@ -318,7 +318,13 @@ const Downloads = {
   },
 
   getRuleParams: (props) => {
-    const { tab, image, index, downloadMethod = undefined } = props;
+    const {
+      tab,
+      image,
+      index,
+      startDate = new Date(), // default date used for testing path rules
+      downloadMethod = undefined,
+    } = props;
     const isDataUrl = Utils.isDataUrl(image.src);
     const parse = Utils.parseURL(image.src); // URI components will be encoded
     const path = parse ? decodeURI(parse.pathname) : null;
@@ -339,6 +345,15 @@ const Downloads = {
         this.tabpath = "";
         this.tabfile = "";
         this.tabext = "";
+        this.date = startDate.toLocaleDateString();
+        this.year = startDate.getFullYear();
+        this.month = (startDate.getMonth() + 1).toString().padStart(2, 0);
+        this.day = startDate.getDate().toString().padStart(2, 0);
+        this.time = startDate.toLocaleTimeString();
+        this.hours = startDate.getHours().toString().padStart(2, 0);
+        this.minutes = startDate.getMinutes().toString().padStart(2, 0);
+        this.seconds = startDate.getSeconds().toString().padStart(2, 0);
+        this.timestamp = startDate.getTime() / 1000;
         // internal
         this._errors = [];
         this._image_src = image_src;
