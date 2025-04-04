@@ -6,7 +6,11 @@ const MESSAGE_TYPE = { ...Constants.MESSAGE_TYPE };
 
 const Messaging = {
   [MESSAGE_TYPE.TAB_OPTIONS]: async ({ url }, sender) =>
-    await App.getTabOptions(sender.tab.windowId, url),
+    await App.getTabOptions({
+      windowId: sender.tab.windowId,
+      tab: sender.tab,
+      url,
+    }),
 
   [MESSAGE_TYPE.CANCEL]: (body, sender) => ({
     cancel: App.isCancelled(sender.tab.windowId),

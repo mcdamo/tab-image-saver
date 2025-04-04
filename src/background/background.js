@@ -78,10 +78,20 @@ const App = {
 
   // called by content script via messaging
   // and also for data-url tabs
-  getTabOptions: async (windowId, url) => {
+  getTabOptions: async ({ windowId, tab, url }) => {
     const options = await Options.getTabOptions(url);
     // 'action' can be overridden by runtime
-    options.action = App.getRuntime(windowId).action;
+    options.action = App.getRuntime(tab.windowId).action;
+    if (options.imageRegex && options.imageRegex.length >= 9) {
+      // evaluate imageRegex using template with tab variables
+      const obj = Downloads.getTabParams({ tab });
+      const evalRegex = await Utils.template(
+        options.imageRegex.replace(/\\/g, "\\\\"), // FIXME: escape backslashes to preserve in template
+        obj
+      );
+      console.debug("evaluated imageRegex:", evalRegex);
+      options.imageRegex = evalRegex;
+    }
     return options;
   },
 
@@ -823,7 +833,7 @@ const App = {
         let img = new Image();
         img.src = tab.url;
         await img.decode();
-        const options = await App.getTabOptions(windowId);
+        const options = await App.getTabOptions({ windowId, tab });
         if (
           img.naturalWidth >= options.minWidth &&
           img.naturalHeight >= options.minHeight
@@ -1142,7 +1152,7 @@ const App = {
     ) {
       // show options on first install
       App.handleCommandOptions();
-      if (temporary) {
+      if (temporary && !Options.OPTIONS.downloadPath) {
         Options.OPTIONS.downloadPath = "tab-image-saver";
       }
     }

@@ -410,6 +410,32 @@ const Downloads = {
     }
     return obj;
   },
+  getTabParams: (props) => {
+    const { tab } = props;
+    const tabParse = Utils.parseURL(tab.url);
+    const tabPath = tabParse ? decodeURI(tabParse.pathname) : null;
+    // public properties should be lowercase
+    let TabParams = class {
+      constructor() {
+        this.tabtitle = "";
+        this.tabhost = "";
+        this.tabpath = "";
+        this.tabfile = "";
+        this.tabext = "";
+      }
+    };
+    const obj = new TabParams();
+    obj.tabtitle = tab.title;
+    if (tabParse) {
+      obj.tabhost = tabParse.hostname;
+    }
+    if (tabPath) {
+      obj.tabpath = Utils.getDirname(tabPath);
+      obj.tabfile = Utils.getFilePart(tabPath);
+      obj.tabext = Utils.getFileExt(tabPath);
+    }
+    return obj;
+  },
 };
 
 export default Downloads;
