@@ -62,33 +62,17 @@ All the following variables are available for use in _Path rules_ and _Download 
 
 #### Date
 
-| Variable | Description | Example |
-| -------- | ----------- | ------- |
-
-<<<<<<< HEAD
-| date | date string in your locale | 1995-12-17 |
-| year | full year | 1995 |
-| month | month (zero padded) | 12 |
-| day | day of month (zero padded) | 17 |
-| time | time string in your locale | 03:24:01 |
-| hours | hours (zero padded) | 03 |
-| minutes | minutes (zero padded) | 24 |
-| seconds | seconds (zero padded) | 01 |
-| timestamp | unix timestamp in seconds | 819170641 |
-
-# \*Example source:
-
-| date | date string in your locale | 1970-01-31 |
-| year | full year | 1970 |
-| month | month (zero padded) | 01 |
-| day | day of month (zero padded) | 31 |
-| time | time string in your locale | 00:00:00 |
-| hours | hours (zero padded) | 00 |
-| minutes | minutes (zero padded) | 00 |
-| seconds | seconds (zero padded) | 00 |
-| timestamp | unix timestamp | 2592000 |
-
-> > > > > > > 2001e4e (Update readme)
+| Variable  | Description                | Example    |
+| --------- | -------------------------- | ---------- |
+| date      | date string in your locale | 1995-12-17 |
+| year      | full year                  | 1995       |
+| month     | month (zero padded)        | 12         |
+| day       | day of month (zero padded) | 17         |
+| time      | time string in your locale | 03:24:01   |
+| hours     | hours (zero padded)        | 03         |
+| minutes   | minutes (zero padded)      | 24         |
+| seconds   | seconds (zero padded)      | 01         |
+| timestamp | unix timestamp in seconds  | 819170641  |
 
 \*Example source:
 
