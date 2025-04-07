@@ -455,10 +455,10 @@ const Options = {
         const key = Options.getRulesetKeyFromId(match.id);
         const ruleset = Options.OPTIONS_RULESETS[key];
         console.info(`matched ruleset ${key}`, ruleset);
-        return ruleset;
+        return { ...ruleset }; // shallow copy to avoid mutation
       }
     }
-    return Options.OPTIONS;
+    return { ...Options.OPTIONS }; // shallow copy to avoid mutation
   },
 
   getRulesetKeyOption: ({ rulesetKey, name }) =>
