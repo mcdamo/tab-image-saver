@@ -126,6 +126,7 @@ const Utils = {
     path.length > 0 &&
     !/^[.]/.test(path) && // does not begin with period
     !/[./]$/.test(path) && // does not end with period or slash
+    !/.*\/\.[^/]+$/.test(path) && // does not have an empty file-part
     !/[*":<>|?]/.test(path), // does not contain invalid characters
 
   isValidFilename: (path) =>

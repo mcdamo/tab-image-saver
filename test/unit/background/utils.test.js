@@ -188,6 +188,7 @@ describe("utils.js", function () {
         "/path/", // leading slash
         "path/", // no filename
         "path /", // no spaces around slashes (firefox requirement)
+        "path/.ext", // empty file-part
       ];
       for (let test of paths) {
         expect(Utils.isValidPath(test), test).to.equal(false);
@@ -229,6 +230,7 @@ describe("utils.js", function () {
         "path/name", // path with no extension
         " space", // no leading spaces
         "space ", // no trailing spaces
+        ".ext", // empty file-part
       ];
       for (let test of paths) {
         expect(Utils.isValidFilename(test), test).to.equal(false);
